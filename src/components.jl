@@ -1,5 +1,5 @@
 using StaticArrays
-using Dictionaries
+# using Dictionaries
 
 struct Region
     name::Symbol
@@ -40,8 +40,9 @@ end
 struct Params
     scalar::ImmutableDict{Symbol,Number}
     y::ImmutableDict{Symbol,ImmutableDict{Year, Number}}
+    cp::ImmutableDict{Symbol,ImmutableDict{CP, Number}}
     cp_y::ImmutableDict{Symbol,ImmutableDict{Tuple{CP,Year}, Number}}
-    co_y::ImmutableDict{Symbol,ImmutableDict{Tuple{CO,Year}, Number}}
+    cp_t::ImmutableDict{Symbol,ImmutableDict{Tuple{CP,Time}, Number}}
 end
 
 struct Input
