@@ -10,7 +10,7 @@ Compact Energy System Modeling Tool
 
 **Steps to Run the Project:**
 
-1.  **Navigate to the Project Directory:** Open your terminal or command prompt and navigate to the directory containing this `Project.toml` file. You can use the `cd` command for this.
+1. **Navigate to the Project Directory:** Open your terminal or command prompt and navigate to the directory containing this `Project.toml` file. You can use the `cd` command for this.
 
     ```bash
     cd /path/to/your/julia_project
@@ -18,7 +18,7 @@ Compact Energy System Modeling Tool
 
     (Replace `/path/to/your/julia_project` with the actual path to your project directory.)
 
-2.  **Activate the Project Environment:** Once inside the project directory, activate the project environment using Julia's `Pkg` manager. This ensures that you are using the specific dependencies defined in your `Project.toml` file.
+2. **Activate the Project Environment:** Once inside the project directory, activate the project environment using Julia's `Pkg` manager. This ensures that you are using the specific dependencies defined in your `Project.toml` file.
 
     Open the Julia REPL (Read-Eval-Print Loop) by typing `julia` in your terminal and pressing Enter.
 
