@@ -1,5 +1,13 @@
+using StaticArrays
+using Dictionaries
+
+struct Region
+    name::Symbol
+end
+
 struct CO
     name::Symbol
+    region::Region
 end
 
 struct CP
@@ -16,15 +24,27 @@ struct Year
     value::Int
 end
 
-struct Region
-    name::Symbol
-end
-
 struct PlotStyle
     color::Symbol
     order::Int
 end
 
-function Base.show(io::IO, ::MIME"text/plain", p::MyParam)
-    print(io, "MyParam(name=$(p.name), value=$(p.value))")
+struct Sets
+    cp::SVector{CP}
+    co::SVector{CO}
+    region::SVector{Region}
+    time::SVector{Time}
+    year::SVector{Year}
+end
+
+struct Params
+    scalar::ImmutableDict{Symbol,Number}
+    y::ImmutableDict{Symbol,ImmutableDict{Year, Number}}
+    cp_y::ImmutableDict{Symbol,ImmutableDict{Tuple{CP,Year}, Number}}
+    co_y::ImmutableDict{Symbol,ImmutableDict{Tuple{CO,Year}, Number}}
+end
+
+struct Input
+    sets::Sets
+    params::Params
 end
