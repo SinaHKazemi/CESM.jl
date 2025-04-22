@@ -1,0 +1,17 @@
+# Ignore build folder with generated HTML files
+/build/
+
+# Ignore local Julia environment files (can be regenerated)
+Manifest.toml
+
+# Ignore editor and OS temporary files
+*.DS_Store
+*.swp
+*.tmp
+*.log
+
+# Ignore Documenter.jl deployment keys (if used for GitHub Pages)
+deploy_key.enc
+
+# Ignore any potential backup files
+*~
