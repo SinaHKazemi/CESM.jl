@@ -1,22 +1,29 @@
 module Model
 
 using JuMP, HiGHS, Gurobi
+using Dictionary
+
 include("variables.jl")
+include("components.jl")
+
 using .Variables
+using .Components
 
 export run_cesm
 
+
 variables = Variables.variables
 
-function run_cesm(input)
+function run_cesm(input::Input)
     model = JuMP.Model(Gurobi.Optimizer)
     vars = add_vars!(model, input)
     add_constraints!(model, vars, input)
     set_obj!(model, vars)
-    # write_to_file(model, "model.mps")
     optimize!(model)
+
+    # write_to_file(model, "model.mps")
     # grb_model = model.moi_backend.optimizer.model.inner
-    compute_conflict!(model)
+    # compute_conflict!(model)
     # list_of_conflicting_constraints = ConstraintRef[]
     # for (F, S) in list_of_constraint_types(model)
     #     for con in all_constraints(model, F, S)
@@ -28,24 +35,23 @@ function run_cesm(input)
     # for x in list_of_conflicting_constraints
     #     println(x)
     # end
-    
+    # iis_model, _ = copy_conflict(model)
+    # print(iis_model)
 
-    iis_model, _ = copy_conflict(model)
-    print(iis_model)
     output = get_output(input, vars)
     return output
 end
 
 
 # add variables
-function add_vars!(model, input)::Dict
-    vars = Dict()
+function add_vars!(model, input::Input)::Dictionary
+    vars = Dictionary()
     for (var_name, attributes) in variables
         set_names = attributes.sets
         if length(set_names) > 1
             sets = Vector()
             for set_name in set_names
-                collection = input[:sets][set_name]
+                collection = input.sets.
                 if collection isa Dict
                     push!(sets, keys(collection))
                 else
@@ -70,12 +76,12 @@ end
 
 
 # helper function
-function discount_factor(input, y::Int)::Float64
+function discount_factor(input::Input, y::Int)::Float64
     y_start = input[:sets][:Y][1]
     return (1 + input[:params][:discount_rate]^(y_start - y))
 end
 
-function year_gap(input, y::Int)::Int
+function year_gap(input::Input, y::Int)::Int
     years = input[:sets][:Y]
     index = findfirst(==(y), years)
     if index == length(years)
@@ -93,7 +99,7 @@ end
 
 
 
-function  add_constraints!(model, vars, input)::Dict
+function  add_constraints!(model, vars, input::Input)::Dict
     # add constraints
     constrs = Dict()
     params = input[:params]
@@ -556,10 +562,10 @@ function set_obj!(model, vars)
     @objective(model, Min, vars[:TOTEX])
 end
 
-function get_output(input, vars)::Dict
-    output = Dict()
+function get_output(input::Input, vars)::Dictionary
+    output = Dictionary()
     for (var_name, attributes) in variables
-        output[var_name] = Dict()
+        output[var_name] = Dictionary()
         set_names = attributes.sets
         if length(set_names) > 0
             sets = [input[:sets][set_name] for set_name in set_names]
