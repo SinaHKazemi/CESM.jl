@@ -35,7 +35,7 @@ Compact Energy System Modeling Tool
 
     The `"."` refers to the current directory, which contains your `Project.toml` file. Julia will then activate the environment associated with this project. You should see the project name in parentheses in your Julia REPL prompt, indicating the environment is active (e.g., `(your_project_name) julia>`).
 
-3.  **Install Dependencies (if necessary):** If this is the first time you are running this project on your system (or if the dependencies have changed), you need to install the required packages listed in the `Project.toml` file. While the project environment is active in the Julia REPL, run the following command:
+3. **Install Dependencies (if necessary):** If this is the first time you are running this project on your system (or if the dependencies have changed), you need to install the required packages listed in the `Project.toml` file. While the project environment is active in the Julia REPL, run the following command:
 
     ```julia
     Pkg.instantiate()
@@ -43,7 +43,7 @@ Compact Energy System Modeling Tool
 
     This command will read the `Project.toml` and `Manifest.toml` files and download and install all the necessary dependencies. This might take some time depending on the number and size of the packages.
 
-4.  **Run the Project Code:** Once the environment is activated and the dependencies are installed, you can run your project's main script or any other relevant Julia files.
+4. **Run the Project Code:** Once the environment is activated and the dependencies are installed, you can run your project's main script or any other relevant Julia files.
 
     * **Running a Main Script:** If your project has a main script (e.g., `src/main.jl` or a file specified for execution), you can run it from the Julia REPL using the `include()` function:
 

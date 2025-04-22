@@ -25,16 +25,3 @@ module Variables
     )
 
 end
-# input = Dict(
-#     "sets" => Dict(
-#         "Y" => Vector{Int}(),
-#         "CO" => Vector{String},
-#         "TSS" => Vector{Int}(),
-#         "CP" => Vector{Strings},
-#     ),
-#     "params" => Dict(),
-#     "plots" => Dict(
-#         "CP" => Dict(),
-#         "CO" => Dict()
-#     )
-# )
