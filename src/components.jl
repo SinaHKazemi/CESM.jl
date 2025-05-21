@@ -6,16 +6,16 @@ module Components
     export Input
 
     struct Region
-        name::Symbol
+        name::String
     end
 
     struct CO
-        name::Symbol
+        name::String
         region::Region
     end
 
     struct CP
-        name::Symbol
+        name::String
         cin::CO
         cout::CO
     end
