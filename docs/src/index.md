@@ -1,42 +1,11 @@
 # CESM.jl Documentation
 
-Welcome to the documentation for `YourProject.jl`! This package provides functionality for XYZ.
+Welcome to the documentation for `CESM.jl`! 
+This package provides functionality for XYZ.
 
-## Installation
+Throughout the CESM documentation, we strive to follow the [Diataxis](https://diataxis.fr/) documentation framework. There are four main sections containing different information:
 
-Install using Julia's package manager:
-```julia
-using Pkg
-Pkg.add("YourProject")
-```
-
-
-## Example.jl Documentation
-
-```@docs
-greet()
-```
-
-
-Here's an equation:
-
-```math
-\frac{n!}{k!(n - k)!} = \binom{n}{k}
-```
-
-This is the binomial coefficient.
-
----
-
-To write a system of equations, use the `aligned` environment:
-
-```math
-\begin{aligned}
-\nabla\cdot\mathbf{E}  &= 4 \pi \rho \\
-\nabla\cdot\mathbf{B}  &= 0 \\
-\nabla\times\mathbf{E} &= - \frac{1}{c} x_{Pin} \frac{\partial\mathbf{B}}{\partial t} \\
-\nabla\times\mathbf{B} &= - \frac{1}{c} \left(4 \pi \mathbf{J} + \frac{\partial\mathbf{E}}{\partial t} \right)
-\end{aligned}
-```
-
-These are Maxwell's equations.
+- **Tutorials** - Detailed walk-throughs to help you learn how to use CESM
+- **How to...** - Directions to help guide your work for a particular task
+- **Explanation** - Additional details and background information to help you understand CESM, its structure, and how it works behind the scenes
+- **Reference** - Technical references and API for a quick look-up during your work
