@@ -1,0 +1,44 @@
+{
+    "units": {
+        "energy" : {"input": "GJ", "output": "GJ", "scale": 1},
+        "capacity": {"input": "GW", "output": "GW", "scale": 1},
+        "capacity_factor": {"input": "GW", "output": "GW", "scale": 1},
+    },
+    "time_steps" : [1,2,3]"./time_series/tss.txt",
+    "years" : [2020, 2025, 2030],
+    "parameters": [
+        {
+            "comment": "",
+            "name": "scale",
+            "sets": ["Y"],
+            "type": "Float",
+            "default": 12,
+            "value": 12
+            [
+                {"x": 2020,"y": 19.32},
+                {"x": 2030,"y": 32.2}
+            ]
+        }
+    ],
+    "regions": [
+        "Global",
+        "US",
+        "EU",
+        "Germany"
+    ],
+    "carriers": [
+        {"name": "gas", "region": "US"},
+        {"name": "oil", "region": "US"}
+    ],
+    "conversion_processes": [
+        {
+            "name": "gas_to_oil",
+            "carrier_in": {"name": "gas", "region": "US"},
+            "carrier_out": {"name": "oil", "region": "US"},
+            "parameters": {
+                
+            }
+        }
+    ]
+
+}
