@@ -17,149 +17,506 @@ config file is a json file that contains the configuration of the project.
 
 ### Sets
 
-- **years**: $Y$
-- **time_steps**: $T$
-- **carriers**: $C$
-- **conversion_processes**: $P$
-- **regions**: set of regions that is denoted by $R$.
+- **years**: an ordered set of years, denoted by $Y$.
+- **time_steps**: an ordered set of time steps, denoted by $T$.
+- **carriers**: an unordered set of energy carriers, denoted by $C$.
+- **conversion_processes**: an unordered set of conversion processes, denoted by $P$.
 
 ### Parameters
 
-The input parameters of teh optimization model are defined as follows:
+The input parameters of the optimization model are defined as follows:
 
 #### Global
 
-- **discount\_rate**: The discount rate is the interest rate used to calculate the present value of future cash flows from a project or investment. For example, at an interest rate of 5%, the value of €100 will increase to €105 in one year. 
+- **discount\_rate**: The discount rate is the interest rate used to calculate the present value of future cash flows from a project or investment. For example, at an interest rate of 5%, the value of €100 will increase to €105 in one year.
   - indices: scalar
   - quantity: dimensionless
   - type: Float
   - default: 0
+  - Range: [0,$\infty$]
 
 - **discount\_factor**: Discount factor for each year that is calculated as follows. It is not directly specified in the config file but is calculated from the discount rate.
   - indices: $Y$
   - quantity: dimensionless
   - type: Float
   - default: 0
+  - Range: [0,$\infty$]
 
 ```math
-discount\_factor(y)=(1+discount\_rate)^{y-Y[0]}\quad y \in Y
+\text{discount\_factor}[y]=(1+\text{discount\_rate})^{y-Y[0]},\quad y \in Y
 ```
 
-- **annual\_co2\_limit**
-- **co2\_price**
+$Y[0]$ is the first year of the model.
+
+
+- **annual\_co2\_limit(y)**: Annual CO2 emission limit of the energy system in year $y \in Y$.
+  - indices: $Y$
+  - quantity: CO2 Mass
+  - type: Float
+  - default: 0
+  - Range: [0,$\infty$]
+
+- **co2\_price(y)**: CO2 price for emission from the energy system  in year $y \in Y$.
+  - indices: $Y$
+  - quantity: Money/CO2 Mass
+  - type: Float
+  - default: 0
+  - Range: [0,$\infty$]
 
 #### Storage
 
-- **is\_storage**
-- **charge\_efficiency**
-- **c\_rate**
+- **is_storage(p)**: Indicates if the conversion process $p \in P$ is a storage process.
+  - indices: $P$
+  - quantity: dimensionless
+  - type: Boolean
+
+- **charge\_efficiency(p)**: Efficiency of charging of storage conversion process $p \in P$.
+  - indices: $P$
+  - quantity: dimensionless
+  - type: Float
+  - default: 1
+  - Range: (0,1]
+
+- **c\_rate(p)**: indicates the discharge and charging rate of the storage conversion process $p \in P$. 2C means that the full storage can be fully discharged in (1 hour)/2=30 minutes.
+  - indices: $P$
+  - quantity: dimensionless
+  - type: Float
+  - Range: (0,1]
 
 #### Legacy
 
-- **max\_legacy\_capacity**: maximum allowed active legacy capacity of a conversion process at a planning year.
+- **max\_legacy\_capacity(p,y)**: maximum allowed active legacy capacity of conversion process $p \in P$ in year $y \in Y$.
   - indices: $P \times Y$
   - quantity: power
   - type: Float
   - default: 0
 
-- **min\_legacy\_capacity**
-
-#### Capacity
-
-- **max\_capacity**
-- **min\_capacity**
-
-#### Costs
-
-- **operational\_cost\_energy**
-Operational cost per energy output of a conversion process in a year.
-  - indices: $Y$
+- **min\_legacy\_capacity(p,y)**: minimum allowed active legacy capacity of conversion process $p \in P$ in year $y \in Y$.
+  - indices: $P \times Y$
   - quantity: power
   - type: Float
   - default: 0
-- **operational\_cost\_energy**
-- **operational\_cost\_power**
-- **capital\_cost\_power**
+  - Range: [0,$\infty$]
+
+#### Capacity
+
+- **max\_capacity(p,y)**: maximum allowed active capacity of conversion process $p \in P$ in year $y \in Y$.
+  - indices: $P \times Y$
+  - quantity: power
+  - type: Float
+  - default: 0
+  - Range: [0,$\infty$]
+
+- **min\_capacity(p,y)**: minimum allowed active capacity of conversion process $p \in P$ in year $y \in Y$.
+  - indices: $P \times Y$
+  - quantity: power
+  - type: Float
+  - default: 0
+  - Range: [0,$\infty$]
+
+#### Costs
+
+- **operational\_cost\_energy(p,y)**: Operational cost per energy output of conversion process $p \in P$ in a year.
+  - indices: $P \times Y$
+  - quantity: Money/Energy
+  - type: Float
+  - default: 0
+  - Range: [0,$\infty$]
+
+- **operational\_cost\_power(p,y)**: Operational cost per active capacity of conversion process $p \in P$ in year $y \in Y$.
+  - indices: $P \times Y$
+  - quantity: Money/Power
+  - type: Float
+  - default: 0
+  - Range: [0,$\infty$]
+
+- **capital\_cost\_power(p,y)**: Capital cost per active capacity of conversion process $p \in P$ in year $y \in Y$.
+  - indices: $P \times Y$
+  - quantity: Money/Power
+  - type: Float
+  - default: 0
+  - Range: [0,$\infty$]
 
 #### Fractions
 
-- **min\_fraction\_in**
-- **min\_fraction\_out**
-- **max\_fraction\_in**
-- **max\_fraction\_out**
+- **min\_fraction\_in(p,y)**: minimum fraction of the input carrier(cin) generated by conversion process $p \in P$ in year $y \in Y$.
+  - indices: $P \times Y$
+  - quantity: dimensionless
+  - type: Float
+  - default: 0
+
+- **min\_fraction\_out(p,y)**: minimum fraction of the output carrier(cout) generated by conversion process $p \in P$ in year $y \in Y$.
+  - indices: $P \times Y$
+  - quantity: dimensionless
+  - type: Float
+  - default: 0
+
+- **max\_fraction\_in(p,y)**: maximum fraction of the input carrier(cin) generated by conversion process $p \in P$ in year $y \in Y$.
+  - indices: $P \times Y$
+  - quantity: dimensionless
+  - type: Float
+  - default: 1
+- **max\_fraction\_out(p,y)**: maximum fraction of the output carrier(cout) generated by conversion process $p \in P$ in year $y \in Y$.
+  - indices: $P \times Y$
+  - quantity: dimensionless
+  - type: Float
+  - default: 1
 
 #### Output Limits
 
-- **max\_energy\_out**
-- **min\_energy\_out**
+- **max\_energy\_out(p,y)**: maximum energy output of conversion process $p \in P$ in year $y \in Y$.
+  - indices: $P \times Y$
+  - quantity: Energy
+  - type: Float
+  - default: $\infty$
+
+- **min\_energy\_out(p,y)**: minimum energy output of conversion process $p \in P$ in year $y \in Y$.
+  - indices: $P \times Y$
+  - quantity: Energy
+  - type: Float
+  - default: 0
 
 #### Time Series
 
-- **availability\_profile**
-- **output\_profile**
+- **availability\_profile(p,t)**: Availability profile of conversion process $p \in P$ at  time step $t \in T$.
+  - indices: $P \times T$
+  - quantity: dimensionless
+  - type: Float
+  - default: 1
+  - Range: [0,1]
+
+- **output\_profile(p,t)**: Share of the annual energy output supplied  of the conversion process $p \in P$ at time step $t \in T$ such that  $\sum_{t \in T}output\_profile[p,t]=1 \quad \forall p \in P$.
+  - indices: $P \times T$
+  - quantity: dimensionless
+  - type: Float
+  - default: 1
+  - Range: [0,1]
 
 #### Technical
 
-- **lifetime**
-- **technical\_availability**
-- **specific\_co2**
-- **efficiency**
+- **lifetime(p)**: Technical lifetime of conversion process $p \in P$ in years.
+  - indices: $P$
+  - quantity: Time
+  - type: Integer
+  - default: 100
+
+- **technical\_availability(p)**: Technical availability of conversion process $p \in P$.
+  - indices: $P$
+  - quantity: dimensionless
+  - type: Float
+  - default: 1
+  - Range: [0,1]
+
+- **specific\_co2(p)**: Specific CO2 emission intensity per energy output of conversion process $p \in P$.
+  - indices: $P$
+  - quantity: CO2 Mass/Energy
+  - type: Float
+  - default: 0
+
+- **efficiency(p)**: Efficiency of conversion process $p \in P$.
+  - indices: $P$
+  - quantity: dimensionless
+  - type: Float
+  - default: 1
+  - Range: [0,1]
 
 ### Variables
 
-- **var\_total\_cost**
-- **var\_capital\_cost**
-- **var\_operational\_cost**
-- **var\_total\_residual\_value**
-- **var\_residual\_value**
-- **var\_annual\_emission**
-- **var\_new\_capacity**
-- **var\_active\_capacity**
-- **var\_legacy\_capacity**
-- **var\_power\_in**
-- **var\_power\_out**
-- **var\_total\_energy\_out**
-- **var\_total\_energy\_in**
-- **var\_energy\_out\_time**
-- **var\_energy\_in\_time**
-- **var\_net\_energy\_generation**
-- **var\_net\_energy\_consumption**
-- **var\_storage\_level**
-- **var\_max\_storage\_level**
+#### Costs
+
+- **var\_total\_cost**: Total cost.
+  - indices: scalar
+  - quantity: Money
+  - type: Float
+
+- **var\_capital\_cost**: Capital cost.
+  - indices: scalar
+  - quantity: Money
+  - type: Float
+
+- **var\_operational\_cost**: Operational cost.
+  - indices: scalar
+  - quantity: Money
+  - type: Float
+
+- **var\_residual\_value**: Residual value of a conversion process in a year.
+  - indices: $P \times Y$
+  - quantity: Money
+  - type: Float
+
+- **var\_total\_residual\_value**: Total residual value.
+  - indices: scalar
+  - quantity: Money
+  - type: Float
+
+- **var\_annual\_emission**: Annual CO2 emission from the energy system in year $y \in Y$.
+  - indices: $Y$
+  - quantity: CO2 Mass
+  - type: Float
+
+- **var\_new\_capacity**: New capacity of conversion process $p\in P$ in year $y \in Y$.
+  - indices: $P \times Y$
+  - quantity: Power
+  - type: Float
+
+- **var\_active\_capacity**: Active capacity of conversion process $p \in P$ in year $y \in Y$.
+  - indices: $P \times Y$
+  - quantity: Power
+  - type: Float
+
+- **var\_legacy\_capacity**: Legacy capacity of conversion process $p \in P$ in year $y \in Y$.
+  - indices: $P \times Y$
+  - quantity: Power
+  - type: Float
+
+- **var\_power\_in**: Power input of conversion process $p \in P$ in year $y \in Y$ at time step $t \in T$.
+  - indices: $P \times Y \times T$
+  - quantity: Power
+  - type: Float
+
+- **var\_power\_out**: Power output of conversion process $p \in P$ in year $y \in Y$ at time step $t \in T$.
+  - indices: $P \times Y \times T$
+  - quantity: Power
+  - type: Float
+
+- **var\_total\_energy\_out**: Total energy output of conversion process $p \in P$ in year $y \in Y$.
+  - indices: $P \times Y$
+  - quantity: Energy
+  - type: Float
+
+- **var\_total\_energy\_in**: Total energy input of conversion process $p \in P$ in year $y \in Y$.
+  - indices: $P \times Y$
+  - quantity: Energy
+  - type: Float
+
+- **var\_energy\_out\_time**: Energy output of conversion process $p \in P$ in year $y \in Y$ at time step $t \in T$.
+  - indices: $P \times Y \times T$
+  - quantity: Energy
+  - type: Float
+
+- **var\_energy\_in\_time(p,y,t)**: Energy input of conversion process $p \in P$ in year $y \in Y$ at time step $t \in T$.
+  - indices: $P \times Y \times T$
+  - quantity: Energy
+  - type: Float
+
+- **var\_net\_energy\_generation(c,y,t)**: Net energy generation of energy carrier $c \in C$ in year $y \in Y$ at time step $t \in T$.
+  - indices: $C \times Y \times T$
+  - quantity: Energy
+  - type: Float
+
+- **var\_net\_energy\_consumption(c,y,t)**: Net energy consumption of energy carrier $c \in C$ in year $y \in Y$ at time step $t \in T$.
+  - indices: $C \times Y \times T$
+  - quantity: Energy
+  - type: Float
+
+- **var\_storage\_level(p,y,t)**: Storage level of a storage conversion process $p \in P$ in year $y\in Y$ at time step $t\in T$.
+  - indices: $P \times Y \times T$
+  - quantity: Energy
+  - type: Float
+
+- **var\_max\_storage\_level(p,y)**: The maximum energy capacity of the storage conversion process $p \in P$ in year $y\in Y$.
+  - indices: $P \times Y$
+  - quantity: Energy
+  - type: Float
 
 ### Constraints
 
 #### Costs
 ```math
-var\_total\_cost = var\_capital\_cost + var\_operational\_cost
+\text{var\_total\_cost} = \text{var\_capital\_cost} + \text{var\_operational\_cost}
+```
+
+```math
+\begin{align*}
+\text{var\_capital\_cost} &= \sum_{y \in Y} 
+\left(
+  \text{discount\_factor}[y] * \sum_{p \in P} 
+    \left(
+      \text{var\_new\_capacity}[p, y] * \text{capital\_cost\_power}[p,y]
+    \right)
+\right)\\
+&- \text{var\_total\_residual\_value}
+\end{align*}
+```
+
+```math
+\begin{align*}
+\text{var\_operational\_cost} &=
+\sum_{p\in P}\sum_{y \in Y} 
+\text{discount\_factor}[y] \\
+& * 
+\left(
+  \text{var\_active\_capacity}[p,y] * \text{operational\_cost\_power}[p,y] + \text{total\_energy\_out}[p,y] * \text{operational\_cost\_energy}[p,y]
+\right) 
+\\ &* \left(y^+-y\quad \text{if} \quad y \neq Y[end] \quad \text{else} \quad 1 \right)
+\end{align*}
+```
+
+where $y^+$ is the next year after $y$.
+
+```math
+\begin{align*}
+\text{var\_residual\_value}[p,y] &= \text{var\_new\_capacity}[y] * \text{capital\_cost\_power}[p,y] \\
+&* (1 - \frac{Y[end]-y+1}{\text{lifetime}[p]}) * \text{discount\_factor}[y], \quad \forall y\in Y,\forall p \in P
+\end{align*}
+```
+
+```math
+\text{var\_total\_residual\_value} = \sum_{p \in P} \sum_{y \in Y} \text{var\_residual\_value}[y] \quad \text{if} \quad Y[end] - y < \text{lifetime}[p]
 ```
 
 #### Power balance
 
+```math
+\sum_{p \in P | p.cin=c} \text{var\_power\_in}[p,y,t] = 
+\sum_{p \in P | p.cout=c} \text{var\_power\_out}[p,y,t], \quad \forall c \in C\setminus \{Dummy\}, \forall y \in Y, \forall t \in T
+```
 
 #### CO2
 
+```math
+\text{var\_annual\_emission}[y] = \sum_{p \in P} \text{var\_total\_energy\_out}[p,y] * \text{specific\_co2}[p], \quad \forall y \in Y
+```
+The annual CO₂ emission is equal to the sum of the energy produced by each conversion process multiplied by its specific CO₂ emission.
+
+```math
+\text{var\_annual\_emission}[y] \leq \text{annual\_co2\_limit}[y], \quad \forall y \in Y
+```
 
 #### Power Output
+
+```math
+\text{var\_power\_out}[p,y,t] \leq \text{var\_power\_in}[p,y,t] * \text{efficiency}[p], \quad \forall p \in P, \forall y \in Y, \forall t \in T
+```
+
+```math
+\text{var\_power\_out}[p,y,t] \leq \text{var\_active\_capacity}[p,y], \quad \forall p \in P, \forall y \in Y, \forall t \in T
+```
+
+```math
+\text{var\_power\_out}[p,y,t] \leq \text{var\_active\_capacity}[p,y] * \text{technical\_availability}[p], \quad \forall p \in P, \forall y \in Y, \forall t \in T
+```
+
+```math
+\text{var\_power\_out}[p,y,t] \leq \text{var\_active\_capacity}[p,y] * \text{availability\_profile}[p,t], \quad \forall p \in P, \forall y \in Y, \forall t \in T
+```
+
+These three constraints should not be active at the same time for the same process !!!!
 
 
 #### Power-Energy
 
+```math
+\text{var\_energy\_out\_time}[p,y,t] = \text{var\_power\_out}[p,y,t] * \text{dt} * \text{w}, \quad \forall p \in P, \forall y \in Y, \forall t \in T
+```
+
+```math
+\text{var\_energy\_in\_time}[p,y,t] = \text{var\_power\_in}[p,y,t] * \text{dt} * \text{w} \quad \forall p \in P, \forall y \in Y, \forall t \in T
+```
 
 #### Fractions
 
+```math
+\text{var\_energy\_out\_time}[p,y,t] \geq \text{min\_fraction\_out}[p,y] * \text{var\_net\_energy\_generation}[p.cout,y,t] \quad \forall p \in P, \forall y \in Y, \forall t \in T
+```
+
+```math
+\text{var\_energy\_out\_time}[p,y,t] \leq \text{max\_fraction\_out}[p,y] * \text{var\_net\_energy\_generation}[p.cout,y,t] \quad \forall p \in P, \forall y \in Y, \forall t \in T
+```
+
+```math
+\text{var\_energy\_in\_time}[p,y,t] \geq \text{min\_fraction\_in}[p,y] * \text{var\_net\_energy\_consumption}[p.cin,y,t] \quad \forall p \in P, \forall y \in Y, \forall t \in T
+```
+
+```math
+\text{var\_energy\_in\_time}[p,y,t] \leq \text{max\_fraction\_in}[p,y] * \text{var\_net\_energy\_consumption}[p.cin,y,t] \quad \forall p \in P, \forall y \in Y, \forall t \in T
+```
 
 #### Capacity
 
+```math
+\text{var\_legacy\_capacity}[p,y] \leq \text{max\_legacy\_capacity}[p,y] \quad \forall p \in P, \forall y \in Y
+```
+
+```math
+\text{var\_legacy\_capacity}[p,y] \geq \text{min\_legacy\_capacity}[p,y] \quad \forall p \in P, \forall y \in Y
+```
+
+```math
+\text{var\_active\_capacity}[p,y] \leq \text{var\_legacy\_capacity}[p,y] + 
+\sum_{y'\in Y| y-\text{lifetime}[p]<y'\leq y}\text{var\_new\_capacity}[p,y'] \quad \forall p \in P, \forall y \in Y
+```
+
+```math
+\text{var\_active\_capacity}[p,y] \leq  \text{max\_capacity}[p,y] \quad \forall p \in P, \forall y \in Y
+```
+
+```math
+\text{var\_active\_capacity}[p,y] \geq  \text{min\_capacity}[p,y] \quad \forall p \in P, \forall y \in Y
+```
 
 #### Auxiliary Linking Variables
 
+```math
+\text{var\_total\_energy\_out}[p,y] = \sum_{t \in T} \text{var\_energy\_out\_time}[p,y,t] \quad \forall p \in P, \forall y \in Y
+```
 
+```math
+\text{var\_total\_energy\_in}[p,y] = \sum_{t \in T} \text{var\_energy\_in\_time}[p,y,t] \quad \forall p \in P, \forall y \in Y
+```
+
+```math
+\text{var\_net\_energy\_generation}[c,y,t] = \sum_{p\in P|p.cout=c}
+\text{var\_energy\_out\_time}[p,y,t] \quad \forall c \in C, \forall y \in Y, \forall t \in T
+```
+
+```math
+\text{var\_net\_energy\_consumption}[c,y,t] = \sum_{p\in P|p.cin=c}
+\text{var\_energy\_in\_time}[p,y,t] \quad \forall c \in C, \forall y \in Y, \forall t \in T
+```
 
 #### Generation
 
+```math
+\text{var\_total\_energy\_out}[p,y] \leq \text{max\_energy\_out}[p,y] \quad \forall p \in P, \forall y \in Y
+```
+
+```math
+\text{var\_total\_energy\_out}[p,y] \geq \text{min\_energy\_out}[p,y] \quad \forall p \in P, \forall y \in Y
+```
+
+```math
+\text{var\_energy\_out\_time}[p,y,t] = \text{var\_total\_energy\_out}[p,y] 
+* \text{output\_profile}[p,t] \quad \forall p \in P, \forall y \in Y, \forall t \in T
+```
 
 #### Storage
 
+Let $S\subseteq P$ be the set of conversion processes that are storage processes.
+```math
+S = \{p \in P | p.is\_storage\}
+```
+then
 
+```math
+\text{var\_max\_storage\_level}[s,y] = \text{var\_active\_capacity}[s,y]/\text{c\_rate}[s] \quad \forall s \in S, \forall y \in Y
+```
 
+```math
+\text{var\_storage\_level}[s,y,t] \leq \text{var\_max\_storage\_level}[s,y] \quad \forall s \in S, \forall y \in Y, \forall t \in T
+```
+
+```math
+\text{var\_power\_in}[s,y,t] \leq \text{var\_active\_capacity}[s,y] \quad \forall s \in S, \forall y \in Y, \forall t \in T
+```
+
+```math
+\begin{align*}
+\text{var\_storage\_level}[s,y,t] &= \text{var\_storage\_level}[s,y,t^{-}] \\
+&+ \text{var\_power\_in}[s,y,t] * \text{dt} * \text{charge\_efficiency}[s]\\
+&- \text{var\_power\_out}[s,y,t] * \text{dt} / \text{efficiency}[s]
+\quad \forall s \in S, \forall y \in Y, \forall t \in T
+\end{align*}
+```
+
+$t^-$ is the previous time step of $t$.
