@@ -5,19 +5,14 @@ module Components
 
     export Input
 
-    struct Region
+    struct Carrier
         name::String
     end
 
-    struct CO
+    struct ConversionProcess
         name::String
-        region::Region
-    end
-
-    struct CP
-        name::String
-        cin::CO
-        cout::CO
+        cin::Carrier
+        cout::Carrier
     end
 
     struct Time
@@ -26,11 +21,6 @@ module Components
 
     struct Year
         value::Int
-    end
-
-    struct Plot
-        cp::Dict{CP,Style}
-        co::Dict{CO,Style} 
     end
 
     struct Style
