@@ -12,13 +12,6 @@ Pkg.add("YourProject")
 greet()
 ```
 
-
-Here's an equation:
-
-```math
-\frac{n!}{k!(n - k)!} = \binom{n}{k}
-```
-
 This is the binomial coefficient.
 
 ---
@@ -52,23 +45,4 @@ flowchart LR
   A[Start] --> B{Decision}
   B -->|Yes| C[Continue]
   B -->|No| D[Stop]
-```
-
-
-```json
-{
-  "name": "EnergySystem",
-  "components": [
-    {
-      "type": "Generator",
-      "capacity": 100,
-      "unit": "kW"
-    },
-    {
-      "type": "Battery",
-      "capacity": 200,
-      "unit": "kWh"
-    }
-  ]
-}
 ```

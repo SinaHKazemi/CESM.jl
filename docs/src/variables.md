@@ -19,3 +19,6 @@ The `var_` prefix is removed from the variable names since it is not necessary i
 - `type`: The type of the variable. The type must be one of the following: *Float*, *Integer* or *Boolean*.
 - `sets`: The sets that the variable belongs to. The sets must be one of the following: *Y*, *T*, *C* or *P*.
 - `quantity`: The quantity that the variable represents. The quantity must be one of the following: *power*, *energy*, *co2_emissions*, *cost_energy*, *cost_power*, *co2_spec* and *money*.
+
+
+<span style="color:red">🚨 Explain about the default value for variables !</span>

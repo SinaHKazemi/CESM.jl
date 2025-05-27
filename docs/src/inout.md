@@ -48,9 +48,9 @@ The Output datastructure is also a dictionary. The keys are the names of the var
 
 ```julia
 output = Dict(
-    "var_annual_emission" => ...,
-    "var_new_capacity" => ...,
-    "var_active_capacity" => ...
+    "annual_emission" => ...,
+    "new_capacity" => ...,
+    "active_capacity" => ...
 )
 ```
 

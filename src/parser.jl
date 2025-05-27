@@ -10,8 +10,8 @@ end
 
 type_dict = Dict(
     "Float" => Float64,
-    "Int" => Int,
-    "Bool" => Bool
+    "Integer" => Int,
+    "Boolean" => Bool
 )
 
 

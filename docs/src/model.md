@@ -532,3 +532,6 @@ then
 ```
 
 $t^-$ is the previous time step of $t$.
+
+
+<span style="color:red">🚨 Objective function !</span>
