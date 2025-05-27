@@ -1,44 +1,44 @@
 {
     "units": {
-        "energy" : {"input": "GJ", "output": "GJ", "scale": 1},
-        "capacity": {"input": "GW", "output": "GW", "scale": 1},
-        "capacity_factor": {"input": "GW", "output": "GW", "scale": 1},
+        "power":{"input": "GW",	"scale": 1, "output": "GW"},
+        "energy": {"input":	"TWh", "scale": 1000, "output": "GWh"},
+        "co2_emissions": {"input": "Mio t",	"scale": 1, "output": "Mio t"},
+        "cost_energy": {"input": "EUR/MWh",	"scale": 0.001, "output": "Mio EUR/GWh"},
+        "cost_power": {"input": "EUR/kW", "scale": 1, "output":	"Mio EUR/GW"},
+        "co2_spec": {"input": "kg/kWh",	"scale": 0.001, "output": "Mio t/GWh"},
+        "money": {"input": "Mio EUR", "scale": 1, "output":	"Mio EUR"}
     },
     "time_steps" : [1,2,3]"./time_series/tss.txt",
     "years" : [2020, 2025, 2030],
-    "parameters": [
-        {
+    "parameters": {
+        "scale" : {
             "comment": "",
-            "name": "scale",
             "sets": ["Y"],
             "type": "Float",
             "default": 12,
-            "value": 12
-            [
+            "value": [
                 {"x": 2020,"y": 19.32},
                 {"x": 2030,"y": 32.2}
             ]
         }
-    ],
-    "regions": [
-        "Global",
-        "US",
-        "EU",
-        "Germany"
-    ],
-    "carriers": [
-        {"name": "gas", "region": "US"},
-        {"name": "oil", "region": "US"}
-    ],
-    "conversion_processes": [
-        {
-            "name": "gas_to_oil",
-            "carrier_in": {"name": "gas", "region": "US"},
-            "carrier_out": {"name": "oil", "region": "US"},
+    },
+    "carriers": {
+        "gas" : {
+            "comment": "gas commodity",
+            "parameters":{
+                "carrier_color": "blue",
+                "carrier_order": 10
+            }
+        },
+        "oil" : {}
+    },
+    "conversion_processes": {
+        "gas_to_oil": {
+            "carrier_in": "gas",
+            "carrier_out": "oil",
             "parameters": {
                 
             }
         }
-    ]
-
+    }
 }
