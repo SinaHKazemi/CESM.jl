@@ -1,6 +1,6 @@
 # CESM.jl Documentation
 
-Welcome to the documentation for `CESM.jl`! 
+Welcome to the documentation for `CESM.jl`!
 This package provides functionality for XYZ.
 
 Throughout the CESM documentation, we strive to follow the [Diataxis](https://diataxis.fr/) documentation framework. There are four main sections containing different information:

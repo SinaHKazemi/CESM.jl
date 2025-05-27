@@ -1,12 +1,13 @@
 # Model
 
+Here we define the mathematical model of the optimization problem.
 
 ## Sets
 
 - **years**: an ordered set of years, denoted by $Y$.
 - **time_steps**: an ordered set of time steps, denoted by $T$.
-- **carriers**: an unordered set of energy carriers, denoted by $C$.
-- **conversion\_processes**: an unordered set of conversion processes, denoted by $P$.
+- **carriers**: an unordered set of energy carriers, denoted by $C$. `Dummy` is a special carrier that is used to represent the carriers out of the model.
+- **conversion\_processes**: an unordered set of conversion processes, denoted by $P$. The subset of $P$ that contains storage conversion processes is denoted by $S$.
 
 ## Parameters
 
@@ -39,7 +40,7 @@ $Y[0]$ is the first year of the model.
   - quantity: dimensionless
   - type: Integer
 
-- **w**:  weight of each time step withim the whole year. It is not directly specified in the config file but is calculated from the time step duration and is equal to $8760/(dt*|T|)$.
+- **w**:  weight of each time step withim the whole year. It is not directly specified in the config file but is calculated from the time step duration and is equal to $8760/(dt*|T|)$ where $|T|$ is the number of time steps and $8760$ is the number of hours in a year.
   - indices: scalar
   - quantity: dimensionless
   - type: Integer
