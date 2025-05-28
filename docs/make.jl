@@ -16,3 +16,9 @@ makedocs(
         ]
     ]
 ) #, ,remotes=nothing)
+
+
+deploydocs(
+    repo = "https://github.com/SinaHKazemi/CESM.jl",
+    branch = "gh-pages"
+)
