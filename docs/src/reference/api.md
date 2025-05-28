@@ -1,5 +1,18 @@
 # API
 
+
+## Model Initialization
+
+```julia
+model = initialize_model(input_file)
+optimizee!(model)
+write_model_to_file(model)
+get_output(model)
+write_output_to_file() # either excel or json
+```
+
+
+
 ## Model Extension
 
 ```julia

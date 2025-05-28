@@ -7,6 +7,10 @@ makedocs(
     sitename="CESM.jl",
     pages = [
         "index.md",
+        "Tutorials" => [
+            "sub1" => "tutorials/sub1.md",
+            "Subsection 2" => "tutorials/sub2.md"
+        ],
         "Reference" => [
             "Model" => "reference/model.md",
             "Config File" => "reference/config.md",
@@ -14,13 +18,9 @@ makedocs(
             "Variables" => "reference/variables.md",
             "API" => "reference/api.md",
         ],
-        "Tutorials" => [
-            "sub1" => "tutorials/sub1.md",
-            "Subsection 2" => "tutorials/sub2.md"
-        ]
+
     ],
 )
-
 
 deploydocs(
     repo = "https://github.com/SinaHKazemi/CESM.jl.git",
