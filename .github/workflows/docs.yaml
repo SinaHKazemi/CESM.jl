@@ -3,23 +3,34 @@ name: Documentation
 on:
   push:
     branches:
-      - main  # Or your default branch
+      - main # update to match your development branch (master, main, dev, trunk, ...)
+    tags: '*'
+  pull_request:
 
 jobs:
   build:
+    # These permissions are needed to:
+    # - Deploy the documentation: https://documenter.juliadocs.org/stable/man/hosting/#Permissions
+    # - Delete old caches: https://github.com/julia-actions/cache#usage
+    permissions:
+      actions: write
+      contents: write
+      pull-requests: read
+      statuses: write
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-
-      - name: Set up Julia
-        uses: julia-actions/setup-julia@v1
+      - uses: actions/checkout@v4
+      - uses: julia-actions/setup-julia@v2
         with:
-          version: '1.11.5'  # Use your Julia version
-
+          version: '1'
+      - uses: julia-actions/cache@v2
       - name: Install dependencies
+        shell: julia --color=yes --project=docs {0}
         run: |
-          julia --project=docs -e 'using Pkg; Pkg.instantiate(); Pkg.add("Documenter")'
-
-      - name: Build and deploy docs
-        run: |
-          julia --project=docs docs/make.jl
+          using Pkg
+          Pkg.develop(PackageSpec(path=pwd()))
+          Pkg.instantiate()
+      - name: Build and deploy
+        run: julia --color=yes --project=docs docs/make.jl
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # If authenticating with GitHub Actions token
