@@ -8,7 +8,7 @@ makedocs(
     pages = [
         "index.md",
         "Tutorials" => [
-            "sub1" => "tutorials/sub1.md",
+            "Installation" => "tutorials/installation.md",
             "Subsection 2" => "tutorials/sub2.md"
         ],
         "Reference" => [

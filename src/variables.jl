@@ -9,7 +9,7 @@ module Variables
         "total_residual_value" => (type="Float", sets=(), quantity="Money"),
         "residual_value" => (type="Float", sets=("P", "Y"), quantity="Money"),
         "annual_emission" => (type="Float", sets=("Y",), quantity="CO2 Emissions"),
-        "new_capacity" => (type="Float", sets=("P", "Y"), quantity=Money),
+        "new_capacity" => (type="Float", sets=("P", "Y"), quantity="Money"),
         "active_capacity" => (type="Float", sets=("P", "Y")),
         "legacy_capacity" => (type="Float", sets=("P", "Y")),
         "power_in" => (type="Float", sets=("P", "Y", "T")),
