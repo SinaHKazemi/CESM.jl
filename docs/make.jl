@@ -1,5 +1,8 @@
-push!(LOAD_PATH,"../src/")
+# push!(LOAD_PATH,"../src/")
+push!(LOAD_PATH, joinpath(@__DIR__, "..", "src"))
+
 using Documenter, CESM, DocumenterMermaid
+
 makedocs(
     format = Documenter.HTML(),
     sitename="My Documentation",
@@ -19,6 +22,6 @@ makedocs(
 
 
 deploydocs(
-    repo = "https://github.com/SinaHKazemi/CESM.jl",
+    repo = "https://github.com/SinaHKazemi/CESM.jl.git",
     branch = "gh-pages"
 )
