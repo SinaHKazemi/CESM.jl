@@ -7,14 +7,16 @@ makedocs(
     sitename="CESM.jl",
     pages = [
         "index.md",
-        "Model" => "model.md",
-        "Config File" => "config.md",
-        "Input and Output" => "inout.md",
-        "Variables" => "variables.md",
-        "API" => "api.md",
-        "Subsection" => [
-            "sub1" => "sub/sub1.md",
-            "Subsection 2" => "sub/sub2.md"
+        "Reference" => [
+            "Model" => "reference/model.md",
+            "Config File" => "reference/config.md",
+            "Input and Output" => "reference/inout.md",
+            "Variables" => "reference/variables.md",
+            "API" => "reference/api.md",
+        ],
+        "Tutorials" => [
+            "sub1" => "tutorials/sub1.md",
+            "Subsection 2" => "tutorials/sub2.md"
         ]
     ],
 )
