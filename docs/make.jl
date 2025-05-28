@@ -4,7 +4,7 @@ using Documenter, CESM, DocumenterMermaid
 
 makedocs(
     format = Documenter.HTML(),
-    sitename="My Documentation",
+    sitename="CESM.jl",
     pages = [
         "index.md",
         "Model" => "model.md",
@@ -16,8 +16,8 @@ makedocs(
             "sub1" => "sub/sub1.md",
             "Subsection 2" => "sub/sub2.md"
         ]
-    ]
-) #, ,remotes=nothing)
+    ],
+)
 
 
 deploydocs(
