@@ -1,6 +1,6 @@
 module Parse
-using XLSX
-using DataFrames
+
+using JSON
 
 export parse
 
@@ -14,270 +14,184 @@ type_dict = Dict(
     "Boolean" => Bool
 )
 
+function parse_input(path::AbstractString)::Dict
+    fullpath = abspath(path)  # normalize to absolute path
+    base_path = dirname(fullpath)
 
-function parse(file_path, scenario)
-    XLSX.openxlsx(file_path) do workbook
-        input = Dict()
-        input[:sets] = Dict()
-        input[:plot] = Dict()
-        
-        unit_output = parse_units(workbook["Units"])
-        input[:units] = unit_output
-        scenario_output = parse_scenario(workbook["Scenario"], scenario)
-        input[:sets][:Y] = scenario_output.years
-        co_output = parse_commodity(workbook["Commodity"])
-        input[:sets][:CO] = co_output.co
-        input[:plot][:CO] = co_output.plot
-        tss_output = parse_tss(workbook["TimeSeriesSelection"], scenario_output.tss)
-        input[:sets][:T] = tss_output.tss
-        cp_output = parse_cp(workbook, co_output.co, scenario_output.years, tss_output.tss, unit_output)
-        input[:sets][:CP] = cp_output.cp
-        input[:plot][:CP] = cp_output.plot
-        input[:params] = merge(cp_output.params, scenario_output.params)
-        input[:params][:dt] = tss_output.dt
-        input[:defaults] = merge(cp_output.defaults, scenario_output.defaults)
-        return input
+    if !isfile(fullpath)
+        error("JSON file not found: $fullpath")
+    end
+
+    open(fullpath, "r") do io
+        data = JSON.parse(read(io, String))
     end
     
+    input = Dict()
+    input["units"] = data["units"]
+    input["timesteps"] = parse_timesteps(data["timesteps"])
+    input["years"] = parse_years(data["Units"])
+    input["carriers"] = parse_carriers(data["carriers"])
+    input["processes"] = parse_processes(data["processes"], input["carriers"])
+    input["parameters"] = parse_parameters(data, input, base_path)
+    return input
 end
 
+function parse_data_file(path::AbstractString, base_path::AbstractString, ::Type{T}) where {T}
+    # Use base_path if path is relative
+    fullpath = isabspath(path) ? path : joinpath(base_path, path)
 
-function parse_units(sheet::XLSX.Worksheet)::Dict{Symbol,Dict{Symbol,Union{String,Real}}}
-    df = DataFrame(XLSX.gettable(sheet))
-    units_dict = Dict{Symbol,Dict}()
-    for row in eachrow(df)
-        units_dict[Symbol(row[:quantity])] = Dict(
-            :input => row[:input],
-            :scale => Float64(row[:scale_factor]),
-            :output => row[:output]
-        )
+    # Normalize to absolute path
+    fullpath = abspath(fullpath)
+
+    # Validate file existence
+    if !isfile(fullpath)
+        error("File not found: $fullpath")
     end
-    return units_dict
-end
 
+    data = T[]
 
-function parse_scenario(sheet::XLSX.Worksheet, name::String)
-    df = DataFrame(XLSX.gettable(sheet))
-    params = Dict{Symbol,Any}()
-    defaults = Dict{Symbol,Any}()
-    years = Vector{Int}()
-    # Filter the data and keep only the scenario you want
-    filtered_df = df[df.name .== name, :]
-    if nrow(filtered_df) == 0
-        throw(ParseError("There is no scenario with name: $name."))
-    elseif nrow(filtered_df) > 1
-        throw(ParseError("There are more than one scenario named $name. The name of the scenarios must be unique."))
-    end
-    scenario_row = first(filtered_df)
-    default_row = first(df[df.name .== "Default", :])
-    type_row = first(df[df.name .== "Type", :])
-    sets_row = first(df[df.name .== "Sets", :])
-
-    years = collect(range(Int(scenario_row[:from_year]), stop= Int(scenario_row[:until_year]), step=Int(scenario_row[:year_step])))
-    tss = scenario_row[:tss]
-
-    for key in keys(scenario_row)
-        if key in (:name, :from_year, :until_year, :year_step, :tss, :disabled_cp)
-            continue
-        end
-        if !ismissing(default_row[key])
-            defaults[key] = tryparse(type_dict[type_row[key]], string(default_row[key]))
-        end
-        if !ismissing(scenario_row[key])
-            if ismissing(sets_row[key])
-                params[key] = tryparse(type_dict[type_row[key]], string(scenario_row[key]))
-            elseif sets_row[key] == "Y"
-                params[key] = Dict(zip(years,parse_pw(string(scenario_row[key]), years, Int)))
-            else
-                throw(ParseError("??"))
+    open(fullpath, "r") do io
+        for line in eachline(io)
+            # Skip full-line comments
+            if occursin(r"^\s*#", line)
+                continue
             end
-        end
-    end
-    return (tss=tss, params=params, defaults=defaults, years=years)
-end
 
-function parse_commodity(sheet::XLSX.Worksheet)::NamedTuple{(:co, :plot), Tuple{Vector{Symbol}, Dict{Symbol,NamedTuple}}}
-    # reads co names and generates a vector of these names
-    # reads the color and order for each co and generates a dictionary with co name as key and namedtuple of color and order as values
-    df = DataFrame(XLSX.gettable(sheet))
-    co = Vector{Symbol}() # vector of commodity names
-    plot = Dict{Symbol,NamedTuple{(:color,:order),Tuple{Union{Nothing,String},Union{Nothing,Int}}}}() # dictionary with commodi as key and namedtuple of order and color as value
-    for row in eachrow(df)
-        co_name = Symbol(row[:name])
-        push!(co,co_name)
-        order = nothing
-        color= nothing
-        if !ismissing(row[:order])
-            order = Int(row[:order])
-        end
-        if !ismissing(row[:color])
-            color = row[:color]
-        end
-        plot[co_name] = (color=color,order=order)
-    end
-    return (co=co, plot=plot)
-end
+            # Split on space, tab, comma, etc.
+            tokens = split(line, r"[,\s]+", keepempty=false)
 
-function parse_tss(sheet::XLSX.Worksheet, name::String)::NamedTuple{(:dt, :tss), Tuple{Int, Vector{Int}}}
-    df = DataFrame(XLSX.gettable(sheet))
-    column = df[!, Symbol(name)]
-    dt = Int(column[2])
-    if any(ismissing, column[3:end])
-        end_index = findfirst(ismissing, column[3:end])
-    else
-        end_index = length(column)
-    end
-    tss = map(Int, column[3:end_index])
-    return (dt=dt, tss=tss)
-end
-
-function parse_ts(sheet::XLSX.Worksheet, name::String, tss::Vector{Int}, type::Type)::Vector{Float64}
-    df = DataFrame(XLSX.gettable(sheet))
-    column = df[!, Symbol(name)]
-    if any(ismissing, column[2:end])
-        end_index = findfirst(ismissing, column[2:end])
-    else
-        end_index = length(column)
-    end
-    ts = map(type, column[2:end_index])
-    ts = ts[tss]
-    return ts
-end
-
-function parse_cp(book, co::Vector{Symbol}, years::Vector{Int}, tss::Vector{Int}, units_output)
-    df = DataFrame(XLSX.gettable(book["ConversionProcess"]))
-    cp_dict=Dict{Symbol,NamedTuple{(:cin,:cout),Tuple{Symbol,Symbol}}}()
-    plot_dict=Dict{Symbol,NamedTuple{(:color,:order),Tuple{Union{Nothing,String},Union{Nothing,Int}}}}()
-    params = Dict{Symbol,Any}()
-    defaults = Dict{Symbol,Any}()
-    default_row = df[findfirst(x -> x == 1, df.rows .== "Default"), :]
-    type_row = df[findfirst(x -> x == 1, df.rows .== "Type"), :]
-    sets_row = df[findfirst(x -> x == 1, df.rows .== "Sets"), :]
-    dimension_row = df[findfirst(x -> x == 1, df.rows .== "Dimension"), :]
-    dimension_dict = Dict{Symbol,Float64}()
-    for param in keys(default_row)
-        param in (:name, :cin, :cout, :color, :order, :rows, :description) && continue
-        defaults[param] = tryparse(type_dict[type_row[param]], string(default_row[param]))
-        params[param] = Dict{Symbol,Any}()
-        if !ismissing(dimension_row[param])
-            dimension_dict[param] = units_output[Symbol(dimension_row[param])][:scale]
-        end
-    end
-    for row in eachrow(df)
-        ismissing(row[:name]) && continue
-        cp_name = Symbol(row[:name])
-        cp_name in keys(cp_dict) && throw(ParseError("CP $cp_name already exists. cp name must be unique."))
-        !(Symbol(row[:cin]) in co) && throw(ParseError("commodity $(row[:cin]) doesn't exist in the list of commodities "))
-        !(Symbol(row[:cout]) in co) && throw(ParseError("commodity $(row[:cout]) doesn't exist in the list of commodities "))
-        cp_dict[cp_name] = (cin=Symbol(row[:cin]), cout=Symbol(row[:cout]))
-        cp_color = ismissing(row[:color]) ? nothing : row[:color]
-        cp_order = ismissing(row[:order]) ? nothing : row[:order]
-        plot_dict[cp_name] = (color=cp_color, order=cp_order)
-        for param in keys(row)
-            scale = get(dimension_dict, param, 1)
-            param in (:name, :cin, :cout, :color, :order, :rows, :description) && continue
-            ismissing(row[param]) && continue
-            if ismissing(sets_row[param])
-                params[param][cp_name] = Base.parse(type_dict[type_row[param]], string(row[param])) * scale
-            elseif sets_row[param] == "Y"
-                params[param][cp_name] = Dict(zip(years, parse_pw(string(row[param]), years, type_dict[type_row[param]]) .* scale))
-                # params[param][cp_name] = 1 
-            elseif sets_row[param] == "T"
-                ts = parse_ts(book["TimeSeries"], row[param], tss, type_dict[type_row[param]])
-                if param == :output_profile
-                    ts = ts ./ sum(ts)
-                    # ts[end] -= sum(ts)-1
+            for token in tokens
+                try
+                    push!(data, parse(T, token))
+                catch
+                    error("Invalid input: $token")
                 end
-                params[param][cp_name] = Dict(zip(tss, ts))
-            else
-                throw(ParseError("$(sets_row[param]) type is not a valid type."))
             end
         end
-        
     end
-    return (cp=cp_dict, plot=plot_dict, params=params, defaults=defaults)
+
+    return data
 end
 
-
-function parse_pw(param::String, years::Vector{Int}, type::Type)
-    """
-    Get interpolated values for a given vector of years based on year-value pairs.
-
-    If `param` is a single numeric value, return a vector of that value with the same length as `years`.
-    Otherwise, extract year-value pairs and perform linear interpolation.
-
-    Parameters
-    ----------
-    param : String
-        String containing either:
-        - A single numeric value (e.g., "5.0")
-        - Year-value pairs in the format: "YYYY value ; YYYY value ; ..."
-    years : Vector{Int}
-        Vector of integer years for which interpolation values should be calculated.
-
-    Returns
-    -------
-    Vector{type}
-        Vector of interpolated values corresponding to input years.
-    """
-
-    param = strip(param)  # Remove leading/trailing spaces
-
-    # Case 1: Single numeric value (return a constant vector)
-    single_value = tryparse(Float64, param)  # Try parsing as a single number
-
-    if single_value !== nothing
-        return fill(single_value, length(years))  # Return a vector with the same value
-    end
-
-    # Case 2: Year-value pairs (parse and interpolate)
-    yy, vals = Int[], Float64[]
-
-    # Case 2: Year-value pairs inside brackets (e.g., "[2016 23.3; 2040 0]")
-    m = match(r"\[(.*?)\]", param)
-    if m === nothing
-        error("Invalid format. Expected a single number or '[YYYY value; YYYY value; ...]'")
-    end
-
-    param = m.captures[1]  # Extract content inside brackets
-    yy, vals = Int[], Float64[]
-
-    for pair in split(param, ";")
-        tokens = split(strip(pair))
-        if length(tokens) != 2
-            continue  # Skip malformed entries
-        end
-
-        try
-            year = Base.parse(Int, tokens[1])
-            val = lowercase(tokens[2]) == "nan" ? NaN : Base.parse(Float64, tokens[2])
-
-            if !isnothing(val) && !isnan(val)
-                push!(yy, year)
-                push!(vals, val)
-            end
-        catch
-            continue  # Skip invalid numerical conversions
-        end
-    end
-
-
-    if isempty(yy)
-        error("No valid year-value pairs found.")
-    end
-
-    # Create interpolation function
-    if length(yy) > 1
-        itp = x -> linear_interpolation(yy, vals, x)
+function get_vector_or_file(x, ::Type{T}) where {T}
+    if isa(x, Vector{T})
+        return x
+    elseif isa(x, AbstractString)
+        return parse_data_file(x, pwd(), T)
     else
-        itp = x ->  [ i == yy[1] ? vals[1] : Inf for i in x ]  # Return constant value
+        error("Input must be either Vector{$T} or a file path string.")
     end
-
-    return itp(years)  # Interpolate and return results as a vector
 end
 
+function validate_temporal_sequence(values::Vector{Int})
+    if ! (length(values) == length(unique(indices)))
+        error("Duplicate values found in the vector")
+    elseif ! all(values .> 0)
+        error("Negative values found in the vector")
+    elseif ! all(diff(values) .> 0)
+        error("Non-increasing values found in the vector")
+    end
+end
 
-function linear_interpolation(x::Vector{Int}, y::Vector{Float64}, xq::Vector{Int})
+function parse_timesteps(timesteps_data::Union{Vector,AbstractString})::Vector{Int}
+    timesteps = get_vector_or_file(timesteps_data, Int)
+    validate_temporal_sequence(timesteps)
+    return timesteps
+end
+
+function parse_years(years_data::Union{Vector,AbstractString})::Vector{Int}
+    years = get_vector_or_file(years_data, Int)
+    validate_temporal_sequence(years)
+    return years
+end
+
+function parse_carriers(data::Dict)::Dict{String}
+    return(Vector{String}(keys(data["carriers"])))
+end
+
+function parse_processes(data::Dict, carriers::Vector{String})::Dict{String, Dict{String, String}}
+    processes = Dict{String, Dict{String, String}}()
+    for (process_name, process_data) in data
+        if process_data["carrier_in"] in carriers && process_data["carrier_out"] in carriers
+            processes[process_name] = Dict(
+                "carrier_in" => process_data["carrier_in"],
+                "carrier_out" => process_data["carrier_out"],
+            )
+        else
+            error("Invalid carrier in process: $(process_data["carrier_in"]) or $(process_data["carrier_out"])")
+        end
+    end
+    return processes
+end
+
+function parse_parameters(data::Dict, input::Dict, base_path::AbstractString)::Dict
+    params = Dict()
+    params["defaults"] = Dict()
+    for (param_name, param_data) in data["parameters"]
+        if "default" in keys(param_data)
+            params["defaults"][param_name] = param_data["default"]
+        end
+
+        if !("type" in keys(param_data)) || !("sets" in keys(param_data))
+            error("All parameters must have a 'type' and 'sets' field.")
+        end
+
+        if param_data["sets"] == ["T"] || param_data["sets"] == ["P","Y","T"]
+            error("No parameter is allowed to only have 'T' or '[P,Y,T]' as its set, but found: '$(param_name)'")
+        end
+
+        if param_data["sets"] == [] # check if the type is a vector
+            params[param_name] = parse(param_data["value"], type_dict[param_data["type"]])
+        elseif param_data["sets"] == ["Y"]
+            params[param_name] = parse_year_dependent(param_data["value"], type_dict[param_data["type"]])
+        elseif "value" in keys(param_data)
+            error("Parameter '$param_name' with sets '$(param_data["sets"])' cannot have a 'value' field.")
+        else
+            params[param_name] = Dict()
+        end
+    end
+
+    for (process, process_data) in input["processes"]
+        for (param_name, param_value) in process_data["parameters"]
+            type = type_dict[data["parameters"][param_name]["type"]]
+            sets = data["parameters"][param_name]["sets"]
+            if sets == ["P"]
+                params[param_name][process] = parse(param_value, type)
+            elseif sets == ["P", "T"]
+                params[param_name][process] = get_time_dependent(param_value, input["timesteps"], type, base_path)
+            elseif sets == ["P", "Y"]
+                params[param_name][process] = get_year_dependent(param_value, input["years"], type)
+            end
+        end
+    end
+end
+
+function get_time_dependent(param::Union{Number,AbstractString}, timesteps::Vector{Int}, type::Type, base_path)
+    """
+    Parse a time-dependent parameter string.
+    """
+    if isa(param, Number)
+        return Dict(t => parse(type, param) for t in timesteps)
+    elseif isa(param, AbstractString)
+        values = parse_data_file(param, base_path, type)
+        return Dict(t => values[t] for t in timesteps)
+    end
+end
+
+function get_year_dependent(param::Union{Number,Vector}, years::Vector{Int}, type::Type)
+    """
+    Parse a year-dependent parameter string.
+    """
+    if isa(param, Number)
+        return Dict(y => parse(type, param) for y in years)
+    elseif isa(param, Vector)
+        return linear_interpolation(param, years, type) 
+    else
+        error("Invalid parameter type. Expected a number or a vector.")
+    end
+end
+
+function linear_interpolation(f::Vector{Dict{String,Float64}}, xq::Vector{Int}, type::Type)
     """
     Perform manual linear interpolation for a given set of x and y values.
 
@@ -291,9 +205,24 @@ function linear_interpolation(x::Vector{Int}, y::Vector{Float64}, xq::Vector{Int
     -------
     Vector{Float64} -> Interpolated values for xq
     """
+    x = Vector{Int}()
+    y = Vector{type}()
+
+    for point in f
+        push!(x, point["x"])
+        push!(y, point["y"])
+    end
+
+    if length(x) < 2
+        error("At least two points are required for linear interpolation.")
+    end
+
+    if diff(x) .> 0
+        error("x values must be in increasing order.")
+    end
 
     n = length(x)
-    interp_vals = Float64[]
+    interp_vals = Vector{type}()
 
     for x_i in xq
         # Extrapolate if x_i is out of bounds
@@ -317,13 +246,4 @@ function linear_interpolation(x::Vector{Int}, y::Vector{Float64}, xq::Vector{Int
     return interp_vals
 end
 
-
-# parse("data/DEModel.xlsx")
-# println(parse("data/DEModel.xlsx"))
-    
-
 end
-
-
-
-

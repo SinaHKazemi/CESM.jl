@@ -13,7 +13,7 @@
     "parameters": {
         "scale" : {
             "comment": "",
-            "sets": ["Y"],
+            "sets": ["years"],
             "type": "Float",
             "default": 12,
             "value": [
@@ -32,7 +32,7 @@
         },
         "oil" : {}
     },
-    "conversion_processes": {
+    "processes": {
         "gas_to_oil": {
             "carrier_in": "gas",
             "carrier_out": "oil",
