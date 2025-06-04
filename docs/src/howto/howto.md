@@ -4,4 +4,4 @@
 
 ## Model a Combined Heat and Power Plant(CHP)
 
-## Extend the model
+## Multi-regional model
