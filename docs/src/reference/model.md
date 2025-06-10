@@ -5,9 +5,9 @@ Here we define the mathematical model of the optimization problem.
 ## Sets
 
 - **years**: an ordered set of years, denoted by $Y$.
-- **time_steps**: an ordered set of time steps, denoted by $T$.
+- **tss**: an ordered set of time steps selection, denoted by $T$.
 - **carriers**: an unordered set of energy carriers, denoted by $C$. `Dummy` is a special carrier that is used to represent the carriers out of the model.
-- **conversion\_processes**: an unordered set of conversion processes, denoted by $P$. The subset of $P$ that contains storage conversion processes is denoted by $S$.
+- **processes**: an unordered set of conversion processes, denoted by $P$. The subset of $P$ that contains storage conversion processes is denoted by $S$.
 
 ## Parameters
 
