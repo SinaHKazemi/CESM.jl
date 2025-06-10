@@ -1,4 +1,6 @@
 {
+    "comment": "This is a test file for the model",
+    "version": "1",
     "units": {
         "power":{"input": "GW",	"scale": 1, "output": "GW"},
         "energy": {"input":	"TWh", "scale": 1000, "output": "GWh"},
@@ -8,7 +10,7 @@
         "co2_spec": {"input": "kg/kWh",	"scale": 0.001, "output": "Mio t/GWh"},
         "money": {"input": "Mio EUR", "scale": 1, "output":	"Mio EUR"}
     },
-    "time_steps" : "./data_int.txt",
+    "tss" : "./data_int.txt",
     "years" : [2020, 2025, 2030],
     "parameters": {
         "scale" : {

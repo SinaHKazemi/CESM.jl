@@ -37,8 +37,8 @@ include("../src/parser.jl")
     # validate_temporal_sequence
     @test_throws Parse.TemporalSequenceError Parse.validate_temporal_sequence([1,2,3,4,6,5])
     @test_throws Parse.TemporalSequenceError Parse.validate_temporal_sequence([-1,0,1,2,3])
-    # parse_timesteps
-    @test Parse.parse_timesteps([1,2,3,4,5,6], dirname(@__FILE__)) == [1,2,3,4,5,6]
+    # parse_tss
+    @test Parse.parse_tss([1,2,3,4,5,6], dirname(@__FILE__)) == [1,2,3,4,5,6]
     # parse_years
     @test Parse.parse_years([1,2,3,4,5,6], dirname(@__FILE__)) == [1,2,3,4,5,6]
     # parse carriers
@@ -217,11 +217,36 @@ include("../src/parser.jl")
 
     # test get_dependent_parameters
     parameters = Dict(
+        "param_scalar_independent" => Dict(
+            "comment" => "scalar parameter",
+            "sets" => [],
+            "default" => 1,
+            "value" => 1,
+            "type" => "Integer",
+        ),
+        "param_array" => Dict(
+            "comment" => "array parameter",
+            "sets" => ["Y"],
+            "default" => 2.2,
+            "value" => 1,
+            "type" => "Float",
+            "quantity" => "energy",
+        ),
+        "param_pw" => Dict(
+            "comment" => "piecewise parameter",
+            "sets" => ["Y"],
+            "default" => 2.2,
+            "value" => [
+                Dict("x" => 2, "y" => 1),
+                Dict("x" => 3, "y" => 2),
+                Dict("x" => 4, "y" => 3),
+            ],
+            "type" => "Float",
+        ),
         "param_scalar" => Dict(
             "comment" => "scalar parameter",
             "sets" => ["P"],
             "default" => 1,
-            "value" => 1,
             "type" => "Integer",
             "quantity" => "energy",
         ),
@@ -229,7 +254,6 @@ include("../src/parser.jl")
             "comment" => "array parameter",
             "sets" => ["P","T"],
             "default" => 2.2,
-            "value" => "./testdata/data_float.txt",
             "type" => "Float",
         ),
         "param_y" => Dict(
@@ -285,7 +309,7 @@ include("../src/parser.jl")
     )
 
     years = [ 1,2,3,4,5,6]
-    timesteps = [1,2,3,4,5,6]
+    tss = [1,2,3,4,5,6]
 
 
     units = Dict(
@@ -294,7 +318,7 @@ include("../src/parser.jl")
         "co2_emissions" => Dict("input" => "Mio t", "scale" => 1.0, "output" => "Mio t"),
     )
 
-    @test Parse.get_dependent_parameters(parameters, processes, carriers, years, timesteps, units, dirname(@__FILE__)) == Dict(
+    @test Parse.get_dependent_parameters(parameters, processes, carriers, years, tss, units, dirname(@__FILE__)) == Dict(
         "param_scalar" => Dict(
             "gas_to_oil" => 12.0,
         ),
@@ -338,5 +362,71 @@ include("../src/parser.jl")
             "gas" => "orange",
         ),
     )
+
+    @test Parse.get_parameters(parameters, processes, carriers, years, tss, units, dirname(@__FILE__)) == Dict(
+        "defaults" => Dict("param_scalar_independent" => 1, "param_scalar" => 12.0, "param_array" => 2.2*12, "param_pw" => 2.2, "param_t" => 2.2, "param_y" => 2.2, "param_c_color" => "blue"),
+        "param_scalar_independent" => 1,
+        "param_array" => Dict(
+            1 => 12.,
+            2 => 12.,
+            3 => 12.,
+            4 => 12.,
+            5 => 12.,
+            6 => 12.,
+        ),
+        "param_pw" => Dict(
+            1 => 1.,
+            2 => 1.,
+            3 => 2.,
+            4 => 3.,
+            5 => 3.,
+            6 => 3.,
+        ),
+        "param_scalar" => Dict(
+            "gas_to_oil" => 12.0,
+        ),
+        "param_t" => Dict(
+            "gas_to_oil" => Dict(
+                1 => 2.2,
+                2 => 2.2,
+                3 => 2.2,
+                4 => 2.2,
+                5 => 2.2,
+                6 => 2.2,
+            ),
+            "oil_to_gas" => Dict(
+                1 => 1.,
+                2 => 2.,
+                3 => 3.,
+                4 => 4.,
+                5 => 5.2,
+                6 => 6.7,
+            )
+        ),
+        "param_y" => Dict(
+            "gas_to_oil" => Dict(
+                1 => 2.3,
+                2 => 2.3,
+                3 => 2.3,
+                4 => 2.3,
+                5 => 2.3,
+                6 => 2.3,
+            ),
+            "oil_to_gas" => Dict(
+                1 => 1.,
+                2 => 1.,
+                3 => 2.,
+                4 => 3.,
+                5 => 3.,
+                6 => 3.,
+            ),
+        ),
+        "param_c_color" => Dict(
+            "gas" => "orange",
+        ),
+    )
+    # PrettyPrinting.pprint(Parse.get_parameters(parameters, processes, carriers, years, tss, units, dirname(@__FILE__)))
+    # PrettyPrinting.pprint(x)
+
                 
 end

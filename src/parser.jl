@@ -33,11 +33,11 @@ function parse_input(path::AbstractString)::Dict
     
     input = Dict()
     input["units"] = get_units(data["units"])
-    input["timesteps"] = parse_timesteps(data["timesteps"], base_path)
+    input["tss"] = parse_tss(data["tss"], base_path)
     input["years"] = parse_years(data["Units"], base_path)
     input["carriers"] = parse_carriers(data["carriers"])
     input["processes"] = parse_processes(data["processes"], input["carriers"])
-    input["parameters"] = get_parameters(data["parameters"], data["processes"], data["carriers"], input["years"], input["timesteps"], input["units"], base_path)
+    input["parameters"] = get_parameters(data["parameters"], data["processes"], data["carriers"], input["years"], input["tss"], input["units"], base_path)
     return input
 end
 
@@ -113,10 +113,10 @@ function validate_temporal_sequence(values::Vector{Int})
     end
 end
 
-function parse_timesteps(timesteps_data::Union{Vector,AbstractString}, base_path::AbstractString)::Vector{Int}
-    timesteps = get_vector_or_file(timesteps_data, Int, base_path)
-    validate_temporal_sequence(timesteps)
-    return timesteps
+function parse_tss(tss_data::Union{Vector,AbstractString}, base_path::AbstractString)::Vector{Int}
+    tss = get_vector_or_file(tss_data, Int, base_path)
+    validate_temporal_sequence(tss)
+    return tss
 end
 
 function parse_years(years_data::Union{Vector,AbstractString}, base_path::AbstractString)::Vector{Int}
@@ -144,15 +144,15 @@ function parse_processes(data::Dict, carriers::Set{String})::Dict{String, Dict{S
     return processes
 end
 
-function get_time_dependent(param::Union{Number,AbstractString}, timesteps::Vector{Int}, type::Type, base_path) :: Dict{Int, Number}
+function get_time_dependent(param::Union{Number,AbstractString}, tss::Vector{Int}, type::Type, base_path) :: Dict{Int, Number}
     """
     get a time-dependent parameter that is either a number or a data file path
     """
     if isa(param, Number)
-        return Dict(t => convert(type, param) for t in timesteps)
+        return Dict(t => convert(type, param) for t in tss)
     elseif isa(param, AbstractString)
         values = parse_data_file(param, base_path, type)
-        return Dict(t => values[t] for t in timesteps)
+        return Dict(t => values[t] for t in tss)
     end
 end
 
@@ -270,18 +270,29 @@ function get_independent_parameters(parameters::Dict, years::Vector{Int}, units:
         if "quantity" in keys(param_data)
             scale = units[param_data["quantity"]]["scale"]
         else
-            scale = 1.0
+            scale = nothing
         end
         # read default value
         if "default" in keys(param_data)
-            params["defaults"][param_name] = convert(type, param_data["default"]) * scale
+            temp = convert(type, param_data["default"])
+            if scale !== nothing
+                params["defaults"][param_name] =  temp * scale
+            else
+                params["defaults"][param_name] = temp
+            end
         end
 
         # The parameters that are not process or carrier dependent
         if sets == Set([]) # check if the type is a vector
-            params[param_name] = scale * convert(type, param_data["value"])
+            temp = convert(type, param_data["value"])
+            params[param_name] = (scale !== nothing ? scale * temp : temp)
         elseif sets == Set(["Y"])
-            params[param_name] = scale_dict_values(get_year_dependent(param_data["value"], years, type), scale)
+            temp = get_year_dependent(param_data["value"], years, type)
+            if scale !== nothing
+                params[param_name] = scale_dict_values(temp, scale)
+            else
+                params[param_name] = temp
+            end
         elseif "value" in keys(param_data)
             throw(InvalidParameterError("Parameter '$param_name' with sets '$(sets)' cannot have a 'value' field."))
         end
@@ -291,7 +302,7 @@ function get_independent_parameters(parameters::Dict, years::Vector{Int}, units:
 end
 
 
-function get_dependent_parameters(parameters::Dict, processes::Dict, carriers::Dict, years::Vector{Int}, timesteps::Vector{Int}, units::Dict,  base_path::AbstractString)::Dict
+function get_dependent_parameters(parameters::Dict, processes::Dict, carriers::Dict, years::Vector{Int}, tss::Vector{Int}, units::Dict,  base_path::AbstractString)::Dict
     """
     Parse a parameter dictionary.
     Parameters
@@ -305,8 +316,8 @@ function get_dependent_parameters(parameters::Dict, processes::Dict, carriers::D
     carriers dictionary from raw input.
     years : Vector{Int}
     vector of years from parsed input.
-    timesteps : Vector{Int}
-    timesteps vector from parsed input.
+    tss : Vector{Int}
+    tss vector from parsed input.
     """
     params = Dict()
 
@@ -330,14 +341,17 @@ function get_dependent_parameters(parameters::Dict, processes::Dict, carriers::D
             if "quantity" in keys(parameters[param_name])
                 scale = units[parameters[param_name]["quantity"]]["scale"]
             else
-                scale = 1.0
+                scale = nothing
             end
             if sets == ["P"]
-                params[param_name][process] = convert(type, param_value) * scale
+                temp = convert(type, param_value) 
+                params[param_name][process] = (scale !== nothing  ? scale * temp : temp)
             elseif sets == ["P", "T"]
-                params[param_name][process] = scale_dict_values(get_time_dependent(param_value, timesteps, type, base_path), scale)
+                temp = get_time_dependent(param_value, tss, type, base_path)
+                params[param_name][process] = (scale !== nothing ? scale_dict_values(temp, scale) : temp )
             elseif sets == ["P", "Y"]
-                params[param_name][process] = scale_dict_values(get_year_dependent(param_value, years, type), scale)
+                temp = get_year_dependent(param_value, years, type)
+                params[param_name][process] = (scale !== nothing ? scale_dict_values(temp, scale) : temp )
             end
         end
     end
@@ -358,12 +372,14 @@ function get_dependent_parameters(parameters::Dict, processes::Dict, carriers::D
     return params
 end
 
-function get_parameters(parameters::Dict, processes::Dict, carriers::Dict, years::Vector{Int}, timesteps::Vector{Int}, units::Dict, base_path::AbstractString)::Dict
+function get_parameters(parameters::Dict, processes::Dict, carriers::Dict, years::Vector{Int}, tss::Vector{Int}, units::Dict, base_path::AbstractString)::Dict
     """
     Parse a parameter dictionary.
     """
     validate_parameters(parameters)
     independent_parameters = get_independent_parameters(parameters, years, units)
-    dependent_parameters = get_dependent_parameters(parameters, processes, carriers, years, timesteps, units, base_path)
+    dependent_parameters = get_dependent_parameters(parameters, processes, carriers, years, tss, units, base_path)
     return merge(independent_parameters, dependent_parameters)
+end
+
 end
