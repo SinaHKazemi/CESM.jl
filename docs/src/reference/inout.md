@@ -8,7 +8,7 @@ The Input datastructure is a dictionary that contains the input data of the mode
 
 - `units`: a dictionary that contains the units of the input data.
 - `parameters`: a dictionary that contains the parameters of the model.
-- `time_steps`: a list of integers that represents the time steps of the model.
+- `tss`: a list of integers that represents the time steps selection of the model.
 - `years`: a list of integers that represents the years of the model.
 - `carriers`: a list that contains the carriers of the model.
 - `conversion_processes`: a dictionary that contains the conversion processes of the model. The keys of the dictionary are the names of the conversion processes and the values are dictionaries that contain the `carrrier_in` and `carrier_out` carriers of the conversion process.
@@ -16,10 +16,10 @@ The Input datastructure is a dictionary that contains the input data of the mode
 ```julia
 Input = Dict(
     "units" => ...,
-    "time_steps" => ...,
+    "tss" => ...,
     "years" => ...,
     "carriers" => ...,
-    "conversion_processes" => ...
+    "processes" => ...
     "parameters" => ...,
 )
 ```

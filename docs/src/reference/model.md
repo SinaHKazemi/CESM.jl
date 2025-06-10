@@ -45,7 +45,7 @@ $Y[0]$ is the first year of the model.
   - quantity: dimensionless
   - type: Integer
 
-### CO2 
+### CO2
 
 - **annual\_co2\_limit(y)**: Annual CO2 emission limit of the energy system in year $y \in Y$.
   - indices: $Y$
@@ -388,6 +388,7 @@ where $y^+$ is the next year after $y$.
 ```math
 \text{var\_annual\_emission}[y] = \sum_{p \in P} \text{var\_total\_energy\_out}[p,y] * \text{specific\_co2}[p], \quad \forall y \in Y
 ```
+
 The annual CO₂ emission is equal to the sum of the energy produced by each conversion process multiplied by its specific CO₂ emission.
 
 ```math
@@ -505,9 +506,11 @@ These three constraints should not be active at the same time for the same proce
 ### Storage
 
 Let $S\subseteq P$ be the set of conversion processes that are storage processes.
+
 ```math
 S = \{p \in P | p.is\_storage\}
 ```
+
 then
 
 ```math

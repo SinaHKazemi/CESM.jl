@@ -6,10 +6,10 @@ config file is a json file that contains the configuration of the project.
 {
   "units": {..},
   "parameters" : {..},
-  "time_steps": [..],
+  "tss": [..],
   "years": [..],
   "carriers": {..},
-  "conversion_processes": {..}
+  "processes": {..}
 }
 ```
 
@@ -70,14 +70,14 @@ The value of the function out of the range of the function is equal to the value
 ## Time Steps
 
 ```json
-"time_steps": [1,2,3,4,5]
+"tss": [1,2,3,4,5]
 ```
 
 The time steps is a list of integers that represents the time steps of the model.
 you could also refer to the file that contains the time steps by its path. The path is either a relative path to the config file or an absolute path. `file.txt` is the same as  `./file.txt`. The format of the file could be csv or txt.
 
 ```json
-"time_steps": "path/to/file.txt"
+"tss": "path/to/file.txt"
 ```
 
 ## Years
@@ -125,7 +125,7 @@ The `carrier_in` and `carrier_out` keys are the names of the name of the input a
 
 ```json
 {
-    "conversion_processes": {
+    "processes": {
         "electricity_to_heat": {
             "comment": "comment for the conversion process",
             "carrier_in": "electricity",
@@ -139,4 +139,4 @@ The `carrier_in` and `carrier_out` keys are the names of the name of the input a
 }
 ```
 
-If a parameter is defined over `years` then the value of the parameter could be either a scalar or a piecewise function. If the parameter is defined over `time_steps` then the value of the parameter then the value must be either a scalar or a reference to a file that contains the values of the parameter over the time steps.
+If a parameter is defined over `years` then the value of the parameter could be either a scalar or a piecewise function. If the parameter is defined over `tss` then the value of the parameter then the value must be either a scalar or a reference to a file that contains the values of the parameter over the time steps.
