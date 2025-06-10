@@ -4,14 +4,19 @@ using JSON
 
 export parse
 
-struct ParseError <: Exception
+struct TemporalSequenceError <: Exception
+    msg::String
+end
+
+struct InvalidParameterError <: Exception
     msg::String
 end
 
 type_dict = Dict(
     "Float" => Float64,
     "Integer" => Int,
-    "Boolean" => Bool
+    "Boolean" => Bool,
+    "String" => String,
 )
 
 function parse_input(path::AbstractString)::Dict
@@ -27,13 +32,28 @@ function parse_input(path::AbstractString)::Dict
     end
     
     input = Dict()
-    input["units"] = data["units"]
-    input["timesteps"] = parse_timesteps(data["timesteps"])
-    input["years"] = parse_years(data["Units"])
+    input["units"] = get_units(data["units"])
+    input["timesteps"] = parse_timesteps(data["timesteps"], base_path)
+    input["years"] = parse_years(data["Units"], base_path)
     input["carriers"] = parse_carriers(data["carriers"])
     input["processes"] = parse_processes(data["processes"], input["carriers"])
-    input["parameters"] = parse_parameters(data, input, base_path)
+    input["parameters"] = get_parameters(data["parameters"], data["processes"], data["carriers"], input["years"], input["timesteps"], input["units"], base_path)
     return input
+end
+
+function get_units(data::Dict)::Dict
+    for (unit_name, unit_data) in data
+        if keys(unit_data) != Set(("input", "output", "scale"))
+            throw(InvalidParameterError("each unit must have 'input', 'output', and 'scale' fields but found: '$unit_name'"))
+        end
+
+        if !(unit_data["input"] isa String && unit_data["output"] isa String && unit_data["scale"] isa Real)
+            throw(InvalidParameterError("input and output fields must be String and the scale must be Real but found: '$unit_name'"))
+        end
+
+        unit_data["scale"] = convert(Float64, unit_data["scale"])
+    end
+    return data
 end
 
 function parse_data_file(path::AbstractString, base_path::AbstractString, ::Type{T}) where {T}
@@ -73,43 +93,43 @@ function parse_data_file(path::AbstractString, base_path::AbstractString, ::Type
     return data
 end
 
-function get_vector_or_file(x, ::Type{T}) where {T}
+function get_vector_or_file(x, ::Type{T}, base_path::AbstractString) where {T}
     if isa(x, Vector{T})
         return x
     elseif isa(x, AbstractString)
-        return parse_data_file(x, pwd(), T)
+        return parse_data_file(x, base_path, T)
     else
         error("Input must be either Vector{$T} or a file path string.")
     end
 end
 
 function validate_temporal_sequence(values::Vector{Int})
-    if ! (length(values) == length(unique(indices)))
-        error("Duplicate values found in the vector")
+    if ! (length(values) == length(unique(values)))
+        throw(TemporalSequenceError("Duplicate values found in the vector"))
     elseif ! all(values .> 0)
-        error("Negative values found in the vector")
+        throw(TemporalSequenceError("Negative values found in the vector"))
     elseif ! all(diff(values) .> 0)
-        error("Non-increasing values found in the vector")
+        throw(TemporalSequenceError("Non-increasing values found in the vector"))
     end
 end
 
-function parse_timesteps(timesteps_data::Union{Vector,AbstractString})::Vector{Int}
-    timesteps = get_vector_or_file(timesteps_data, Int)
+function parse_timesteps(timesteps_data::Union{Vector,AbstractString}, base_path::AbstractString)::Vector{Int}
+    timesteps = get_vector_or_file(timesteps_data, Int, base_path)
     validate_temporal_sequence(timesteps)
     return timesteps
 end
 
-function parse_years(years_data::Union{Vector,AbstractString})::Vector{Int}
-    years = get_vector_or_file(years_data, Int)
+function parse_years(years_data::Union{Vector,AbstractString}, base_path::AbstractString)::Vector{Int}
+    years = get_vector_or_file(years_data, Int, base_path)
     validate_temporal_sequence(years)
     return years
 end
 
-function parse_carriers(data::Dict)::Dict{String}
-    return(Vector{String}(keys(data["carriers"])))
+function parse_carriers(data::Dict)::Set{String}
+    return(Set{String}(keys(data)))
 end
 
-function parse_processes(data::Dict, carriers::Vector{String})::Dict{String, Dict{String, String}}
+function parse_processes(data::Dict, carriers::Set{String})::Dict{String, Dict{String, String}}
     processes = Dict{String, Dict{String, String}}()
     for (process_name, process_data) in data
         if process_data["carrier_in"] in carriers && process_data["carrier_out"] in carriers
@@ -124,74 +144,19 @@ function parse_processes(data::Dict, carriers::Vector{String})::Dict{String, Dic
     return processes
 end
 
-function parse_parameters(data::Dict, input::Dict, base_path::AbstractString)::Dict
-    params = Dict()
-    params["defaults"] = Dict()
-    for (param_name, param_data) in data["parameters"]
-        if "default" in keys(param_data)
-            params["defaults"][param_name] = param_data["default"]
-        end
-
-        if !("type" in keys(param_data)) || !("sets" in keys(param_data))
-            error("All parameters must have a 'type' and 'sets' field.")
-        end
-
-        if param_data["sets"] == ["T"] || param_data["sets"] == ["P","Y","T"]
-            error("No parameter is allowed to only have 'T' or '[P,Y,T]' as its set, but found: '$(param_name)'")
-        end
-
-        if param_data["sets"] == [] # check if the type is a vector
-            params[param_name] = parse(param_data["value"], type_dict[param_data["type"]])
-        elseif param_data["sets"] == ["Y"]
-            params[param_name] = parse_year_dependent(param_data["value"], type_dict[param_data["type"]])
-        elseif "value" in keys(param_data)
-            error("Parameter '$param_name' with sets '$(param_data["sets"])' cannot have a 'value' field.")
-        else
-            params[param_name] = Dict()
-        end
-    end
-
-    for (process, process_data) in input["processes"]
-        for (param_name, param_value) in process_data["parameters"]
-            type = type_dict[data["parameters"][param_name]["type"]]
-            sets = data["parameters"][param_name]["sets"]
-            if sets == ["P"]
-                params[param_name][process] = parse(param_value, type)
-            elseif sets == ["P", "T"]
-                params[param_name][process] = get_time_dependent(param_value, input["timesteps"], type, base_path)
-            elseif sets == ["P", "Y"]
-                params[param_name][process] = get_year_dependent(param_value, input["years"], type)
-            end
-        end
-    end
-end
-
-function get_time_dependent(param::Union{Number,AbstractString}, timesteps::Vector{Int}, type::Type, base_path)
+function get_time_dependent(param::Union{Number,AbstractString}, timesteps::Vector{Int}, type::Type, base_path) :: Dict{Int, Number}
     """
-    Parse a time-dependent parameter string.
+    get a time-dependent parameter that is either a number or a data file path
     """
     if isa(param, Number)
-        return Dict(t => parse(type, param) for t in timesteps)
+        return Dict(t => convert(type, param) for t in timesteps)
     elseif isa(param, AbstractString)
         values = parse_data_file(param, base_path, type)
         return Dict(t => values[t] for t in timesteps)
     end
 end
 
-function get_year_dependent(param::Union{Number,Vector}, years::Vector{Int}, type::Type)
-    """
-    Parse a year-dependent parameter string.
-    """
-    if isa(param, Number)
-        return Dict(y => parse(type, param) for y in years)
-    elseif isa(param, Vector)
-        return linear_interpolation(param, years, type) 
-    else
-        error("Invalid parameter type. Expected a number or a vector.")
-    end
-end
-
-function linear_interpolation(f::Vector{Dict{String,Float64}}, xq::Vector{Int}, type::Type)
+function linear_interpolation(f::Vector{<:Dict{String,<:Number}}, xq::Vector{<:Number}, type::Type)
     """
     Perform manual linear interpolation for a given set of x and y values.
 
@@ -214,11 +179,11 @@ function linear_interpolation(f::Vector{Dict{String,Float64}}, xq::Vector{Int}, 
     end
 
     if length(x) < 2
-        error("At least two points are required for linear interpolation.")
+        throw(InvalidParameterError("At least two points are required for linear interpolation."))
     end
 
-    if diff(x) .> 0
-        error("x values must be in increasing order.")
+    if any(diff(x) .<= 0)
+        throw(InvalidParameterError("x values must be in increasing order."))
     end
 
     n = length(x)
@@ -246,4 +211,159 @@ function linear_interpolation(f::Vector{Dict{String,Float64}}, xq::Vector{Int}, 
     return interp_vals
 end
 
+function get_year_dependent(param::Union{Number,Vector}, years::Vector{Int}, type::Type)
+    """
+    Parse a year-dependent parameter string.
+    """
+    if isa(param, Number)
+        return Dict(y => convert(type, param) for y in years)
+    elseif isa(param, Vector)
+        return Dict(zip(years, linear_interpolation(param, years, type)))
+    else
+        error("Invalid parameter type. Expected a number or a vector.")
+    end
+end
+
+function validate_parameters(parameters::Dict)
+    for (param_name, param_data) in parameters
+        if !(issubset(keys(param_data), ["default", "type", "sets", "value", "quantity", "comment"]))
+            throw(InvalidParameterError("Invalid parameter: $(param_name). there is an unkown field: $(keys(param_data))"))
+        end
+
+        if !(issubset(Set(["type","sets"]), keys(param_data)))
+            throw(InvalidParameterError("All parameters must have a 'type' and 'sets' field."))
+        end
+
+        # check if the type is valid
+        if !(param_data["type"] in keys(type_dict))
+            throw(InvalidParameterError("allowable types are: '$(keys(type_dict))', but found: '$(param_name)' with type: '$(param_data["type"])'"))
+        end
+
+        type = type_dict[param_data["type"]]
+        sets = Set(param_data["sets"])
+
+        if ! issubset(sets,Set(["P","Y","T","C"]))
+            throw(InvalidParameterError("All parameters sets must be a subset of [P,Y,T,C], but found: '$(param_name)' with sets: '$(param_data["sets"])'"))
+        end
+
+        allowable_sets = Set([Set(), Set(["Y"]), Set(["P"]), Set(["P","Y"]), Set(["P","T"]), Set(["C"])])
+        if ! (sets in allowable_sets)
+            throw(InvalidParameterError("All parameters sets must be one of the following: '$(allowable_sets)', but found: '$(param_name)' with sets: '$(param_data["sets"])'"))
+        end
+    end
+end
+
+function scale_dict_values(dict::Dict, scale)
+    return Dict(k => v * scale for (k, v) in dict)
+end
+
+function get_independent_parameters(parameters::Dict, years::Vector{Int}, units::Dict)::Dict
+    """
+    Get parameters independent of processes and carriers
+    """
+    params = Dict()
+    params["defaults"] = Dict()
+    
+    for (param_name, param_data) in parameters
+        type = type_dict[param_data["type"]]
+        sets = Set(param_data["sets"])
+        if "quantity" in keys(param_data)
+            scale = units[param_data["quantity"]]["scale"]
+        else
+            scale = 1.0
+        end
+        # read default value
+        if "default" in keys(param_data)
+            params["defaults"][param_name] = convert(type, param_data["default"]) * scale
+        end
+
+        # The parameters that are not process or carrier dependent
+        if sets == Set([]) # check if the type is a vector
+            params[param_name] = scale * convert(type, param_data["value"])
+        elseif sets == Set(["Y"])
+            params[param_name] = scale_dict_values(get_year_dependent(param_data["value"], years, type), scale)
+        elseif "value" in keys(param_data)
+            throw(InvalidParameterError("Parameter '$param_name' with sets '$(sets)' cannot have a 'value' field."))
+        end
+    end
+    
+    return params
+end
+
+
+function get_dependent_parameters(parameters::Dict, processes::Dict, carriers::Dict, years::Vector{Int}, timesteps::Vector{Int}, units::Dict,  base_path::AbstractString)::Dict
+    """
+    Parse a parameter dictionary.
+    Parameters
+    ----------
+    parameters : Dict
+    A dictionary containing parameter information.
+    on.
+    processes : Dict
+    processes dictionary from raw input.
+    carriers : Dict
+    carriers dictionary from raw input.
+    years : Vector{Int}
+    vector of years from parsed input.
+    timesteps : Vector{Int}
+    timesteps vector from parsed input.
+    """
+    params = Dict()
+
+    for (param_name, param_data) in parameters
+        sets = Set(param_data["sets"])
+        if ! (sets in Set((Set([]), Set(["Y"]))))
+            params[param_name] = Dict()
+        end
+    end
+
+    for (process, process_data) in processes
+        if !("parameters" in keys(process_data))
+            throw(InvalidParameterError("All processes must have a 'parameters' field but found: '$(process)'"))
+        end
+        for (param_name, param_value) in process_data["parameters"]
+            if ! (param_name in keys(parameters))
+                throw(InvalidParameterError("Parameter '$param_name' not found in parameters in process: '$(process)'"))
+            end
+            type = type_dict[parameters[param_name]["type"]]
+            sets = parameters[param_name]["sets"]
+            if "quantity" in keys(parameters[param_name])
+                scale = units[parameters[param_name]["quantity"]]["scale"]
+            else
+                scale = 1.0
+            end
+            if sets == ["P"]
+                params[param_name][process] = convert(type, param_value) * scale
+            elseif sets == ["P", "T"]
+                params[param_name][process] = scale_dict_values(get_time_dependent(param_value, timesteps, type, base_path), scale)
+            elseif sets == ["P", "Y"]
+                params[param_name][process] = scale_dict_values(get_year_dependent(param_value, years, type), scale)
+            end
+        end
+    end
+
+    for (carrier, carrier_data) in carriers
+        for (param_name, param_value) in carrier_data["parameters"]
+            if ! (param_name in keys(parameters))
+                throw(InvalidParameterError("Parameter '$param_name' not found in parameters in carrier: '$(carrier)'."))
+            end
+            type = type_dict[parameters[param_name]["type"]]
+            sets = parameters[param_name]["sets"]
+            if sets == ["C"]
+                params[param_name][carrier] = convert(type,param_value)
+            end
+        end
+    end
+
+    return params
+end
+
+function get_parameters(parameters::Dict, processes::Dict, carriers::Dict, years::Vector{Int}, timesteps::Vector{Int}, units::Dict, base_path::AbstractString)::Dict
+    """
+    Parse a parameter dictionary.
+    """
+    validate_parameters(parameters)
+    independent_parameters = get_independent_parameters(parameters, years, units)
+    dependent_parameters = get_dependent_parameters(parameters, processes, carriers, years, timesteps, units, base_path)
+    return merge(independent_parameters, dependent_parameters)
 end

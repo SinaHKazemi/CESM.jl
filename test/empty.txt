@@ -1,0 +1,29 @@
+    parameters = Dict(
+        "param_scalar" => Dict(
+            "comment" => "scalar parameter",
+            "sets" => ["P"],
+            "default" => 1,
+            "value" => 1,
+            "type" => "Integer",
+            "quantity" => "energy",
+        ),
+        "param_array" => Dict(
+            "comment" => "array parameter",
+            "sets" => ["P","T"],
+            "default" => 2.2,
+            "value" => "./testdata/data_float.txt",
+            "type" => "Float",
+        ),
+        "param_pw" => Dict(
+            "comment" => "piecewise parameter",
+            "sets" => ["P","Y"],
+            "default" => 2.2,
+            "value" => [
+                Dict("x" => 2, "y" => 1),
+                Dict("x" => 3, "y" => 2),
+                Dict("x" => 4, "y" => 3),
+            ],
+            "type" => "Float",
+            "quantity" => "power",
+        )
+    )

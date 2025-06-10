@@ -8,7 +8,7 @@
         "co2_spec": {"input": "kg/kWh",	"scale": 0.001, "output": "Mio t/GWh"},
         "money": {"input": "Mio EUR", "scale": 1, "output":	"Mio EUR"}
     },
-    "time_steps" : [1,2,3]"./time_series/tss.txt",
+    "time_steps" : "./data_int.txt",
     "years" : [2020, 2025, 2030],
     "parameters": {
         "scale" : {
