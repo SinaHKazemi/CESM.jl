@@ -17,10 +17,37 @@
         "A",
         "B"
     ],
+    "carriers": [
+        {
+            "name": "dummy",
+            "region": "base"
+        },
+        {
+            "name": "gas",
+            "region": "A"
+        },
+        {
+            "name": "gas",
+            "region": "B",
+            "parameters":{
+                "carrier_color": "blue",
+                "carrier_order": 10
+            }
+        },
+        {
+            "name": "oil",
+            "region": "B",
+            "parameters":{
+                "carrier_color": "blue",
+                "carrier_order": 10
+            }
+        }
+
+    ],
     "parameters": {
-        "scale" : {
+        "param_a" : {
             "comment": "",
-            "sets": ["years"],
+            "sets": ["Y"],
             "type": "Float",
             "default": 12,
             "value": [
@@ -29,36 +56,13 @@
             ]
         }
     },
-    "carriers": {
-        "dummy" : {
-            "comment": "Dummy carrier",
-            "region": "Base",
-            "parameters": {
-            }
-        },
-        "gas" : {
-            "comment": "gas commodity",
-            "region": "A",
-            "parameters":{
-                "carrier_color": "blue",
-                "carrier_order": 10
-            }
-        },
-        "oil" : {
-            "comment": "gas commodity",
-            "region": "B",
-            "parameters":{
-                "carrier_color": "blue",
-                "carrier_order": 10
-            }
-        }
-    },
-    "processes": {
-        "gas_to_oil" : {
-            "carrier_in": "gas",
-            "carrier_out": "oil",
+    "processes": [
+        {
+            "name": "gas_to_oil",
+            "carrier_in": {"name": "gas", "region": "A"},
+            "carrier_out": {"name": "gas", "region": "B"},
             "parameters": {
             }
         }
-    }
+    ]
 }

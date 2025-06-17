@@ -138,6 +138,9 @@ function parse_regions(regions::Vector{String})::Set{Region}
             throw(InvalidParameterError("Duplicate region found in the regions vector $(r)"))
         end
     end
+    if !(Region("Global") in output)
+        throw(InvalidParameterError("Global region not found in the regions vector"))
+    end
     return output
 end
 
@@ -155,6 +158,9 @@ function parse_carriers(carriers_json::Vector{Dict{String,String}}, regions::Set
         else
             throw(InvalidParameterError("Duplicate carrier found in the carriers vector $(c)"))
         end
+    end
+    if !(Carrier("Dummy", Region("Global")) in output)
+        throw(InvalidParameterError("Dummy carrier in region Global not found in the carriers vector"))
     end
     return output
 end

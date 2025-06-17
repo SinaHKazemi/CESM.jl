@@ -21,9 +21,9 @@ Base.:+(y::Year, x::Integer) = Year(y.value + x)
 Base.:+(x::Integer, y::Year) = Year(x + y.value)
 Base.:+(a::Year, b::Year) = Year(a.value + b.value)
 
-Base.:-(y::Year, x::Integer) = Year(y.value - x)
-Base.:-(x::Integer, y::Year) = Year(x - y.value)
-Base.:-(a::Year, b::Year) = Year(a.value - b.value)
+Base.:-(y::Year, x::Integer) = y.value - x
+Base.:-(x::Integer, y::Year) = x - y.value
+Base.:-(a::Year, b::Year) = a.value - b.value
 
 # Comparisons
 Base.:(==)(a::Year, b::Year) = a.value == b.value
