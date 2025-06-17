@@ -9,7 +9,6 @@ Pkg.add("YourProject")
 ## Example.jl Documentation
 
 ```@docs
-greet()
 ```
 
 This is the binomial coefficient.
