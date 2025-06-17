@@ -341,7 +341,7 @@ using CESM.Components
     ]
 
     years = [Year(y) for y in 1:6]
-    timesteps = Set([Time(t) for t in 1:6])
+    timesteps = [Time(t) for t in 1:6]
 
 
     @test Parse.get_dependent_parameters(parameters, processes_json, carriers_json, years, timesteps, units, dirname(@__FILE__)) == Dict(
@@ -389,66 +389,66 @@ using CESM.Components
         ),
     )
 
-    @test Parse.get_parameters(parameters, processes, carriers, years, timesteps, units, dirname(@__FILE__)) == Dict(
+    @test Parse.get_parameters(parameters, processes_json, carriers_json, years, timesteps, units, dirname(@__FILE__)) == Dict(
         "defaults" => Dict("param_scalar_independent" => 1, "param_scalar" => 12.0, "param_array" => 2.2*12, "param_pw" => 2.2, "param_t" => 2.2, "param_y" => 2.2, "param_c_color" => "blue"),
         "param_scalar_independent" => 1,
         "param_array" => Dict(
-            1 => 12.,
-            2 => 12.,
-            3 => 12.,
-            4 => 12.,
-            5 => 12.,
-            6 => 12.,
+            Year(1) => 12.,
+            Year(2) => 12.,
+            Year(3) => 12.,
+            Year(4) => 12.,
+            Year(5) => 12.,
+            Year(6) => 12.,
         ),
         "param_pw" => Dict(
-            1 => 1.,
-            2 => 1.,
-            3 => 2.,
-            4 => 3.,
-            5 => 3.,
-            6 => 3.,
+            Year(1) => 1.,
+            Year(2) => 1.,
+            Year(3) => 2.,
+            Year(4) => 3.,
+            Year(5) => 3.,
+            Year(6) => 3.,
         ),
         "param_scalar" => Dict(
-            "gas_to_oil" => 12.0,
+            Process("gas_to_oil", Carrier("gas", Region("Hessen")), Carrier("oil", Region("Berlin"))) => 12.0,
         ),
         "param_t" => Dict(
-            "gas_to_oil" => Dict(
-                1 => 2.2,
-                2 => 2.2,
-                3 => 2.2,
-                4 => 2.2,
-                5 => 2.2,
-                6 => 2.2,
+            Process("gas_to_oil", Carrier("gas", Region("Hessen")), Carrier("oil", Region("Berlin"))) => Dict(
+                Time(1) => 2.2,
+                Time(2) => 2.2,
+                Time(3) => 2.2,
+                Time(4) => 2.2,
+                Time(5) => 2.2,
+                Time(6) => 2.2,
             ),
-            "oil_to_gas" => Dict(
-                1 => 1.,
-                2 => 2.,
-                3 => 3.,
-                4 => 4.,
-                5 => 5.2,
-                6 => 6.7,
+            Process("oil_to_gas", Carrier("oil", Region("Berlin")), Carrier("gas", Region("Baden-Württemberg"))) => Dict(
+                Time(1) => 1.,
+                Time(2) => 2.,
+                Time(3) => 3.,
+                Time(4) => 4.,
+                Time(5) => 5.2,
+                Time(6) => 6.7,
             )
         ),
         "param_y" => Dict(
-            "gas_to_oil" => Dict(
-                1 => 2.3,
-                2 => 2.3,
-                3 => 2.3,
-                4 => 2.3,
-                5 => 2.3,
-                6 => 2.3,
+            Process("gas_to_oil", Carrier("gas", Region("Hessen")), Carrier("oil", Region("Berlin"))) => Dict(
+                Year(1) => 2.3,
+                Year(2) => 2.3,
+                Year(3) => 2.3,
+                Year(4) => 2.3,
+                Year(5) => 2.3,
+                Year(6) => 2.3,
             ),
-            "oil_to_gas" => Dict(
-                1 => 1.,
-                2 => 1.,
-                3 => 2.,
-                4 => 3.,
-                5 => 3.,
-                6 => 3.,
+            Process("oil_to_gas", Carrier("oil", Region("Berlin")), Carrier("gas", Region("Baden-Württemberg"))) => Dict(
+                Year(1) => 1.,
+                Year(2) => 1.,
+                Year(3) => 2.,
+                Year(4) => 3.,
+                Year(5) => 3.,
+                Year(6) => 3.,
             ),
         ),
         "param_c_color" => Dict(
-            "gas" => "orange",
+            Carrier("gas", Region("Hessen")) => "orange",
         ),
     )
 

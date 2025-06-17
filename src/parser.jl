@@ -18,7 +18,7 @@ type_dict = Dict(
     "String" => String,
 )
 
-function parse_input(path::AbstractString)::Dict
+function parse_input(path::AbstractString)::Input
     fullpath = abspath(path)  # normalize to absolute path
     base_path = dirname(fullpath)
 
@@ -30,14 +30,14 @@ function parse_input(path::AbstractString)::Dict
         data = JSON.parse(read(io, String))
     end
     
-    input = Dict()
     units = get_units(data["units"])
     timesteps = parse_timesteps(data["timesteps"], base_path)
     years = parse_years(data["years"], base_path)
     regions = parse_regions(data["regions"])
     carriers = parse_carriers(data["carriers"], regions)
     processes = parse_processes(data["processes"], carriers)
-    input["parameters"] = get_parameters(data["parameters"], processes, carriers, years, timesteps, units, base_path)
+    parameters = get_parameters(data["parameters"], processes, carriers, years, timesteps, units, base_path)
+    input = Input(units,  years, timesteps, regions, carriers, processes, parameters)
     return input
 end
 
@@ -337,7 +337,7 @@ function get_independent_parameters(parameters::Dict, years::Vector{Year}, units
 end
 
 
-function get_dependent_parameters(parameters::Dict, processes::Vector{Dict}, carriers::Vector{Dict}, years::Vector{Year}, timesteps::Vector{Time}, units::Dict{String,Unit},  base_path::AbstractString)::Dict
+function get_dependent_parameters(parameters::Dict, processes_json::Vector{Dict{String, Any}}, carriers_json::Vector{Dict{String, Any}}, years::Vector{Year}, timesteps::Vector{Time}, units::Dict{String,Unit},  base_path::AbstractString)::Dict
     """
     Parse a parameter dictionary.
     Parameters
@@ -363,7 +363,7 @@ function get_dependent_parameters(parameters::Dict, processes::Vector{Dict}, car
         end
     end
 
-    for process in processes
+    for process in processes_json
         if !("parameters" in keys(process))
             throw(InvalidParameterError("All processes must have a 'parameters' field but found: '$(process)'"))
         end
@@ -380,10 +380,10 @@ function get_dependent_parameters(parameters::Dict, processes::Vector{Dict}, car
             end
             if sets == ["P"]
                 temp = convert(type, param_value) 
-                params[param_name][process["process_struct"]] = (scale !== nothing  ? scale * temp : temp)
+                params[param_name][process["struct"]] = (scale !== nothing  ? scale * temp : temp)
             elseif sets == ["P", "T"]
                 temp = get_time_dependent(param_value, timesteps, type, base_path)
-                params[param_name][process["process_struct"]] = (scale !== nothing ? scale_dict_values(temp, scale) : temp )
+                params[param_name][process["struct"]] = (scale !== nothing ? scale_dict_values(temp, scale) : temp )
             elseif sets == ["P", "Y"]
                 temp = get_year_dependent(param_value, years, type)
                 params[param_name][process["struct"]] = (scale !== nothing ? scale_dict_values(temp, scale) : temp )
@@ -391,7 +391,10 @@ function get_dependent_parameters(parameters::Dict, processes::Vector{Dict}, car
         end
     end
 
-    for carrier in carriers
+    for carrier in carriers_json
+        if !("parameters" in keys(carrier))
+            continue
+        end
         for (param_name, param_value) in carrier["parameters"]
             if ! (param_name in keys(parameters))
                 throw(InvalidParameterError("Parameter '$param_name' not found in parameters in carrier: '$(carrier)'."))
@@ -407,13 +410,13 @@ function get_dependent_parameters(parameters::Dict, processes::Vector{Dict}, car
     return params
 end
 
-function get_parameters(parameters::Dict, processes::Vector{Dict}, carriers::Vector{Dict}, years::Vector{Year}, timesteps::Vector{Time}, units::Dict{String,Unit}, base_path::AbstractString)::Dict
+function get_parameters(parameters::Dict, processes_json::Vector{Dict{String, Any}}, carriers_json::Vector{Dict{String, Any}}, years::Vector{Year}, timesteps::Vector{Time}, units::Dict{String,Unit}, base_path::AbstractString)::Dict
     """
     Parse a parameter dictionary.
     """
     validate_parameters(parameters)
     independent_parameters = get_independent_parameters(parameters, years, units)
-    dependent_parameters = get_dependent_parameters(parameters, processes, carriers, years, timesteps, units, base_path)
+    dependent_parameters = get_dependent_parameters(parameters, processes_json, carriers_json, years, timesteps, units, base_path)
     return merge(independent_parameters, dependent_parameters)
 end
 
