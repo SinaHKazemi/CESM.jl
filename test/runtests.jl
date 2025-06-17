@@ -1,6 +1,11 @@
 using Test
-using PrettyPrinting
-include("../src/parser.jl")
+using Revise
+
+
+include("../src/CESM.jl")
+
+import CESM.Parse as Parse
+using CESM.Components
 
 @testset "MyPackage Tests" begin
     # parse_units
@@ -22,11 +27,6 @@ include("../src/parser.jl")
         "co2_emissions" => Dict("input" => "Mio t", "scale" => 1, "output" => "Mio t"),
     )
 
-    @test Parse.get_units(units) == Dict(
-        "energy" => Dict("input" => "TWh", "scale" => 12.0, "output" => "GWh"),
-        "power" => Dict("input" => "GW", "scale" => 1.0, "output" => "GW"),
-        "co2_emissions" => Dict("input" => "Mio t", "scale" => 1.0, "output" => "Mio t"),
-    )
 
     # parse data file
     @test Parse.parse_data_file("./testdata/data_int.txt", dirname(@__FILE__), Int) == [1,2,3,4,5,6]  # Expected output is just a printed message
@@ -37,54 +37,72 @@ include("../src/parser.jl")
     # validate_temporal_sequence
     @test_throws Parse.TemporalSequenceError Parse.validate_temporal_sequence([1,2,3,4,6,5])
     @test_throws Parse.TemporalSequenceError Parse.validate_temporal_sequence([-1,0,1,2,3])
-    # parse_tss
-    @test Parse.parse_tss([1,2,3,4,5,6], dirname(@__FILE__)) == [1,2,3,4,5,6]
+    # parse_timesteps
+    @test Parse.parse_timesteps([1,2,3,4,5,6], dirname(@__FILE__)) == [Time(t) for t in 1:6]
     # parse_years
-    @test Parse.parse_years([1,2,3,4,5,6], dirname(@__FILE__)) == [1,2,3,4,5,6]
+    @test Parse.parse_years([1,2,3,4,5,6], dirname(@__FILE__)) == [Year(y) for y in 1:6]
     # parse carriers
-    data = Dict(
-        "carriers" => Dict(
-            "gas" => Dict(
-                "comment" => "gas carrier",
-                "parameters" => Dict(
-                    "param1" => 1,
-                    "param2" => 2,
-                )
-            ),
-            "oil" => Dict(
-                "comment" => "oil carrier",
-                "parameters" => Dict(
-                    "param3" => 3,
-                    "param4" => 4,
-                )
-            )
-        ),
-        "processes" => Dict(
-            "gas_to_oil" => Dict(
-                "carrier_in" => "gas",
-                "carrier_out" => "oil",
-            ),
-            "oil_to_gas" => Dict(
-                "carrier_in" => "oil",
-                "carrier_out" => "gas",
-            )
-        )
-    )
 
-    @test Parse.parse_carriers(data["carriers"]) == Set(["gas", "oil"])
+    # parse regions
+    regions_json = [
+        "Hessen",
+        "Berlin",
+        "Baden-Württemberg",
+    ]
+    regions = Set([Region("Hessen"), Region("Berlin"), Region("Baden-Württemberg")])
     
+    @test Parse.parse_regions(regions_json) == regions
+
+    # parse_carriers
+    carriers_json = [
+        Dict(
+            "name" => "gas",
+            "region" => "Hessen",
+        ),
+        Dict(
+            "name" => "oil",
+            "region" => "Berlin",
+        ),
+        Dict(
+            "name" => "gas",
+            "region" => "Baden-Württemberg",
+        )
+    ]
+    carriers = Set([
+        Carrier("gas", Region("Hessen")),
+        Carrier("oil", Region("Berlin")),
+        Carrier("gas", Region("Baden-Württemberg")),
+    ])
+
+    @test Parse.parse_carriers(carriers_json, regions) == carriers
+
     # parse processes
-    @test Parse.parse_processes(data["processes"], Set(["gas", "oil"])) == Dict(
-        "gas_to_oil" => Dict("carrier_in" => "gas", "carrier_out" => "oil"),
-        "oil_to_gas" => Dict("carrier_in" => "oil", "carrier_out" => "gas")
-    )
+
+    processes_json = [
+        Dict(
+            "name" => "gas_to_oil",
+            "carrier_in" => Dict("name" => "gas", "region" => "Hessen"),
+            "carrier_out" => Dict("name" => "oil", "region" => "Berlin")
+        ),
+        Dict(
+            "name" => "oil_to_gas",
+            "carrier_in" => Dict("name" => "oil", "region" => "Berlin"),
+            "carrier_out" => Dict("name" => "gas", "region" => "Baden-Württemberg")
+        )
+    ]
+    
+    processes = Set([
+        Process("gas_to_oil", Carrier("gas", Region("Hessen")), Carrier("oil", Region("Berlin"))),
+        Process("oil_to_gas", Carrier("oil", Region("Berlin")), Carrier("gas", Region("Baden-Württemberg")))
+    ])
+    @test Parse.parse_processes(processes_json, carriers) == processes
 
     # carrier_in is not in carriers
-    @test_throws Exception Parse.parse_processes(data["processes"], Set(["gas",]))
+    
     
     # get_time_dependent
-    @test Parse.get_time_dependent(1, [1,2,3,4,5,6], Int, dirname(@__FILE__)) == Dict(1 => 1, 2 => 1, 3 => 1, 4 => 1, 5 => 1, 6 => 1)
-    @test Parse.get_time_dependent("./testdata/data_int.txt", [1,2,3,4,5,6], Int, dirname(@__FILE__)) == Dict(1 => 1, 2 => 2, 3 => 3, 4 => 4, 5 => 5, 6 => 6)
+    @test Parse.get_time_dependent(1, [Time(t) for t in 1:6], Int, dirname(@__FILE__)) == Dict(Time(i) => 1 for i in 1:6)
+    @test Parse.get_time_dependent("./testdata/data_int.txt", [Time(t) for t in 1:6], Int, dirname(@__FILE__)) == Dict(Time(i) => i for i in 1:6)
 
     # linear interpolation
     peice_wise_data = [
@@ -105,8 +123,9 @@ include("../src/parser.jl")
     @test Parse.linear_interpolation(peice_wise_data, [0,1.2,3.4,5.6,8], Float64) == [1.0, 1.2, 3, 3, 3]
     
     # get_year_dependent
-    @test Parse.get_year_dependent(1, [1,2,3,4,5,6], Int) == Dict(1 => 1, 2 => 1, 3 => 1, 4 => 1, 5 => 1, 6 => 1)
-    @test Parse.get_year_dependent(peice_wise_data, [0,1,2,3,4,5,6], Int) == Dict(0=>1, 1 => 1, 2 => 2, 3 => 3, 4 => 3, 5 => 3, 6 => 3)
+    @test Parse.get_year_dependent(1, [Year(y) for y in 1:6], Int) == Dict(Year(i) => 1 for i in 1:6)
+    @test Parse.get_year_dependent(peice_wise_data, [Year(y) for y in 1:6], Int) == Dict(Year(1) => 1, Year(2) => 2, Year(3) => 3, Year(4) => 3, Year(5) => 3, Year(6) => 3)
+    # Dict(0=>1, 1 => 1, 2 => 2, 3 => 3, 4 => 3, 5 => 3, 6 => 3)
 
     # parse parameters
     parameters = Dict(
@@ -189,29 +208,31 @@ include("../src/parser.jl")
         )
     )
 
-    units = Dict(
+    units_json = Dict(
         "energy" => Dict("input" => "TWh", "scale" => 12.0, "output" => "GWh"),
         "power" => Dict("input" => "GW", "scale" => 1.0, "output" => "GW"),
         "co2_emissions" => Dict("input" => "Mio t", "scale" => 1.0, "output" => "Mio t"),
     )
-    @test Parse.get_independent_parameters(parameters, [1,2,3,4,5,6], units) == Dict(
+    
+    units = Dict(
+        "energy" => Components.Unit("TWh", "GWh", 12.0),
+        "power" => Components.Unit("GW", "GW", 1.0),
+        "co2_emissions" => Components.Unit("Mio t", "Mio t", 1.0),
+    )
+
+    @test Parse.get_units(units_json) == units
+
+    @test Parse.get_independent_parameters(parameters, [Year(y) for y in 1:6], units) == Dict(
         "defaults" => Dict("param_scalar" => 1, "param_array" => 2.2*12, "param_pw" => 2.2),
         "param_scalar" => 1,
-        "param_array" => Dict(
-            1 => 12.,
-            2 => 12.,
-            3 => 12.,
-            4 => 12.,
-            5 => 12.,
-            6 => 12.,
-        ),
+        "param_array" => Dict(Year(i) => 12. for i in 1:6),
         "param_pw" => Dict(
-            1 => 1.,
-            2 => 1.,
-            3 => 2.,
-            4 => 3.,
-            5 => 3.,
-            6 => 3.,
+            Year(1) => 1.,
+            Year(2) => 1.,
+            Year(3) => 2.,
+            Year(4) => 3.,
+            Year(5) => 3.,
+            Year(6) => 3.,
         ),
     )
 
@@ -270,33 +291,43 @@ include("../src/parser.jl")
             "type" => "String",
         ),
     )
-    carriers = Dict(
-        "gas" => Dict(
-            "comment" => "gas carrier",
+    carriers_json = [
+        Dict(
+            "name" => "gas",
+            "region" => "Hessen",
             "parameters" => Dict(
                 "param_c_color" => "orange",
-            )
+            ),
+            "struct" => Carrier("gas", Region("Hessen"))
         ),
-        "oil" => Dict(
-            "comment" => "oil carrier",
-            "parameters" => Dict(
-            )
+        Dict(
+            "name" => "oil",
+            "region" => "Berlin",
+            "struct" => Carrier("oil", Region("Berlin"))
+        ),
+        Dict(
+            "name" => "gas",
+            "region" => "Baden-Württemberg",
+            "struct" => Carrier("gas", Region("Baden-Württemberg"))
         )
-    )
+    ]
 
-    processes = Dict(
-        "gas_to_oil" => Dict(
-            "carrier_in" => "gas",
-            "carrier_out" => "oil",
+    processes_json = [
+        Dict(
+            "name" => "gas_to_oil",
+            "carrier_in" => Dict("name" => "gas", "region" => "Hessen"),
+            "carrier_out" => Dict("name" => "oil", "region" => "Berlin"),
             "parameters" => Dict(
                 "param_scalar" => 1,
                 "param_t" => 2.2,
                 "param_y" => 2.3,
-            )
+            ),
+            "struct" => Process("gas_to_oil", Carrier("gas", Region("Hessen")), Carrier("oil", Region("Berlin"))),
         ),
-        "oil_to_gas" => Dict(
-            "carrier_in" => "oil",
-            "carrier_out" => "gas",
+        Dict(
+            "name" => "oil_to_gas",
+            "carrier_in" => Dict("name" => "oil", "region" => "Berlin"),
+            "carrier_out" => Dict("name" => "gas", "region" => "Baden-Württemberg"),
             "parameters" => Dict(
                 "param_t" => "./testdata/data_float.txt",
                 "param_y" => [
@@ -304,66 +335,61 @@ include("../src/parser.jl")
                     Dict("x" => 3, "y" => 2),
                     Dict("x" => 4, "y" => 3),
                 ],
-            )
+            ),
+            "struct" => Process("oil_to_gas", Carrier("oil", Region("Berlin")), Carrier("gas", Region("Baden-Württemberg")))
         )
-    )
+    ]
 
-    years = [ 1,2,3,4,5,6]
-    tss = [1,2,3,4,5,6]
+    years = [Year(y) for y in 1:6]
+    timesteps = Set([Time(t) for t in 1:6])
 
 
-    units = Dict(
-        "energy" => Dict("input" => "TWh", "scale" => 12.0, "output" => "GWh"),
-        "power" => Dict("input" => "GW", "scale" => 1.0, "output" => "GW"),
-        "co2_emissions" => Dict("input" => "Mio t", "scale" => 1.0, "output" => "Mio t"),
-    )
-
-    @test Parse.get_dependent_parameters(parameters, processes, carriers, years, tss, units, dirname(@__FILE__)) == Dict(
+    @test Parse.get_dependent_parameters(parameters, processes_json, carriers_json, years, timesteps, units, dirname(@__FILE__)) == Dict(
         "param_scalar" => Dict(
-            "gas_to_oil" => 12.0,
+            Process("gas_to_oil", Carrier("gas", Region("Hessen")), Carrier("oil", Region("Berlin"))) => 12.0,
         ),
         "param_t" => Dict(
-            "gas_to_oil" => Dict(
-                1 => 2.2,
-                2 => 2.2,
-                3 => 2.2,
-                4 => 2.2,
-                5 => 2.2,
-                6 => 2.2,
+            Process("gas_to_oil", Carrier("gas", Region("Hessen")), Carrier("oil", Region("Berlin"))) => Dict(
+                Time(1) => 2.2,
+                Time(2) => 2.2,
+                Time(3) => 2.2,
+                Time(4) => 2.2,
+                Time(5) => 2.2,
+                Time(6) => 2.2,
             ),
-            "oil_to_gas" => Dict(
-                1 => 1.,
-                2 => 2.,
-                3 => 3.,
-                4 => 4.,
-                5 => 5.2,
-                6 => 6.7,
+            Process("oil_to_gas", Carrier("oil", Region("Berlin")), Carrier("gas", Region("Baden-Württemberg"))) => Dict(
+                Time(1) => 1.,
+                Time(2) => 2.,
+                Time(3) => 3.,
+                Time(4) => 4.,
+                Time(5) => 5.2,
+                Time(6) => 6.7,
             )
         ),
         "param_y" => Dict(
-            "gas_to_oil" => Dict(
-                1 => 2.3,
-                2 => 2.3,
-                3 => 2.3,
-                4 => 2.3,
-                5 => 2.3,
-                6 => 2.3,
+            Process("gas_to_oil", Carrier("gas", Region("Hessen")), Carrier("oil", Region("Berlin"))) => Dict(
+                Year(1) => 2.3,
+                Year(2) => 2.3,
+                Year(3) => 2.3,
+                Year(4) => 2.3,
+                Year(5) => 2.3,
+                Year(6) => 2.3,
             ),
-            "oil_to_gas" => Dict(
-                1 => 1.,
-                2 => 1.,
-                3 => 2.,
-                4 => 3.,
-                5 => 3.,
-                6 => 3.,
+            Process("oil_to_gas", Carrier("oil", Region("Berlin")), Carrier("gas", Region("Baden-Württemberg"))) => Dict(
+                Year(1) => 1.,
+                Year(2) => 1.,
+                Year(3) => 2.,
+                Year(4) => 3.,
+                Year(5) => 3.,
+                Year(6) => 3.,
             ),
         ),
         "param_c_color" => Dict(
-            "gas" => "orange",
+            Carrier("gas", Region("Hessen")) => "orange",
         ),
     )
 
-    @test Parse.get_parameters(parameters, processes, carriers, years, tss, units, dirname(@__FILE__)) == Dict(
+    @test Parse.get_parameters(parameters, processes, carriers, years, timesteps, units, dirname(@__FILE__)) == Dict(
         "defaults" => Dict("param_scalar_independent" => 1, "param_scalar" => 12.0, "param_array" => 2.2*12, "param_pw" => 2.2, "param_t" => 2.2, "param_y" => 2.2, "param_c_color" => "blue"),
         "param_scalar_independent" => 1,
         "param_array" => Dict(
@@ -425,7 +451,5 @@ include("../src/parser.jl")
             "gas" => "orange",
         ),
     )
-    # PrettyPrinting.pprint(Parse.get_parameters(parameters, processes, carriers, years, tss, units, dirname(@__FILE__)))
-    # PrettyPrinting.pprint(x)
 
 end

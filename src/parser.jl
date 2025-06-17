@@ -1,8 +1,7 @@
 module Parse
 
 using JSON
-
-export parse
+using ..Components
 
 struct TemporalSequenceError <: Exception
     msg::String
@@ -32,17 +31,19 @@ function parse_input(path::AbstractString)::Dict
     end
     
     input = Dict()
-    input["units"] = get_units(data["units"])
-    input["tss"] = parse_tss(data["tss"], base_path)
-    input["years"] = parse_years(data["Units"], base_path)
-    input["carriers"] = parse_carriers(data["carriers"])
-    input["processes"] = parse_processes(data["processes"], input["carriers"])
-    input["parameters"] = get_parameters(data["parameters"], data["processes"], data["carriers"], input["years"], input["tss"], input["units"], base_path)
+    units = get_units(data["units"])
+    timesteps = parse_timesteps(data["timesteps"], base_path)
+    years = parse_years(data["years"], base_path)
+    regions = parse_regions(data["regions"])
+    carriers = parse_carriers(data["carriers"], regions)
+    processes = parse_processes(data["processes"], carriers)
+    input["parameters"] = get_parameters(data["parameters"], processes, carriers, years, timesteps, units, base_path)
     return input
 end
 
-function get_units(data::Dict)::Dict
-    for (unit_name, unit_data) in data
+function get_units(units::Dict)::Dict{String,Unit}
+    output = Dict{String,Unit}()
+    for (unit_name, unit_data) in units
         if keys(unit_data) != Set(("input", "output", "scale"))
             throw(InvalidParameterError("each unit must have 'input', 'output', and 'scale' fields but found: '$unit_name'"))
         end
@@ -52,8 +53,9 @@ function get_units(data::Dict)::Dict
         end
 
         unit_data["scale"] = convert(Float64, unit_data["scale"])
+        output[unit_name] = Unit(unit_data["input"], unit_data["output"], unit_data["scale"])
     end
-    return data
+    return output
 end
 
 function parse_data_file(path::AbstractString, base_path::AbstractString, ::Type{T}) where {T}
@@ -113,46 +115,79 @@ function validate_temporal_sequence(values::Vector{Int})
     end
 end
 
-function parse_tss(tss_data::Union{Vector,AbstractString}, base_path::AbstractString)::Vector{Int}
-    tss = get_vector_or_file(tss_data, Int, base_path)
-    validate_temporal_sequence(tss)
-    return tss
+function parse_timesteps(timesteps_data::Union{Vector,AbstractString}, base_path::AbstractString)::Vector{Time}
+    timesteps = get_vector_or_file(timesteps_data, Int, base_path)
+    validate_temporal_sequence(timesteps)
+    return [Time(t) for t in timesteps]
 end
 
-function parse_years(years_data::Union{Vector,AbstractString}, base_path::AbstractString)::Vector{Int}
+function parse_years(years_data::Union{Vector,AbstractString}, base_path::AbstractString)::Vector{Year}
     years = get_vector_or_file(years_data, Int, base_path)
     validate_temporal_sequence(years)
-    return years
+    return [Year(y) for y in years]
 end
 
-function parse_carriers(data::Dict)::Set{String}
-    return(Set{String}(keys(data)))
-end
 
-function parse_processes(data::Dict, carriers::Set{String})::Dict{String, Dict{String, String}}
-    processes = Dict{String, Dict{String, String}}()
-    for (process_name, process_data) in data
-        if process_data["carrier_in"] in carriers && process_data["carrier_out"] in carriers
-            processes[process_name] = Dict(
-                "carrier_in" => process_data["carrier_in"],
-                "carrier_out" => process_data["carrier_out"],
-            )
+function parse_regions(regions::Vector{String})::Set{Region}
+    output = Set{Region}()
+    for region in regions
+        r = Region(strip(region))
+        if ! (r in output)
+            push!(output, r)
         else
-            error("Invalid carrier in process: $(process_data["carrier_in"]) or $(process_data["carrier_out"])")
+            throw(InvalidParameterError("Duplicate region found in the regions vector $(r)"))
         end
     end
-    return processes
+    return output
 end
 
-function get_time_dependent(param::Union{Number,AbstractString}, tss::Vector{Int}, type::Type, base_path) :: Dict{Int, Number}
+function parse_carriers(carriers_json::Vector{Dict{String,String}}, regions::Set{Region})::Set{Carrier}
+    output = Set{Carrier}()
+    for carrier in carriers_json
+        r = Region(carrier["region"])
+        if ! (r in regions)
+            throw(InvalidParameterError("Region $(r) not found in the regions vector"))
+        end
+        c = Carrier(carrier["name"], r)
+        if ! (c in output)
+            push!(output, c)
+            carrier["struct"] = c # add carrier struct to carrier dict to be used in parameters
+        else
+            throw(InvalidParameterError("Duplicate carrier found in the carriers vector $(c)"))
+        end
+    end
+    return output
+end
+
+function parse_processes(processes::Vector{Dict{String,Any}}, carriers::Set{Carrier})::Set{Process}
+    output = Set{Process}()
+    for process in processes
+        carrier_in = Carrier(process["carrier_in"]["name"], Region(process["carrier_in"]["region"]))
+        carrier_out = Carrier(process["carrier_out"]["name"], Region(process["carrier_out"]["region"]))
+        if (carrier_in in carriers) && (carrier_out in carriers)
+            p = Process(process["name"], carrier_in, carrier_out)
+            if ! (p in output)
+                push!(output, p)
+                process["struct"] = p # add process struct to process dict to be used in parameters
+            else
+                throw(InvalidParameterError("Duplicate process found in the processes vector $(p)"))
+            end
+        else
+            error("Invalid carrier in process: $(carrier_in) or $(carrier_out)")
+        end
+    end
+    return output
+end
+
+function get_time_dependent(param::Union{Number,AbstractString}, timesteps::Vector{Time}, type::Type, base_path) :: Dict{Time, Number}
     """
     get a time-dependent parameter that is either a number or a data file path
     """
     if isa(param, Number)
-        return Dict(t => convert(type, param) for t in tss)
+        return Dict(t => convert(type, param) for t in timesteps)
     elseif isa(param, AbstractString)
         values = parse_data_file(param, base_path, type)
-        return Dict(t => values[t] for t in tss)
+        return Dict(t => values[Int(t)] for t in timesteps)
     end
 end
 
@@ -211,14 +246,14 @@ function linear_interpolation(f::Vector{<:Dict{String,<:Number}}, xq::Vector{<:N
     return interp_vals
 end
 
-function get_year_dependent(param::Union{Number,Vector}, years::Vector{Int}, type::Type)
+function get_year_dependent(param::Union{Number,Vector}, years::Vector{Year}, type::Type)
     """
     Parse a year-dependent parameter string.
     """
     if isa(param, Number)
         return Dict(y => convert(type, param) for y in years)
     elseif isa(param, Vector)
-        return Dict(zip(years, linear_interpolation(param, years, type)))
+        return Dict(zip(years, linear_interpolation(param, Int.(years), type)))
     else
         error("Invalid parameter type. Expected a number or a vector.")
     end
@@ -257,7 +292,7 @@ function scale_dict_values(dict::Dict, scale)
     return Dict(k => v * scale for (k, v) in dict)
 end
 
-function get_independent_parameters(parameters::Dict, years::Vector{Int}, units::Dict)::Dict
+function get_independent_parameters(parameters::Dict, years::Vector{Year}, units::Dict{String,Unit})::Dict
     """
     Get parameters independent of processes and carriers
     """
@@ -268,7 +303,7 @@ function get_independent_parameters(parameters::Dict, years::Vector{Int}, units:
         type = type_dict[param_data["type"]]
         sets = Set(param_data["sets"])
         if "quantity" in keys(param_data)
-            scale = units[param_data["quantity"]]["scale"]
+            scale = units[param_data["quantity"]].scale
         else
             scale = nothing
         end
@@ -302,7 +337,7 @@ function get_independent_parameters(parameters::Dict, years::Vector{Int}, units:
 end
 
 
-function get_dependent_parameters(parameters::Dict, processes::Dict, carriers::Dict, years::Vector{Int}, tss::Vector{Int}, units::Dict,  base_path::AbstractString)::Dict
+function get_dependent_parameters(parameters::Dict, processes::Vector{Dict}, carriers::Vector{Dict}, years::Vector{Year}, timesteps::Vector{Time}, units::Dict{String,Unit},  base_path::AbstractString)::Dict
     """
     Parse a parameter dictionary.
     Parameters
@@ -316,8 +351,8 @@ function get_dependent_parameters(parameters::Dict, processes::Dict, carriers::D
     carriers dictionary from raw input.
     years : Vector{Int}
     vector of years from parsed input.
-    tss : Vector{Int}
-    tss vector from parsed input.
+    timesteps : Vector{Int}
+    timesteps vector from parsed input.
     """
     params = Dict()
 
@@ -328,43 +363,43 @@ function get_dependent_parameters(parameters::Dict, processes::Dict, carriers::D
         end
     end
 
-    for (process, process_data) in processes
-        if !("parameters" in keys(process_data))
+    for process in processes
+        if !("parameters" in keys(process))
             throw(InvalidParameterError("All processes must have a 'parameters' field but found: '$(process)'"))
         end
-        for (param_name, param_value) in process_data["parameters"]
+        for (param_name, param_value) in process["parameters"]
             if ! (param_name in keys(parameters))
                 throw(InvalidParameterError("Parameter '$param_name' not found in parameters in process: '$(process)'"))
             end
             type = type_dict[parameters[param_name]["type"]]
             sets = parameters[param_name]["sets"]
             if "quantity" in keys(parameters[param_name])
-                scale = units[parameters[param_name]["quantity"]]["scale"]
+                scale = units[parameters[param_name]["quantity"]].scale
             else
                 scale = nothing
             end
             if sets == ["P"]
                 temp = convert(type, param_value) 
-                params[param_name][process] = (scale !== nothing  ? scale * temp : temp)
+                params[param_name][process["process_struct"]] = (scale !== nothing  ? scale * temp : temp)
             elseif sets == ["P", "T"]
-                temp = get_time_dependent(param_value, tss, type, base_path)
-                params[param_name][process] = (scale !== nothing ? scale_dict_values(temp, scale) : temp )
+                temp = get_time_dependent(param_value, timesteps, type, base_path)
+                params[param_name][process["process_struct"]] = (scale !== nothing ? scale_dict_values(temp, scale) : temp )
             elseif sets == ["P", "Y"]
                 temp = get_year_dependent(param_value, years, type)
-                params[param_name][process] = (scale !== nothing ? scale_dict_values(temp, scale) : temp )
+                params[param_name][process["struct"]] = (scale !== nothing ? scale_dict_values(temp, scale) : temp )
             end
         end
     end
 
-    for (carrier, carrier_data) in carriers
-        for (param_name, param_value) in carrier_data["parameters"]
+    for carrier in carriers
+        for (param_name, param_value) in carrier["parameters"]
             if ! (param_name in keys(parameters))
                 throw(InvalidParameterError("Parameter '$param_name' not found in parameters in carrier: '$(carrier)'."))
             end
             type = type_dict[parameters[param_name]["type"]]
             sets = parameters[param_name]["sets"]
             if sets == ["C"]
-                params[param_name][carrier] = convert(type,param_value)
+                params[param_name][carrier["struct"]] = convert(type,param_value)
             end
         end
     end
@@ -372,13 +407,13 @@ function get_dependent_parameters(parameters::Dict, processes::Dict, carriers::D
     return params
 end
 
-function get_parameters(parameters::Dict, processes::Dict, carriers::Dict, years::Vector{Int}, tss::Vector{Int}, units::Dict, base_path::AbstractString)::Dict
+function get_parameters(parameters::Dict, processes::Vector{Dict}, carriers::Vector{Dict}, years::Vector{Year}, timesteps::Vector{Time}, units::Dict{String,Unit}, base_path::AbstractString)::Dict
     """
     Parse a parameter dictionary.
     """
     validate_parameters(parameters)
     independent_parameters = get_independent_parameters(parameters, years, units)
-    dependent_parameters = get_dependent_parameters(parameters, processes, carriers, years, tss, units, base_path)
+    dependent_parameters = get_dependent_parameters(parameters, processes, carriers, years, timesteps, units, base_path)
     return merge(independent_parameters, dependent_parameters)
 end
 

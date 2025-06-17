@@ -1,12 +1,6 @@
 module CESM
 
-export greet
-
-"""
-    greet()
-
-Return double the number `x` plus `1`.
-"""
-greet() = print("Hello World!")
+include("components.jl")
+include("parser.jl")
 
 end # module CESM

@@ -10,8 +10,13 @@
         "co2_spec": {"input": "kg/kWh",	"scale": 0.001, "output": "Mio t/GWh"},
         "money": {"input": "Mio EUR", "scale": 1, "output":	"Mio EUR"}
     },
-    "tss" : "./data_int.txt",
+    "timesteps" : "./data_int.txt",
     "years" : [2020, 2025, 2030],
+    "regions": [
+        "base",
+        "A",
+        "B"
+    ],
     "parameters": {
         "scale" : {
             "comment": "",
@@ -25,21 +30,34 @@
         }
     },
     "carriers": {
+        "dummy" : {
+            "comment": "Dummy carrier",
+            "region": "Base",
+            "parameters": {
+            }
+        },
         "gas" : {
             "comment": "gas commodity",
+            "region": "A",
             "parameters":{
                 "carrier_color": "blue",
                 "carrier_order": 10
             }
         },
-        "oil" : {}
+        "oil" : {
+            "comment": "gas commodity",
+            "region": "B",
+            "parameters":{
+                "carrier_color": "blue",
+                "carrier_order": 10
+            }
+        }
     },
     "processes": {
-        "gas_to_oil": {
+        "gas_to_oil" : {
             "carrier_in": "gas",
             "carrier_out": "oil",
             "parameters": {
-                
             }
         }
     }

@@ -432,7 +432,7 @@ function  add_constraints!(model, vars, input::Input)::Dict
         for y in input["years"]
             constrs["max_energy_out"][p,y] = @constraint(
                 model,
-                vars["total_energy_out"][cp, y] <= params["max_energy_out"][p][y],
+                vars["total_energy_out"][p, y] <= params["max_energy_out"][p][y],
                 base_name = "max_energy_out_$(p)_$y"
             )
         end
