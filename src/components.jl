@@ -1,6 +1,6 @@
 module Components
 
-export Carrier, Process, Region, Year, Unit, Time, Input
+export Carrier, Process, Region, Year, Unit, Time, Input, sina
 
 struct Unit
     input::String
@@ -105,8 +105,14 @@ Base.:(==)(p1::Process, p2::Process) =
 Base.convert(::Type{String}, p::Process) = "$(p.name)_$(p.carrier_in)_$(p.carrier_out)"
 Base.String(p::Process) = "$(p.name)_$(p.carrier_in)_$(p.carrier_out)"
 
-
+"""
+    Input
+    A struct to hold
+"""
 struct Input
+    """
+    A struct to hold
+    """
     units::Dict{String, Unit}
     years::Vector{Year}
     timesteps::Vector{Time}

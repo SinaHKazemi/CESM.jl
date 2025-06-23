@@ -5,9 +5,14 @@ Here we define the mathematical model of the optimization problem.
 ## Sets
 
 - **years**: an ordered set of years, denoted by $Y$.
-- **tss**: an ordered set of time steps selection, denoted by $T$.
-- **carriers**: an unordered set of energy carriers, denoted by $C$. `Dummy` is a special carrier that is used to represent the carriers out of the model.
-- **processes**: an unordered set of conversion processes, denoted by $P$. The subset of $P$ that contains storage conversion processes is denoted by $S$.
+- **timesteps**: an ordered set of time steps selection, denoted by $T$.
+- **regions**: an unordered set of regions, denoted by $R$. `Global` is a special region that is used to represent the regions out of the model.
+- **carriers**: an unordered set of energy carriers, denoted by $C$. Each carrier $c \in C$ has a name $c.name$ and region $c.region$. 
+Two carriers are equal if they have the same name and region.
+`Dummy` is a special carrier that is used to represent the carriers out of the model. this carrier belongs to `Global`.
+- **processes**: an unordered set of conversion processes, denoted by $P$.
+Each process $p \in P$ has a name $p.name$, input carrier $p.carrier_in$, output carrier $p.carrier_out$. Two process are equal if they have the same name, input carrier and output carrier.
+The subset of $P$ that contains storage conversion processes is denoted by $S$.
 
 ## Parameters
 

@@ -1,6 +1,6 @@
 push!(LOAD_PATH, joinpath(@__DIR__, "..", "src"))
 
-using Documenter, CESM, DocumenterMermaid
+using Documenter, Components, DocumenterMermaid
 
 makedocs(
     format = Documenter.HTML(),

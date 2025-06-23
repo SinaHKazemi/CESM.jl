@@ -342,7 +342,6 @@ function get_independent_parameters(parameters::Dict, years::Vector{Year}, units
     return params
 end
 
-
 function get_dependent_parameters(parameters::Dict, processes_json::Vector{Dict{String, Any}}, carriers_json::Vector{Dict{String, Any}}, years::Vector{Year}, timesteps::Vector{Time}, units::Dict{String,Unit},  base_path::AbstractString)::Dict
     """
     Parse a parameter dictionary.
