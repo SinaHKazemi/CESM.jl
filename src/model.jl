@@ -13,26 +13,28 @@ function run_model(input::Input)
     add_constraints!(model, vars, input)
     set_obj!(model, vars)
     optimize!(model)
-
-    # write_to_file(model, "model.mps")
-    # grb_model = model.moi_backend.optimizer.model.inner
-    # compute_conflict!(model)
-    # list_of_conflicting_constraints = ConstraintRef[]
-    # for (F, S) in list_of_constraint_types(model)
-    #     for con in all_constraints(model, F, S)
-    #         if get_attribute(con, MOI.ConstraintConflictStatus()) == MOI.IN_CONFLICT
-    #             push!(list_of_conflicting_constraints, con)
-    #         end
-    #     end
-    # end
-    # for x in list_of_conflicting_constraints
-    #     println(x)
-    # end
-    # iis_model, _ = copy_conflict(model)
-    # print(iis_model)
-
     output = get_output(input, vars)
     return output
+end
+
+function get_iis_model(model)
+    # needs to be completed, it is just a draft
+    write_to_file(model, "model.mps")
+    grb_model = model.moi_backend.optimizer.model.inner
+    compute_conflict!(model)
+    list_of_conflicting_constraints = ConstraintRef[]
+    for (F, S) in list_of_constraint_types(model)
+        for con in all_constraints(model, F, S)
+            if get_attribute(con, MOI.ConstraintConflictStatus()) == MOI.IN_CONFLICT
+                push!(list_of_conflicting_constraints, con)
+            end
+        end
+    end
+    for x in list_of_conflicting_constraints
+        println(x)
+    end
+    iis_model, _ = copy_conflict(model)
+    print(iis_model)
 end
 
 
@@ -68,10 +70,6 @@ function add_vars!(model, input)
     return vars
 end
 
-
-
-
-
 function  add_constraints!(model, vars, input::Input)::Dict
     # helper function
     function discount_factor(y::Year)::Float64
@@ -104,23 +102,33 @@ function  add_constraints!(model, vars, input::Input)::Dict
         return current
     end
 
+    function has_param(param_name, keys)
+        return get_param(param_name, keys) !== nothing
+    end
+
+    # define alias for readability
+    years = input.years
+    timesteps = input.timesteps
+    carriers = input.carriers
+    processes = input.processes
+    params = input.parameters
+
     # add constraints
     constrs = Dict()
-    params = input.parameters
-    defaults = input.parameters["defaults"]
+    
+    # Costs
+    
     constrs["totex"] = @constraint(model, vars["total_cost"] == vars["capital_cost"] + vars["operational_cost"], base_name="totex")
     
     constrs["capex"] = @constraint(
         model,
         vars["capital_cost"] == sum(
             discount_factor(y) * 
-            sum(vars["new_capacity"][p,y]) * get_param("capital_cost_power", (p,y)) for p in input.processes
-            for y in input.years
+            sum(vars["new_capacity"][p,y]) * get_param("capital_cost_power", (p,y)) for p in processes
+            for y in years
         ) - vars["total_residual_value"],
         base_name = "capex"
     )
-
-    
 
     constrs["opex"] = @constraint(
         model,
@@ -128,13 +136,12 @@ function  add_constraints!(model, vars, input::Input)::Dict
             (
                 (
                     vars["active_capacity"][p, y] * get_param("operational_cost_power",(p,y)) +
-                    vars["active_capacity"][p, y] * get_param("operational_cost_power",(p,y)) +
                     vars["total_energy_out"][p, y] * get_param("operational_cost_energy",(p,y)) +
-                    get_param("co2_price",y) * vars["annual_emission"][y]
+                    vars["annual_emission"][y] * get_param("co2_price",y)
                 ) * year_gap(y) * discount_factor(y)
             )
-            for p in input.processes
-            for y in input.years
+            for p in processes
+            for y in years
         ),
         base_name = "opex"
     )
@@ -142,9 +149,9 @@ function  add_constraints!(model, vars, input::Input)::Dict
 
     constrs["residual_value"] = Dict()
     begin
-        last_year = input.years[end]
-        for p in input.processes
-            for y in input.years
+        last_year = years[end]
+        for p in processes
+            for y in years
                 if (last_year - y) < get_param("lifetime", p)
                     constrs["residual_value"][p,y] =
                     @constraint(
@@ -160,29 +167,33 @@ function  add_constraints!(model, vars, input::Input)::Dict
     constrs["total_residual_value"] = @constraint(
         model,
         vars["total_residual_value"] == sum(
-            vars["residual_value"][p, y] for p in input.processes for y in input.years
-            if (input.years[end] - y) < get_param("lifetime", p)
+            vars["residual_value"][p, y] for p in processes for y in years
+            if (years[end] - y) < get_param("lifetime", p)
         ),
         base_name = "total_residual_value"
     )
 
+    # Power Balance
+    
     constrs["power_balance"] = Dict()
     begin
-        for t in input.timesteps
-            for y in input.years
-                for c in input.carriers
+        for t in timesteps
+            for y in years
+                for c in carriers
                     c == Carrier("Dummy", Region("Global")) && continue
                     constrs["power_balance"][c,y,t] = @constraint(
                         model,
-                        sum(vars["power_in"][p, y, t] for p in input.processes if p.carrier_in == c) == 
-                        sum(vars["power_out"][p, y, t] for p in input.processes if p.carrier_out == c),
-                        base_name="power_balance_$(c)_$(y)_$t"
+                        sum(vars["power_in"][p, y, t] for p in processes if p.carrier_in == c) == 
+                        sum(vars["power_out"][p, y, t] for p in processes if p.carrier_out == c),
+                        base_name="power_balance_$(c)_$(y)_$(t)"
                     )
                 end
             end
         end
     end
 
+    # CO2
+    
     constrs["co2_emission_eq"] = Dict() 
     for y in input.years
         constrs["co2_emission_eq"][y] = @constraint(
@@ -194,7 +205,7 @@ function  add_constraints!(model, vars, input::Input)::Dict
 
     constrs["co2_emission_limit"] = Dict()
     for y in input.years
-        get_param("annual_co2_limit",y) === nothing && continue
+        !has_param("annual_co2_limit",y) && continue
         constrs["co2_emission_limit"][y] = @constraint(
             model,
             vars["annual_emission"][y] <= get_param("annual_co2_limit",y),
@@ -202,54 +213,25 @@ function  add_constraints!(model, vars, input::Input)::Dict
         )
     end
 
+    # Power Output
+    
     constrs["efficiency"] = Dict()
-    for p in input.processes
-        get_param("is_storage",p) && continue
-        for y in input.years
-            for t in input.timesteps
+    for p in processes
+        for y in years
+            for t in timesteps
                 constrs["efficiency"][p,y,t] = @constraint(
                     model,
-                    vars["power_out"][p,y,t] == vars["power_in"][p,y,t] * get(params["efficiency"],p,defaults["efficiency"]),
-                    base_name = "efficiency_eq_$(p)_$(y)_$t"
+                    vars["power_out"][p,y,t] == vars["power_in"][p,y,t] * get_param("efficiency", p),
+                    base_name = "efficiency_eq_$(p)_$(y)_$(t)"
                 )
             end
         end
     end
-
-    # constrs[:max_power_out] = Dict()
-    # for cp in keys(sets[:CP])
-    #     haskey(params[:availability_profile], cp) && continue
-    #     for y in sets[:Y]
-    #         for t in sets[:T]
-    #             constrs[:max_power_out][cp,y,t] = @constraint(
-    #                 model,
-    #                 vars[:PowerOut][cp, y, t] <= vars[:CapActive][cp, y],
-    #                 base_name = "max_power_out_$(cp)_$(y)_$t"
-    #             )
-    #         end
-    #     end
-    # end
-
-    constrs["re_availability"] = Dict()
-    for p in input.processes
-        get_param("availability_profile",p) === nothing && continue
-        for y in input.years
-            for t in input.timesteps
-                constrs["re_availability"][p,y,t] = @constraint(
-                    model,
-                    vars["power_out"][p,y,t] <= vars["active_capacity"][p,y] * get_param("availability_profile",(p,t)),
-                    base_name = "re_availability_$(p)_$(y)_$(t)"
-                )
-            end
-        end
-    end
-
 
     constrs["technical_availability"] = Dict()
-    for p in input.processes
-        avail = get(params["technical_availability"],p,defaults[])
-        for y in input.years
-            for t in input.timesteps
+    for p in processes
+        for y in years
+            for t in timesteps
                 @constraint(
                     model,
                     vars["power_out"][p,y,t] <= vars["active_capacity"][p,y] * get_param("technical_availability",p),
@@ -259,95 +241,113 @@ function  add_constraints!(model, vars, input::Input)::Dict
         end
     end
 
+    constrs["renewable_availability"] = Dict()
+    for p in processes
+        !has_param("availability_profile",p) && continue
+        for y in years
+            for t in timesteps
+                constrs["renewable_availability"][p,y,t] = @constraint(
+                    model,
+                    vars["power_out"][p,y,t] <= vars["active_capacity"][p,y] * get_param("availability_profile",(p,t)),
+                    base_name = "renewable_availability_$(p)_$(y)_$(t)"
+                )
+            end
+        end
+    end
+
+    # Power-Energy
+
     constrs["energy_out_time"] = Dict()
-    for y in input.years
-        for t in input.timesteps
-            for p in input.processes
+    for y in years
+        for t in timesteps
+            for p in processes
                 constrs["energy_out_time"][p,y,t] = @constraint(
                     model,
                     vars["energy_out_time"][p,y,t] == vars["power_out"][p,y,t] * (8760 /length(input.timesteps)),
-                    base_name = "energy_out_time_$(p)_$(y)_$t"
+                    base_name = "energy_out_time_$(p)_$(y)_$(t)"
                 )
             end
         end
     end
 
     constrs["energy_in_time"] = Dict()
-    for y in input.years
-        for t in input.timesteps
-            for p in input.processes
+    for y in years
+        for t in timesteps
+            for p in processes
                 constrs["energy_in_time"][p,y,t] = @constraint(
                     model,
                     vars["energy_in_time"][p,y,t] == vars["power_in"][p,y,t] * (8760 /length(input.timesteps)),
-                    base_name = "energy_in_time_$(p)_$(y)_$t"
+                    base_name = "energy_in_time_$(p)_$(y)_$(t)"
                 )
             end
         end
     end
 
-    # Fraction Equations
+    # Fractions
+
     constrs["min_cosupply"] = Dict()
-    for p in input.processes
-        get_param("min_fraction_out",p) === nothing && continue
-        for y in input.years
-            for t in input.timesteps
+    for p in processes
+        !has_param("min_fraction_out",p) && continue
+        for y in years
+            for t in timesteps
                 constrs["min_cosupply"][p,y,t] = @constraint(
                     model,
                     vars["energy_out_time"][p,y,t] >= get_param("min_fraction_out",(p,y)) * vars["net_energy_generation"][p.carrier_out,y,t],
-                    base_name = "min_cosupply_$(p)_$(y)_$(t)"
+                    base_name = "min_carrier_supply_$(p)_$(y)_$(t)"
                 )
             end
         end
     end
 
     constrs["max_cosupply"] = Dict()
-    for p in input.processes
-        get_param("max_fraction_out",p) === nothing && continue
-        for y in input.years
-            for t in input.timesteps
+    for p in processes
+        !has_param("max_fraction_out",p) && continue
+        for y in years
+            for t in timesteps
                 constrs["max_cosupply"][p,y,t] = @constraint(
                     model,
                     vars["energy_out_time"][p,y,t] <= get_param("max_fraction_out",(p,y)) * vars["net_energy_generation"][p.carrier_out,y,t],
-                    base_name = "max_cosupply_$(p)_$(y)_$(t)"
+                    base_name = "max_carrier_supply_$(p)_$(y)_$(t)"
                 )
             end
         end
     end
 
     constrs["min_couse"] = Dict()
-    for p in input.processes
-        get_param("min_fraction_in",p) === nothing && continue
-        for y in sets[:Y]
-            for t in sets[:T]
+    for p in processes
+        !has_param("min_fraction_in",p) && continue
+        for y in years
+            for t in timesteps
                 constrs["min_couse"][p,y,t] = @constraint(
                     model,
                     vars["energy_in_time"][p,y,t] >= get_param("min_fraction_in",(p,y)) * vars["net_energy_consumption"][p.carrier_in,y,t],
-                    base_name = "min_couse_$(p)_$(y)_$(t)"
+                    base_name = "min_carrier_consumption_$(p)_$(y)_$(t)"
                 )
             end
         end
     end
 
     constrs["max_couse"] = Dict()
-    for p in input.processes
-        get_param("max_fraction_in",p) === nothing && continue
-        for y in input.years
-            for t in input.timesteps
+    for p in processes
+        !has_param("max_fraction_in",p) && continue
+        for y in years
+            for t in timesteps
                 constrs["max_couse"][p,y,t] = @constraint(
                     model,
                     vars["energy_in_time"][p,y,t] <= get_param("max_fraction_in",(p,y)) * vars["net_energy_consumption"][p.carrier_in,y,t],
-                    base_name = "max_couse_$(p)_$(y)_$(t)"
+                    base_name = "max_carrier_consumption_$(p)_$(y)_$(t)"
                 )
             end
         end
     end
 
     # Capacity
+
     constrs["max_legacy_cap"] = Dict()
-    for p in input.processes
-        get_param("max_legacy_capacity", p) === nothing && continue
-        for y in input.years
-            isinf(get_param("max_legacy_capacity", (p,y))) && continue
+    for p in processes
+        !has_param("max_legacy_capacity", p) && continue
+        for y in years
+            !has_param("max_legacy_capacity", (p,y)) && continue
             constrs["max_legacy_cap"][p,y] = @constraint(
                 model,
                 vars["legacy_capacity"][p,y] <= get_param("max_legacy_capacity", (p,y)),
@@ -357,10 +357,10 @@ function  add_constraints!(model, vars, input::Input)::Dict
     end
 
     constrs["min_legacy_cap"] = Dict()
-    for p in input.processes
-        get_param("min_legacy_capacity", p) === nothing && continue
-        for y in input.years
-            isinf(get_param("min_legacy_capacity", (p,y))) && continue
+    for p in processes
+        !has_param("min_legacy_capacity", p) && continue
+        for y in years
+            !has_param("min_legacy_capacity", (p,y)) && continue
             constrs["min_legacy_cap"][p,y] = @constraint(
                 model,
                 vars["legacy_capacity"][p,y] >= get_param("min_legacy_capacity", (p,y)),
@@ -370,13 +370,13 @@ function  add_constraints!(model, vars, input::Input)::Dict
     end
 
     constrs["active_capacity"] = Dict() 
-    for p in input.processes
-        for y in input.years
+    for p in processes
+        for y in years
             constrs["active_capacity"][p,y] = @constraint(
                 model,
                 vars["active_capacity"][p,y] == vars["legacy_capacity"][p,y] + sum(
                     vars["new_capacity"][p,yy] 
-                    for yy in input.years 
+                    for yy in years 
                     if yy in y-get_param("lifetime",p)+1:y
                 ),
                 base_name = "active_capacity_$(p)_$(y)"
@@ -385,10 +385,10 @@ function  add_constraints!(model, vars, input::Input)::Dict
     end
 
     constrs["max_active_capacity"] = Dict()
-    for p in input.processes
-        get_param("max_capacity",p) === nothing && continue
-        for y in input.years
-            isinf(get_param("max_capacity",(p,y))) && continue
+    for p in processes
+        !has_param("max_capacity",p) && continue
+        for y in years
+            !has_param("max_capacity",(p,y)) && continue
             constrs["max_active_capacity"][p,y] = @constraint(
                 model,
                 vars["active_capacity"][p,y] <= get_param("max_capacity",(p,y)),
@@ -398,10 +398,10 @@ function  add_constraints!(model, vars, input::Input)::Dict
     end
 
     constrs["min_active_capacity"] = Dict()
-    for p in input.processes
-        get_param("min_capacity",p) === nothing && continue
-        for y in input.years
-            isinf(get_param("min_capacity",(p,y))) && continue
+    for p in processes
+        has_param("min_capacity",p) && continue
+        for y in years
+            !has_param("min_capacity",(p,y)) && continue
             constrs["min_active_capacity"][p,y] = @constraint(
                 model,
                 vars["active_capacity"][p,y] >= get_param("min_capacity",(p,y)),
@@ -410,34 +410,63 @@ function  add_constraints!(model, vars, input::Input)::Dict
         end
     end
 
-    # Energy
+    # Auxiliary Linking Variables
+
     constrs["energy_power_out"] = Dict() 
-    for p in input.processes
-        get_param("output_profile",(p,y)) === nothing && continue
-        for y in input.years
+    for p in processes
+        !has_param("output_profile",(p,y)) && continue
+        for y in years
             constrs["energy_power_out"][p,y] = @constraint(
                 model,
-                vars["total_energy_out"][p,y] == sum(vars["energy_out_time"][p,y,t] for t in input.timesteps),
+                vars["total_energy_out"][p,y] == sum(vars["energy_out_time"][p,y,t] for t in timesteps),
                 base_name = "energy_power_out_$(p)_$(y)"
             )
         end
     end
     
     constrs["energy_power_in"] = Dict()
-    for p in input.processes
-        for y in input.years
+    for p in processes
+        for y in years
             constrs["energy_power_in"][p,y] = @constraint(
                 model,
-                vars["total_energy_out"][p,y] == sum(vars["energy_in_time"][p,y,t] for t in input.timesteps),
+                vars["total_energy_in"][p,y] == sum(vars["energy_in_time"][p,y,t] for t in timesteps),
                 base_name = "energy_power_in_$(p)_$(y)"
             )
         end
     end
 
+    constrs["net_generation"] = Dict()
+    for c in carriers
+        for y in years
+            for t in timesteps
+                constrs["net_generation"][c,y,t] = @constraint(
+                    model,
+                    vars["net_energy_generation"][c,y,t] == sum(vars["energy_out_time"][p,y,t] for p in processes if p.carrier_out == c),
+                    base_name = "net_generation_$(c)_$(y)_$(t)"
+                )
+            end
+        end
+    end
+
+    constrs["net_consumption"] = Dict()
+    for c in carriers
+        for y in years
+            for t in timesteps
+                constrs["net_consumption"][c,y,t] = @constraint(
+                    model,
+                    vars["net_energy_consumption"][c,y,t] == sum(vars["energy_in_time"][p,y,t] for p in input.processes if p.carrier_in == c),
+                    base_name = "net_consumption_$(c)_$(y)_$(t)"
+                )
+            end
+        end
+    end
+
+    # Generation 
+
     constrs["max_energy_out"] = Dict()
-    for p in input.processes
-        get_param("max_energy_out",p) === nothing && continue
-        for y in input.years
+    for p in processes
+        !has_param("max_energy_out",p) && continue
+        for y in years
             constrs["max_energy_out"][p,y] = @constraint(
                 model,
                 vars["total_energy_out"][p, y] <= get_param("max_energy_out",(p,y)),
@@ -447,9 +476,9 @@ function  add_constraints!(model, vars, input::Input)::Dict
     end
 
     constrs["min_energy_out"] = Dict()
-    for p in input.processes
-        get_param("min_energy_out",p) === nothing && continue
-        for y in input.years
+    for p in processes
+        !has_param("min_energy_out",p) && continue
+        for y in years
             constrs["min_energy_out"][p,y] = @constraint(
                 model,
                 vars["total_energy_out"][p,y] >= get_param("min_energy_out",(p,y)),
@@ -459,10 +488,10 @@ function  add_constraints!(model, vars, input::Input)::Dict
     end
 
     constrs["load_shape"] = Dict()
-    for p in input.processes
-        get_param("output_profile",p) === nothing && continue
-        for y in input.years
-            for t in input.timesteps
+    for p in processes
+        !has_param("output_profile",p) && continue
+        for y in years
+            for t in timesteps
                 constrs["load_shape"][p,y,t] = @constraint(
                     model,
                     vars["energy_out_time"][p,y,t] == get_param("output_profile",(p,t)) * vars["total_energy_out"][p,y],
@@ -472,38 +501,13 @@ function  add_constraints!(model, vars, input::Input)::Dict
         end
     end
 
-    constrs["net_to_gen"] = Dict()
-    for c in input.carriers
-        for y in input.years
-            for t in input.timesteps
-                constrs["net_to_gen"][c,y,t] = @constraint(
-                    model,
-                    vars["net_energy_generation"][c,y,t] == sum(vars["energy_out_time"][p,y,t] for p in input.processes if p.carrier_out == c),
-                    base_name = "net_to_gen_$(c)_$(y)_$(t)"
-                )
-            end
-        end
-    end
-
-    constrs["net_to_con"] = Dict()
-    for c in input.carriers
-        for y in input.years
-            for t in input.timesteps
-                constrs["net_to_con"][c,y,t] = @constraint(
-                    model,
-                    vars["net_energy_consumption"][c,y,t] == sum(vars["energy_in_time"][p,y,t] for p in input.processes if p.carrier_in == c),
-                    base_name = "net_to_con_$(c)_$(y)_$(t)"
-                )
-            end
-        end
-    end
-
     # Storage
+
     constrs["storage_energy_limit"] = Dict()
-    for p in input.processes
+    for p in processes
         !(get_param("is_storage", p)) && continue
-        for y in input.years
-            for t in input.timesteps
+        for y in years
+            for t in timesteps
                 constrs["storage_energy_limit"][p,y,t] = @constraint(
                     model,
                     vars["storage_level"][p,y,t] <= vars["max_storage_level"][p,y],
@@ -513,12 +517,11 @@ function  add_constraints!(model, vars, input::Input)::Dict
         end
     end
 
-
     constrs["charge_power_limit"] = Dict()
-    for p in input.processes
+    for p in processes
         !(get_param("is_storage", p)) && continue
-        for y in input.years
-            for t in input.timesteps
+        for y in years
+            for t in timesteps
                 constrs["charge_power_limit"][p,y,t] = @constraint(
                     model,
                     vars["power_in"][p,y,t] <= vars["active_capacity"][p,y],
@@ -529,11 +532,11 @@ function  add_constraints!(model, vars, input::Input)::Dict
     end
 
     constrs["storage_energy_balance"] = Dict()
-    for p in input.processes
+    for p in processes
         !(get_param("is_storage", p)) && continue
-        for y in input.years
-            for (idx,t) in enumerate(input.timesteps)
-                prev_t = input.timesteps[idx == 1 ? end : idx - 1]
+        for y in years
+            for (idx,t) in enumerate(timesteps)
+                prev_t = timesteps[idx == 1 ? end : idx - 1]
                 constrs["storage_energy_balance"][p,y,t] = @constraint(
                     model,
                     vars["storage_level"][p,y,t] == vars["storage_level"][p,y,prev_t]
@@ -546,9 +549,9 @@ function  add_constraints!(model, vars, input::Input)::Dict
     end
 
     constrs["c_rate_relation"] = Dict()
-    for p in input.processes
+    for p in processes
         !(get_param("is_storage", p)) && continue
-        for y in input.years
+        for y in years
             constrs["c_rate_relation"][p,y] = @constraint(
                 model,
                 vars["max_storage_level"][p,y] == vars["active_capacity"][p,y] / params["c_rate"][p],
@@ -565,11 +568,6 @@ function set_obj!(model, vars)
 end
 
 function get_output(input::Input, vars)
-    default_dict = Dict(
-        "Float" => 0.0,
-        "Integer" => 0,
-        "Boolean" => False,
-    )
     output = Dict()
     for (var_name, attributes) in variables
         set_names = attributes.sets
@@ -578,13 +576,13 @@ function get_output(input::Input, vars)
             sets = Vector()
             for set_name in set_names
                 if set_name == "Y"
-                    push!(sets, input.years)
+                    push!(sets, years)
                 elseif set_name == "T"
-                    push!(sets, input.timesteps)
+                    push!(sets, timesteps)
                 elseif set_name == "P"
-                    push!(sets, input.processes)
+                    push!(sets, processes)
                 elseif set_name == "C"
-                    push!(sets, input.carriers)
+                    push!(sets, carriers)
                 else
                     throw(InvalidParameterError("unrecognized set: $set_name , should be Y, T, P, C"))
                 end

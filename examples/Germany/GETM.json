@@ -1,0 +1,380 @@
+{
+    "comment": "German Energy Transition Model",
+    "version": "1",
+    "parameters": {
+
+        
+    },
+    "units": {
+        "power":{"input": "GW",	"scale": 1, "output": "GW"},
+        "energy": {"input":	"TWh", "scale": 1000, "output": "GWh"},
+        "co2_emissions": {"input": "Mio t",	"scale": 1, "output": "Mio t"},
+        "cost_energy": {"input": "EUR/MWh",	"scale": 0.001, "output": "Mio EUR/GWh"},
+        "cost_power": {"input": "EUR/kW", "scale": 1, "output":	"Mio EUR/GW"},
+        "co2_spec": {"input": "kg/kWh",	"scale": 0.001, "output": "Mio t/GWh"},
+        "money": {"input": "Mio EUR", "scale": 1, "output":	"Mio EUR"}
+    },
+    "timesteps" : "./time_series/data_int.txt",
+    "years" : [2020, 2025, 2030],
+    "regions": [
+        "Global"
+    ],
+    "carriers": [
+        {
+            "name": "Dummy",
+            "region": "Global"
+        },
+        {
+            "name": "Vehicles_Propulsion",
+            "region": "Global"
+        },
+        {
+            "name": "Decentral_Heat",
+            "region": "Global"
+        },
+        {
+            "name": "Industrial_Heat_LT",
+            "region": "Global"
+        },
+        {
+            "name": "Industrial_Heat_HT",
+            "region": "Global"
+        },
+        {
+            "name": "Electricity",
+            "region": "Global"
+        },
+        {
+            "name": "Biomass",
+            "region": "Global"
+        },
+        {
+            "name": "Waste",
+            "region": "Global"
+        },
+        {
+            "name": "Uranium",
+            "region": "Global"
+        },
+        {
+            "name": "Liquid_Fuel",
+            "region": "Global"
+        },
+        {
+            "name": "Crude_Oil",
+            "region": "Global"
+        },
+        {
+            "name": "Lignite",
+            "region": "Global"
+        },
+        {
+            "name": "Coal",
+            "region": "Global"
+        },
+        {
+            "name": "Natural_Gas",
+            "region": "Global"
+        },
+        {
+            "name": "H2",
+            "region": "Global"
+        },
+        {
+            "name": "Help_Gas_CHP",
+            "region": "Global"
+        },
+        {
+            "name": "Help_Coal_CHP",
+            "region": "Global"
+        },
+        {
+            "name": "Help_Biomass_CHP",
+            "region": "Global"
+        }
+    ],
+    "processes": [
+        {
+            "name": "Import_Biomass",
+            "carrier_in": {"name": "Dummy", "region": "Global"},
+            "carrier_out": {"name": "Biomass", "region": "Global"}
+        },
+        {
+            "name": "Import_Coal",
+            "carrier_in": {"name": "Dummy", "region": "Global"},
+            "carrier_out": {"name": "Coal", "region": "Global"}
+        },
+                {
+            "name": "Import_Crude_Oil",
+            "carrier_in": {"name": "Dummy", "region": "Global"},
+            "carrier_out": {"name": "Crude_Oil", "region": "Global"}
+        },
+                {
+            "name": "Import_Lignite",
+            "carrier_in": {"name": "Dummy", "region": "Global"},
+            "carrier_out": {"name": "Lignite", "region": "Global"}
+        },
+        {
+            "name": "Import_Natural_Gas",
+            "carrier_in": {"name": "Dummy", "region": "Global"},
+            "carrier_out": {"name": "Natural_Gas", "region": "Global"}
+        },
+        {
+            "name": "Import_Uranium",
+            "carrier_in": {"name": "Dummy", "region": "Global"},
+            "carrier_out": {"name": "Uranium", "region": "Global"}
+        },
+        {
+            "name": "Import_Waste",
+            "carrier_in": {"name": "Dummy", "region": "Global"},
+            "carrier_out": {"name": "Waste", "region": "Global"}
+        },
+        {
+            "name": "Import_H2",
+            "carrier_in": {"name": "Dummy", "region": "Global"},
+            "carrier_out": {"name": "H2", "region": "Global"}
+        },
+        {
+            "name": "Oil_Processing",
+            "carrier_in": {"name": "Crude_Oil", "region": "Global"},
+            "carrier_out": {"name": "Liquid_Fuel", "region": "Global"}
+        },
+
+        {
+            "name": "Integrate_Gas",
+            "carrier_in": {"name": "Natural_Gas", "region": "Global"},
+            "carrier_out": {"name": "Gas", "region": "Global"}
+        },
+        {
+            "name": "Integrate_H2",
+            "carrier_in": {"name": "H2", "region": "Global"},
+            "carrier_out": {"name": "Gas", "region": "Global"}
+        },
+        {
+            "name": "Demand_Decentral_Heat",
+            "carrier_in": {"name": "Decentral_Heat", "region": "Global"},
+            "carrier_out": {"name": "Dummy", "region": "Global"}
+        },
+        {
+            "name": "Demand_Electricity",
+            "carrier_in": {"name": "Electricity", "region": "Global"},
+            "carrier_out": {"name": "Dummy", "region": "Global"}
+        },
+        {
+            "name": "Demand_Industrial_Heat_HT",
+            "carrier_in": {"name": "Industrial_Heat_HT", "region": "Global"},
+            "carrier_out": {"name": "Dummy", "region": "Global"}
+        },
+        {
+            "name": "Demand_Industrial_Heat_LT",
+            "carrier_in": {"name": "Industrial_Heat_LT", "region": "Global"},
+            "carrier_out": {"name": "Dummy", "region": "Global"}
+        },
+        {
+            "name": "Demand_Vehicles_Propulsion",
+            "carrier_in": {"name": "Vehicles_Propulsion", "region": "Global"},
+            "carrier_out": {"name": "Dummy", "region": "Global"}
+        },
+        {
+            "name": "Demand_Rail_Traffic",
+            "carrier_in": {"name": "Electricity", "region": "Global"},
+            "carrier_out": {"name": "Dummy", "region": "Global"}
+        },
+        {
+            "name": "Demand_International_transport",
+            "carrier_in": {"name": "Liquid_Fuel", "region": "Global"},
+            "carrier_out": {"name": "Dummy", "region": "Global"}
+        },
+        {
+            "name": "Demand_Nonenergy",
+            "carrier_in": {"name": "Crude_Oil", "region": "Global"},
+            "carrier_out": {"name": "Dummy", "region": "Global"}
+        },
+        {
+            "name": "PP_Biomass",
+            "carrier_in": {"name": "Biomass", "region": "Global"},
+            "carrier_out": {"name": "Electricity", "region": "Global"}
+        },
+        {
+            "name": "PP_Coal",
+            "carrier_in": {"name": "Coal", "region": "Global"},
+            "carrier_out": {"name": "Electricity", "region": "Global"}
+        },
+        {
+            "name": "PP_Gas",
+            "carrier_in": {"name": "Gas", "region": "Global"},
+            "carrier_out": {"name": "Electricity", "region": "Global"}
+        },
+        {
+            "name": "PP_Lignite",
+            "carrier_in": {"name": "Liquid_Fuel", "region": "Global"},
+            "carrier_out": {"name": "Electricity", "region": "Global"}
+        },
+        {
+            "name": "PP_Nuclear",
+            "carrier_in": {"name": "Uranium", "region": "Global"},
+            "carrier_out": {"name": "Electricity", "region": "Global"}
+        },
+        {
+            "name": "PP_PV",
+            "carrier_in": {"name": "Dummy", "region": "Global"},
+            "carrier_out": {"name": "Electricity", "region": "Global"}
+        },
+        {
+            "name": "PP_Run_off_River",
+            "carrier_in": {"name": "Dummy", "region": "Global"},
+            "carrier_out": {"name": "Electricity", "region": "Global"}
+        },
+        {
+            "name": "PP_Wind_Off",
+            "carrier_in": {"name": "Dummy", "region": "Global"},
+            "carrier_out": {"name": "Electricity", "region": "Global"}
+        },
+        {
+            "name": "PP_Wind_On",
+            "carrier_in": {"name": "Dummy", "region": "Global"},
+            "carrier_out": {"name": "Electricity", "region": "Global"}
+        },
+        {
+            "name": "Furnace_Coal",
+            "carrier_in": {"name": "Coal", "region": "Global"},
+            "carrier_out": {"name": "Industrial_Heat_HT", "region": "Global"}
+        },
+        {
+            "name": "Furnace_Electric",
+            "carrier_in": {"name": "Electricity", "region": "Global"},
+            "carrier_out": {"name": "Industrial_Heat_HT", "region": "Global"}
+        },
+        {
+            "name": "Furnace_Gas",
+            "carrier_in": {"name": "Gas", "region": "Global"},
+            "carrier_out": {"name": "Industrial_Heat_HT", "region": "Global"}
+        },
+        {
+            "name": "Temperiture_Downgrade",
+            "carrier_in": {"name": "Industrial_Heat_HT", "region": "Global"},
+            "carrier_out": {"name": "Industrial_Heat_LT", "region": "Global"}
+        },
+        {
+            "name": "Central_Biomass_Boiler",
+            "carrier_in": {"name": "Biomass", "region": "Global"},
+            "carrier_out": {"name": "Industrial_Heat_LT", "region": "Global"}
+        },
+        {
+            "name": "Central_Heat_Pump",
+            "carrier_in": {"name": "Electricity", "region": "Global"},
+            "carrier_out": {"name": "Industrial_Heat_LT", "region": "Global"}
+        },
+        {
+            "name": "Central_Waste_Boiler",
+            "carrier_in": {"name": "Waste", "region": "Global"},
+            "carrier_out": {"name": "Industrial_Heat_LT", "region": "Global"}
+        },
+        {
+            "name": "District_Heating",
+            "carrier_in": {"name": "Industrial_Heat_LT", "region": "Global"},
+            "carrier_out": {"name": "Decentral_Heat", "region": "Global"}
+        },
+        {
+            "name": "Decentral_Biomass_Heater",
+            "carrier_in": {"name": "Biomass", "region": "Global"},
+            "carrier_out": {"name": "Decentral_Heat", "region": "Global"}
+        },
+        {
+            "name": "Decentral_Gas_Heater",
+            "carrier_in": {"name": "Gas", "region": "Global"},
+            "carrier_out": {"name": "Decentral_Heat", "region": "Global"}
+        },
+        {
+            "name": "Decentral_Heat_Pump",
+            "carrier_in": {"name": "Electricity", "region": "Global"},
+            "carrier_out": {"name": "Decentral_Heat", "region": "Global"}
+        },
+        {
+            "comment": "name doesn't make sense",
+            "name": "Decentral_Oil_Heater",
+            "carrier_in": {"name": "Liquid_Fuel", "region": "Global"},
+            "carrier_out": {"name": "Decentral_Heat", "region": "Global"}
+        },
+        {
+            "name": "Decentral_Resistive_Heater",
+            "carrier_in": {"name": "Electricity", "region": "Global"},
+            "carrier_out": {"name": "Decentral_Heat", "region": "Global"}
+        },
+        {
+            "name": "Biomass_CHP_input",
+            "carrier_in": {"name": "Biomass", "region": "Global"},
+            "carrier_out": {"name": "Help_Biomass_CHP", "region": "Global"}
+        },
+        {
+            "name": "Biomass_CHP_output_Dummy",
+            "carrier_in": {"name": "Help_Biomass_CHP", "region": "Global"},
+            "carrier_out": {"name": "Dummy", "region": "Global"}
+        },
+        {
+            "name": "Biomass_CHP_output_Electricity",
+            "carrier_in": {"name": "Help_Biomass_CHP", "region": "Global"},
+            "carrier_out": {"name": "Electricity", "region": "Global"}
+        },
+        {
+            "name": "Biomass_CHP_output_Industrial_Heat_LT",
+            "carrier_in": {"name": "Help_Biomass_CHP", "region": "Global"},
+            "carrier_out": {"name": "Industrial_Heat_LT", "region": "Global"}
+        },
+        {
+            "name": "Coal_CHP_input",
+            "carrier_in": {"name": "Coal", "region": "Global"},
+            "carrier_out": {"name": "Help_Coal_CHP", "region": "Global"}
+        },
+        {
+            "name": "Coal_CHP_output_Dummy",
+            "carrier_in": {"name": "Help_Coal_CHP", "region": "Global"},
+            "carrier_out": {"name": "Dummy", "region": "Global"}
+        },
+        {
+            "name": "Coal_CHP_output_Electricity",
+            "carrier_in": {"name": "Help_Coal_CHP", "region": "Global"},
+            "carrier_out": {"name": "Electricity", "region": "Global"}
+        },
+        {
+            "name": "Coal_CHP_output_Industrial_Heat_LT",
+            "carrier_in": {"name": "Help_Coal_CHP", "region": "Global"},
+            "carrier_out": {"name": "Industrial_Heat_LT", "region": "Global"}
+        },
+        {
+            "name": "Gas_CHP_input",
+            "carrier_in": {"name": "Gas", "region": "Global"},
+            "carrier_out": {"name": "Help_Coal_CHP", "region": "Global"}
+        },
+        {
+            "name": "Gas_CHP_output_Dummy",
+            "carrier_in": {"name": "Help_Gas_CHP", "region": "Global"},
+            "carrier_out": {"name": "Dummy", "region": "Global"}
+        },
+        {
+            "name": "Gas_CHP_output_Electricity",
+            "carrier_in": {"name": "Help_Gas_CHP", "region": "Global"},
+            "carrier_out": {"name": "Electricity", "region": "Global"}
+        },
+        {
+            "name": "Gas_CHP_output_Industrial_Heat_LT",
+            "carrier_in": {"name": "Help_Gas_CHP", "region": "Global"},
+            "carrier_out": {"name": "Industrial_Heat_LT", "region": "Global"}
+        },
+        {
+            "name": "Internal_Combustion_Vehicle",
+            "carrier_in": {"name": "Liquid_Fuel", "region": "Global"},
+            "carrier_out": {"name": "Vehicles_Propulsion", "region": "Global"}
+        },
+        {
+            "name": "Electric_Vehicle",
+            "carrier_in": {"name": "Electricity", "region": "Global"},
+            "carrier_out": {"name": "Vehicles_Propulsion", "region": "Global"}
+        },
+        {
+            "name": "Power_to_Gas",
+            "carrier_in": {"name": "Electricity", "region": "Global"},
+            "carrier_out": {"name": "H2", "region": "Global"}
+        }
+    ]
+}   

@@ -1,6 +1,12 @@
 module Variables
 
-    export variables
+    export variables, default_dict
+
+    default_dict = Dict(
+        "Float" => 0.0,
+        "Integer" => 0,
+        "Boolean" => False,
+    )
 
     variables = Dict(
         "total_cost" => (type="Float", sets=(), quantity="Money"),

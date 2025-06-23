@@ -1,56 +1,15 @@
 # Input and Output
 
-Here we explain about the Input and Output datastructures.
+Here we explain about the Input and Output data structures.
 
 ## Input
 
-The Input datastructure is a dictionary containing the input data of the model. This datastructure is produced by the `read_input` function that gets configuration file as input. The input datastructure is a dictionary containing the following keys:
+The Input data structure is a struct containing the input data of the model. This datastructure is produced by the `read_input` function that gets configuration file as input. It has the follwoing fields:
 
-- `units`: a dictionary containing the units of the input data.
-- `timesteps`: a vector of integers that represents the time steps selection of the model.
-- `years`: a vector of integers that represents the years of the model.
-- `regions`: a set containing the regions of the model.
-- `carriers`: a set containing the carriers of the model.
-- `processes`: a set containing the processes of the model.
-
-```julia
-Input = Dict(
-    "units" => ...,
-    "timesteps" => ...,
-    "years" => ...,
-    "carriers" => ...,
-    "processes" => ...
-    "parameters" => ...,
-)
-```
-
-The `parameters` is a dictionary containing the parameters of the model. The keys of the dictionary are the names of the parameters and the values are either scalar or dictionaries (possibly nested) that contaon the value of the parameter.
-
-If the value is defined over $P$ and $Y$ then the value of the parameter is a nested dictionary.
-
-```julia
-input["parameters"]["max_capacity"]["electricity_to_heat"][2020]
-```
-
-gives you the value of the parameter *max_capacity* for the conversion process *electricity_to_heat* in the year *2020*.
-
-`parameters` dictionary also has a special key `defaults` which is a dictionary containing the default values of the parameters. The key is the name of the parameter and the value is the default scalar value.
-
-If the value is not defined for *electricity_to_heat* conversion process, then the following is not defined:
-
-```julia
-input["parameters"]["max_capacity"]
-```
-
-## Output
-
-The Output datastructure is also a dictionary. The keys are the names of the variables and similar to the input parameters, the values are either scalar or dictionaries (possibly nested) that contain the optimal values of the variables.
-
-```julia
-output = Dict(
-    "annual_emission" => ...,
-    "new_capacity" => ...,
-    "active_capacity" => ...
-)
-```
-
+- `units`: a dictionary of  of the `Input` structs that represents the conversions between the units of the input data and the units of the output data.
+- `timesteps`: a vector of `Time` structs that represents the time steps of the model.
+- `years`: a vector of `Year` structs that represents the years of the model.
+- `regions`: a set if `Region` structs that represents the regions of the model.
+- `carriers`: a set of `Carrier` structs that represents the carriers of the model. Each carrier has a name and a region.
+- `processes`: a set of `Process` structs that represents the processes of the model. Each process has a name, carrier_in and carrier_out fields.
+- `parameters`: a dictionary of dictionaries that contains the parameters of the model. The keys of the dictionary are the names of the parameters and the values are either scalar or dictionaries (possibly nested) that contain the value of the parameter.
