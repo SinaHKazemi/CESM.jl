@@ -1,10 +1,6 @@
 {
     "comment": "German Energy Transition Model",
     "version": "1",
-    "parameters": {
-
-        
-    },
     "units": {
         "power":{"input": "GW",	"scale": 1, "output": "GW"},
         "energy": {"input":	"TWh", "scale": 1000, "output": "GWh"},
@@ -14,83 +10,294 @@
         "co2_spec": {"input": "kg/kWh",	"scale": 0.001, "output": "Mio t/GWh"},
         "money": {"input": "Mio EUR", "scale": 1, "output":	"Mio EUR"}
     },
-    "timesteps" : "./time_series/data_int.txt",
-    "years" : [2020, 2025, 2030],
+    "parameters": {
+        "discount_rate": {
+            "type": "Float",
+            "sets": [],
+            "value": 0.05
+        },
+        "dt": {
+            "type": "integer",
+            "sets": [],
+            "value": 1
+        },
+        "annual_co2_limit": {
+            "type": "Float",
+            "sets": ["Y"],
+            "quantity": "CO2 Mass",
+            "value": [
+                {"x": 2016, "y": 870},
+                {"x": 2030, "y": 540},
+                {"x": 2050, "y": 240},
+                {"x": 2060, "y": 140}
+            ]
+        },
+        "co2_price": {
+            "type": "Float",
+            "sets": ["Y"],
+            "quantity": "co2_price",
+            "default": 0
+        },
+        "is_storage": {
+            "type": "Boolean",
+            "sets": ["P"],
+            "default": false
+        },
+        "charge_efficiency": {
+            "type": "Float",
+            "sets": ["P"],
+            "default": 1
+        },
+        "c_rate": {
+            "type": "Float",
+            "sets": ["P"]
+        },
+        "max_legacy_capacity": {
+            "type": "Float",
+            "sets": ["P","Y"],
+            "quantity": "power",
+            "default": 0
+        },
+        "min_legacy_capacity": {
+            "type": "Float",
+            "sets": ["P","Y"],
+            "quantity": "power",
+            "default": 0
+        },
+        "max_capacity": {
+            "type": "Float",
+            "sets": ["P","Y"],
+            "quantity": "power",
+            "default": 0
+        },
+        "min_capacity": {
+            "type": "Float",
+            "sets": ["P","Y"],
+            "quantity": "power",
+            "default": 0
+        },
+        "operational_cost_energy": {
+            "type": "Float",
+            "sets": ["P","Y"],
+            "quantity": "cost_energy",
+            "default": 0
+        },
+        "operational_cost_power": {
+            "type": "Float",
+            "sets": ["P","Y"],
+            "quantity": "cost_power",
+            "default": 0
+        },
+        "capital_cost_power": {
+            "type": "Float",
+            "sets": ["P","Y"],
+            "quantity": "cost_power",
+            "default": 0
+        },
+        "min_fraction_in": {
+            "type": "Float",
+            "sets": ["P","Y"],
+            "default": 0
+        },
+        "min_fraction_out": {
+            "type": "Float",
+            "sets": ["P","Y"],
+            "default": 0
+        },
+        "max_fraction_in": {
+            "type": "Float",
+            "sets": ["P","Y"],
+            "default": 1
+        },
+        "max_fraction_out": {
+            "type": "Float",
+            "sets": ["P","Y"],
+            "default": 1
+        },
+        "max_energy_out": {
+            "type": "Float",
+            "sets": ["P","Y"],
+            "quantity": "energy"
+        },
+        "min_energy_out": {
+            "type": "Float",
+            "sets": ["P","Y"],
+            "quantity": "energy"
+        },
+        "availability_profile": {
+            "type": "Float",
+            "sets": ["P","T"],
+            "default": 1
+        },
+        "output_profile": {
+            "type": "Float",
+            "sets": ["P","T"]
+        },
+        "lifetime": {
+            "type": "Integer",
+            "sets": ["P"],
+            "default": 100
+        },
+        "technical_availability": {
+            "type": "Float",
+            "sets": ["P"],
+            "default": 1
+        },
+        "specific_co2": {
+            "type": "Float",
+            "sets": ["P"],
+            "default": 0,
+            "quantity": "co2_price"
+        },
+        "efficiency": {
+            "type": "Float",
+            "sets": ["P"],
+            "default": 1
+        },
+        "carrier_color": {
+            "comment": "https://juliagraphics.github.io/Colors.jl/dev/namedcolors/",
+            "type": "String",
+            "sets": ["C"],
+            "default": "lightsalmon"
+        },
+        "process_color": {
+            "comment": "https://juliagraphics.github.io/Colors.jl/dev/namedcolors/",
+            "type": "String",
+            "sets": ["P"],
+            "default": "lightsalmon"
+        }
+    },
+    "timesteps" : "./time_series/4_thin_weeks.txt",
+    "years" : [2015, 2020, 2025, 2030, 2035, 2040, 2045, 2050, 2055, 2060],
     "regions": [
         "Global"
     ],
     "carriers": [
         {
             "name": "Dummy",
-            "region": "Global"
+            "region": "Global",
+            "parameters":{
+                "carrier_color": "lightsalmon" 
+            }
         },
         {
             "name": "Vehicles_Propulsion",
-            "region": "Global"
+            "region": "Global",
+            "parameters": {
+                "carrier_color": "tomato1"
+            }
         },
         {
             "name": "Decentral_Heat",
-            "region": "Global"
+            "region": "Global",
+            "parameters": {
+                "carrier_color": "firebrick2"
+            }
         },
         {
             "name": "Industrial_Heat_LT",
-            "region": "Global"
+            "region": "Global",
+            "parameters": {
+                "carrier_color": "firebrick"
+            }
         },
         {
             "name": "Industrial_Heat_HT",
-            "region": "Global"
+            "region": "Global",
+            "parameters": {
+                "carrier_color": "red4"
+            }
         },
         {
             "name": "Electricity",
-            "region": "Global"
+            "region": "Global",
+            "parameters": {
+                "carrier_color": "orange"
+            }
         },
         {
             "name": "Biomass",
-            "region": "Global"
+            "region": "Global",
+            "parameters": {
+                "carrier_color": "springgreen1"
+            }
         },
         {
             "name": "Waste",
-            "region": "Global"
+            "region": "Global",
+            "parameters": {
+                "carrier_color": "cyan1"
+            }
         },
         {
             "name": "Uranium",
-            "region": "Global"
+            "region": "Global",
+            "parameters": {
+                "carrier_color": "magenta1"
+            }
         },
         {
             "name": "Liquid_Fuel",
-            "region": "Global"
+            "region": "Global",
+            "parameters": {
+                "carrier_color": "hotpink2"
+            }
         },
         {
             "name": "Crude_Oil",
-            "region": "Global"
+            "region": "Global",
+            "parameters": {
+                "carrier_color": "gray26"
+            }
         },
         {
             "name": "Lignite",
-            "region": "Global"
+            "region": "Global",
+            "parameters": {
+                "carrier_color": "bisque3"
+            }
         },
         {
             "name": "Coal",
-            "region": "Global"
+            "region": "Global",
+            "parameters": {
+                "carrier_color": "black"
+            }
         },
         {
             "name": "Natural_Gas",
-            "region": "Global"
+            "region": "Global",
+            "parameters": {
+                "carrier_color": "blue1"
+            }
         },
         {
             "name": "H2",
-            "region": "Global"
+            "region": "Global",
+            "parameters": {
+                "carrier_color": "lightblue1"
+            }
         },
         {
             "name": "Help_Gas_CHP",
-            "region": "Global"
+            "region": "Global",
+            "parameters": {
+                "carrier_color": "snow"
+            }
         },
         {
             "name": "Help_Coal_CHP",
-            "region": "Global"
+            "region": "Global",
+            "parameters": {
+                "carrier_color": "snow"
+            }
         },
         {
             "name": "Help_Biomass_CHP",
-            "region": "Global"
+            "region": "Global",
+            "parameters": {
+                "carrier_color": "snow"
+            }
         }
     ],
     "processes": [
