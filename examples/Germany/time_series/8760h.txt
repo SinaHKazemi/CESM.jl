@@ -1,3 +1,4 @@
+# time steps selection, contains the whole year and each time step represents one hour 
 1
 2
 3

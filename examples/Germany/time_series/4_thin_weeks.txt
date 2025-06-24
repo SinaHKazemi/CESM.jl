@@ -1,4 +1,4 @@
-# contains for weeks and each time step represents three hours 
+# time steps selection, contains four weeks and each time step represents three hours 
 1924
 1927
 1930
