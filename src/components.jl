@@ -63,33 +63,13 @@ Base.:>=(a::Time, b::Time) = a.value >= b.value
 # Show as an integer
 Base.show(io::IO, y::Time) = print(io, y.value)
 
-struct Region
-    name::String
-end
-
-# String conversion
-Base.convert(::Type{String}, r::Region) = r.name
-Base.String(r::Region) = r.name
-
-# Show as a string
-Base.show(io::IO, r::Region) = print(io, r.name)
-
-# Comparison (region == string)
-Base.:(==)(r::Region, s::String) = r.name == s
-Base.:(==)(s::String, r::Region) = s == r.name
-Base.:(==)(r1::Region, r2::Region) = r1.name == r2.name
 
 struct Carrier
     name::String
-    region::Region
 end
 
-
-Base.convert(::Type{String}, c::Carrier) = "$(c.name)_$(c.region)"
-Base.String(c::Carrier) = "$(c.name)_$(c.region)"
-
 Base.:(==)(c1::Carrier, c2::Carrier) = 
-    c1.name == c2.name && c1.region == c2.region
+    c1.name == c2.name
 
 struct Process
     name::String
@@ -116,7 +96,6 @@ struct Input
     units::Dict{String, Unit}
     years::Vector{Year}
     timesteps::Vector{Time}
-    regions::Set{Region}
     carriers::Set{Carrier}
     processes::Set{Process}
     parameters::Dict{String, Any}
