@@ -170,984 +170,754 @@
     },
     "timesteps" : "./time_series/4_thin_weeks.txt",
     "years" : [2015, 2020, 2025, 2030, 2035, 2040, 2045, 2050, 2055, 2060],
-    "regions": [
-        "Global"
-    ],
-    "carriers": [
-        {
-            "name": "Dummy",
-            "region": "Global",
-            "parameters":{
-                "carrier_color": "lightsalmon" 
-            }
+    "carriers": {
+        "Vehicles_Propulsion": {
+            "color": "tomato1"
         },
-        {
-            "name": "Vehicles_Propulsion",
-            "region": "Global",
-            "parameters": {
-                "carrier_color": "tomato1"
-            }
+        "Decentral_Heat": {
+            "color": "firebrick2"
         },
-        {
-            "name": "Decentral_Heat",
-            "region": "Global",
-            "parameters": {
-                "carrier_color": "firebrick2"
-            }
+        "Industrial_Heat_LT": {
+            "color": "firebrick"
         },
-        {
-            "name": "Industrial_Heat_LT",
-            "region": "Global",
-            "parameters": {
-                "carrier_color": "firebrick"
-            }
+        "Industrial_Heat_HT": {
+            "color": "red4"
         },
-        {
-            "name": "Industrial_Heat_HT",
-            "region": "Global",
-            "parameters": {
-                "carrier_color": "red4"
-            }
+        "Electricity": {
+            "color": "orange"
         },
-        {
-            "name": "Electricity",
-            "region": "Global",
-            "parameters": {
-                "carrier_color": "orange"
-            }
+        "Biomass": {
+            "color": "springgreen1"
         },
-        {
-            "name": "Biomass",
-            "region": "Global",
-            "parameters": {
-                "carrier_color": "springgreen1"
-            }
+        "Waste": {
+            "color": "cyan1"
         },
-        {
-            "name": "Waste",
-            "region": "Global",
-            "parameters": {
-                "carrier_color": "cyan1"
-            }
+        "Uranium": {
+            "color": "magenta1"
         },
-        {
-            "name": "Uranium",
-            "region": "Global",
-            "parameters": {
-                "carrier_color": "magenta1"
-            }
+        "Liquid_Fuel": {
+            "color": "hotpink2"
         },
-        {
-            "name": "Liquid_Fuel",
-            "region": "Global",
-            "parameters": {
-                "carrier_color": "hotpink2"
-            }
+        "Crude_Oil": {
+            "color": "gray26"
         },
-        {
-            "name": "Crude_Oil",
-            "region": "Global",
-            "parameters": {
-                "carrier_color": "gray26"
-            }
+        "Lignite": {
+            "color": "bisque3"
         },
-        {
-            "name": "Lignite",
-            "region": "Global",
-            "parameters": {
-                "carrier_color": "bisque3"
-            }
+        "Coal": {
+            "color": "black"
         },
-        {
-            "name": "Coal",
-            "region": "Global",
-            "parameters": {
-                "carrier_color": "black"
-            }
+        "Natural_Gas": {
+            "color": "blue1"
         },
-        {
-            "name": "Natural_Gas",
-            "region": "Global",
-            "parameters": {
-                "carrier_color": "blue1"
-            }
+        "H2": {
+            "color": "lightblue1"
         },
-        {
-            "name": "H2",
-            "region": "Global",
-            "parameters": {
-                "carrier_color": "lightblue1"
-            }
+        "Help_Gas_CHP": {
+            "color": "snow"
         },
-        {
-            "name": "Help_Gas_CHP",
-            "region": "Global",
-            "parameters": {
-                "carrier_color": "snow"
-            }
+        "Help_Coal_CHP": {
+            "color": "snow"
         },
-        {
-            "name": "Help_Coal_CHP",
-            "region": "Global",
-            "parameters": {
-                "carrier_color": "snow"
-            }
-        },
-        {
-            "name": "Help_Biomass_CHP",
-            "region": "Global",
-            "parameters": {
-                "carrier_color": "snow"
-            }
+        "Help_Biomass_CHP": {
+            "color": "snow"
         }
-    ],
-    "processes": [
-        {
-            "name": "Import_Biomass",
-            "carrier_in": {"name": "Dummy", "region": "Global"},
-            "carrier_out": {"name": "Biomass", "region": "Global"},
-            "parameters": {
-                "operational_cost_energy": 15,
-                "max_energy_out": 310
-            }
+    },
+    "processes": {
+        "Import_Biomass": {
+            "carrier_in": "Dummy",
+            "carrier_out": "Biomass",
+            "operational_cost_energy": 15,
+            "max_energy_out": 310
+            
         },
-        {
-            "name": "Import_Coal",
-            "carrier_in": {"name": "Dummy", "region": "Global"},
-            "carrier_out": {"name": "Coal", "region": "Global"},
-            "parameters": {
-                "operational_cost_energy": [
-                    {"x": 2015, "y": 8.2},
-                    {"x": 2016, "y": 8.2},
-                    {"x": 2030, "y": 9.3},
-                    {"x": 2050, "y": 8.5},
-                    {"x": 2060, "y": 8.5}
-                ]
-            }
+        "Import_Coal": {
+            "carrier_in": "Dummy",
+            "carrier_out": "Coal",
+            "operational_cost_energy": [
+                {"x": 2015, "y": 8.2},
+                {"x": 2016, "y": 8.2},
+                {"x": 2030, "y": 9.3},
+                {"x": 2050, "y": 8.5},
+                {"x": 2060, "y": 8.5}
+            ]
         },
-                {
-            "name": "Import_Crude_Oil",
-            "carrier_in": {"name": "Dummy", "region": "Global"},
-            "carrier_out": {"name": "Crude_Oil", "region": "Global"},
-            "parameters": {
-                "operational_cost_energy": [
-                    {"x": 2015, "y": 24.2},
-                    {"x": 2016, "y": 24.2},
-                    {"x": 2030, "y": 40},
-                    {"x": 2050, "y": 33.9},
-                    {"x": 2060, "y": 33.9}
-                ]
-            }
+        "Import_Crude_Oil": {
+            "carrier_in": "Dummy",
+            "carrier_out": "Crude_Oil",
+            "operational_cost_energy": [
+                {"x": 2015, "y": 24.2},
+                {"x": 2016, "y": 24.2},
+                {"x": 2030, "y": 40},
+                {"x": 2050, "y": 33.9},
+                {"x": 2060, "y": 33.9}
+            ]
         },
-                {
-            "name": "Import_Lignite",
-            "carrier_in": {"name": "Dummy", "region": "Global"},
-            "carrier_out": {"name": "Lignite", "region": "Global"},
-            "parameters": {
-                "operational_cost_energy": 6.1
-            }
+        "Import_Lignite": {
+            "carrier_in": "Dummy",
+            "carrier_out": "Lignite",
+            "operational_cost_energy": 6.1
         },
-        {
-            "name": "Import_Natural_Gas",
-            "carrier_in": {"name": "Dummy", "region": "Global"},
-            "carrier_out": {"name": "Natural_Gas", "region": "Global"},
-            "parameters": {
-                "operational_cost_energy": [
-                    {"x": 2015, "y": 15.4},
-                    {"x": 2016, "y": 15.4},
-                    {"x": 2030, "y": 28.9},
-                    {"x": 2050, "y": 29.7},
-                    {"x": 2060, "y": 29.7}
-                ]
-            }
+        "Import_Natural_Gas": {
+            "carrier_in": "Dummy",
+            "carrier_out": "Natural_Gas",
+            "operational_cost_energy": [
+                {"x": 2015, "y": 15.4},
+                {"x": 2016, "y": 15.4},
+                {"x": 2030, "y": 28.9},
+                {"x": 2050, "y": 29.7},
+                {"x": 2060, "y": 29.7}
+            ]
         },
-        {
-            "name": "Import_Uranium",
-            "carrier_in": {"name": "Dummy", "region": "Global"},
-            "carrier_out": {"name": "Uranium", "region": "Global"}
+        "Import_Uranium": {
+            "carrier_in": "Dummy",
+            "carrier_out": "Uranium"
         },
-        {
-            "name": "Import_Waste",
-            "carrier_in": {"name": "Dummy", "region": "Global"},
-            "carrier_out": {"name": "Waste", "region": "Global"},
-            "parameters": {
-                "max_energy_out": 69
-            }
+        "Import_Waste": {
+            "carrier_in": "Dummy",
+            "carrier_out": "Waste",
+            "max_energy_out": 69
         },
-        {
-            "name": "Import_H2",
-            "carrier_in": {"name": "Dummy", "region": "Global"},
-            "carrier_out": {"name": "H2", "region": "Global"},
-            "parameters": {
-                "operational_cost_energy": [
-                    {"x": 2015, "y": 135},
-                    {"x": 2020, "y": 135},
-                    {"x": 2030, "y": 105},
-                    {"x": 2050, "y": 70},
-                    {"x": 2060, "y": 70}
-                ]
-            }
+        "Import_H2": {
+            "carrier_in": "Dummy",
+            "carrier_out": "H2",
+            "operational_cost_energy": [
+                {"x": 2015, "y": 135},
+                {"x": 2020, "y": 135},
+                {"x": 2030, "y": 105},
+                {"x": 2050, "y": 70},
+                {"x": 2060, "y": 70}
+            ]
         },
-        {
-            "name": "Oil_Processing",
-            "carrier_in": {"name": "Crude_Oil", "region": "Global"},
-            "carrier_out": {"name": "Liquid_Fuel", "region": "Global"},
-            "parameters": {
-                "efficiency": 0.88
-            }
+        "Oil_Processing": {
+            "carrier_in": "Crude_Oil",
+            "carrier_out": "Liquid_Fuel",
+            "efficiency": 0.88
         },
-
-        {
-            "name": "Integrate_Gas",
-            "carrier_in": {"name": "Natural_Gas", "region": "Global"},
-            "carrier_out": {"name": "Gas", "region": "Global"}
+        "Integrate_Gas": {
+            "carrier_in": "Natural_Gas",
+            "carrier_out": "Gas"
         },
-        {
-            "name": "Integrate_H2",
-            "carrier_in": {"name": "H2", "region": "Global"},
-            "carrier_out": {"name": "Gas", "region": "Global"}
+        "Integrate_H2": {
+            "carrier_in": "H2",
+            "carrier_out": "Gas"
         },
-        {
-            "name": "Demand_Decentral_Heat",
-            "carrier_in": {"name": "Decentral_Heat", "region": "Global"},
-            "carrier_out": {"name": "Dummy", "region": "Global"},
-            "parameters": {
-                "min_energy_out": [
-                    {"x": 2015, "y": 720},
-                    {"x": 2016, "y": 720},
-                    {"x": 2050, "y": 430},
-                    {"x": 2060, "y": 430}
-                ],
-                "output_profile": "./time_series/Household_Heat_Demand.txt"
-            }
+        "Demand_Decentral_Heat": {
+            "carrier_in": "Decentral_Heat",
+            "carrier_out": "Dummy",            
+            "min_energy_out": [
+                {"x": 2015, "y": 720},
+                {"x": 2016, "y": 720},
+                {"x": 2050, "y": 430},
+                {"x": 2060, "y": 430}
+            ],
+            "output_profile": "./time_series/Household_Heat_Demand.txt"
         },
-        {
-            "name": "Demand_Electricity",
-            "carrier_in": {"name": "Electricity", "region": "Global"},
-            "carrier_out": {"name": "Dummy", "region": "Global"},
-            "parameters": {
-                "min_energy_out": 511,
-                "output_profile": "./time_series/Electricity_Demand_Corrected.txt"
-            }
+        "Demand_Electricity": {
+            "carrier_in": "Electricity",
+            "carrier_out": "Dummy",
+            "min_energy_out": 511,
+            "output_profile": "./time_series/Electricity_Demand_Corrected.txt"
         },
-        {
-            "name": "Demand_Industrial_Heat_HT",
-            "carrier_in": {"name": "Industrial_Heat_HT", "region": "Global"},
-            "carrier_out": {"name": "Dummy", "region": "Global"},
-            "parameters": {
-                "min_energy_out": 250,
-                "output_profile": "./time_series/Uniform.txt"
-            }
+        "Demand_Industrial_Heat_HT": {
+            "carrier_in": "Industrial_Heat_HT",
+            "carrier_out": "Dummy",
+            "min_energy_out": 250,
+            "output_profile": "./time_series/Uniform.txt"
         },
-        {
-            "name": "Demand_Industrial_Heat_LT",
-            "carrier_in": {"name": "Industrial_Heat_LT", "region": "Global"},
-            "carrier_out": {"name": "Dummy", "region": "Global"},
-            "parameters": {
-                "min_energy_out": 245,
-                "output_profile": "./time_series/Uniform.txt"
-            }
+        "Demand_Industrial_Heat_LT": {
+            "carrier_in": "Industrial_Heat_LT",
+            "carrier_out": "Dummy",
+            "min_energy_out": 245,
+            "output_profile": "./time_series/Uniform.txt"
         },
-        {
-            "name": "Demand_Vehicles_Propulsion",
-            "carrier_in": {"name": "Vehicles_Propulsion", "region": "Global"},
-            "carrier_out": {"name": "Dummy", "region": "Global"},
-            "parameters": {
-                "min_energy_out": 210,
-                "output_profile": "./time_series/Uniform.txt"
-            }
+        "Demand_Vehicles_Propulsion": {
+            "carrier_in": "Vehicles_Propulsion",
+            "carrier_out": "Dummy",
+            "min_energy_out": 210,
+            "output_profile": "./time_series/Uniform.txt"
         },
-        {
-            "name": "Demand_Rail_Traffic",
-            "carrier_in": {"name": "Electricity", "region": "Global"},
-            "carrier_out": {"name": "Dummy", "region": "Global"},
-            "parameters": {
-                "min_energy_out": 11,
-                "output_profile": "./time_series/Uniform.txt"
-            }
+        "Demand_Rail_Traffic": {
+            "carrier_in": "Electricity",
+            "carrier_out": "Dummy",
+            "min_energy_out": 11,
+            "output_profile": "./time_series/Uniform.txt"
         },
-        {
-            "name": "Demand_International_transport",
-            "carrier_in": {"name": "Liquid_Fuel", "region": "Global"},
-            "carrier_out": {"name": "Dummy", "region": "Global"},
-            "parameters": {
-                "min_energy_out": 135,
-                "output_profile": "./time_series/Uniform.txt"
-            }
+        "Demand_International_transport": {
+            "carrier_in": "Liquid_Fuel",
+            "carrier_out": "Dummy",
+            "min_energy_out": 135,
+            "output_profile": "./time_series/Uniform.txt"
         },
-        {
-            "name": "Demand_Nonenergy",
-            "carrier_in": {"name": "Crude_Oil", "region": "Global"},
-            "carrier_out": {"name": "Dummy", "region": "Global"},
-            "parameters": {
-                "min_energy_out": 220,
-                "output_profile": "./time_series/Uniform.txt"
-            }
+        "Demand_Nonenergy": {
+            "carrier_in": "Crude_Oil",
+            "carrier_out": "Dummy",
+            "min_energy_out": 220,
+            "output_profile": "./time_series/Uniform.txt"
         },
-        {
-            "name": "PP_Biomass",
-            "carrier_in": {"name": "Biomass", "region": "Global"},
-            "carrier_out": {"name": "Electricity", "region": "Global"},
-            "parameters": {
-                "efficiency": 0.3,
-                "technical_availability": 0.86,
-                "max_legacy_capacity": [
-                    {"x": 2015, "y": 9.9138},
-                    {"x": 2016, "y": 9.9138},
-                    {"x": 2040, "y": 0},
-                    {"x": 2060, "y": 0}
-                ],
-                "max_capacity": [
-                    {"x": 2015, "y": 9.9138},
-                    {"x": 2016, "y": 9.9138}
-                ],
-                "lifetime": 30,
-                "operational_cost_power": 165,
-                "capital_cost_power": [
-                    {"x": 2015, "y": 3297},
-                    {"x": 2020, "y": 3297},
-                    {"x": 2050, "y": 3287},
-                    {"x": 2060, "y": 3287}
-                ]
-            }
+        "PP_Biomass": {
+            "carrier_in": "Biomass",
+            "carrier_out": "Electricity",
+            "efficiency": 0.3,
+            "technical_availability": 0.86,
+            "max_legacy_capacity": [
+                {"x": 2015, "y": 9.9138},
+                {"x": 2016, "y": 9.9138},
+                {"x": 2040, "y": 0},
+                {"x": 2060, "y": 0}
+            ],
+            "max_capacity": [
+                {"x": 2015, "y": 9.9138},
+                {"x": 2016, "y": 9.9138}
+            ],
+            "lifetime": 30,
+            "operational_cost_power": 165,
+            "capital_cost_power": [
+                {"x": 2015, "y": 3297},
+                {"x": 2020, "y": 3297},
+                {"x": 2050, "y": 3287},
+                {"x": 2060, "y": 3287}
+            ]
         },
-        {
-            "name": "PP_Coal",
-            "carrier_in": {"name": "Coal", "region": "Global"},
-            "carrier_out": {"name": "Electricity", "region": "Global"},
-            "parameters": {
-                "efficiency": 0.38,
-                "technical_availability": 0.86,
-                "max_legacy_capacity": [
-                    {"x": 2015, "y": 20.4},
-                    {"x": 2016, "y": 20.4},
-                    {"x": 2040, "y": 0},
-                    {"x": 2060, "y": 0}
-                ],
-                "max_capacity": [
-                    {"x": 2015, "y": 20.4},
-                    {"x": 2016, "y": 20.4}
-                ],
-                "lifetime": 40,
-                "operational_cost_power": 20,
-                "capital_cost_power": 1500
-            }
+        "PP_Coal": {
+            "carrier_in": "Coal",
+            "carrier_out": "Electricity",
+            "efficiency": 0.38,
+            "technical_availability": 0.86,
+            "max_legacy_capacity": [
+                {"x": 2015, "y": 20.4},
+                {"x": 2016, "y": 20.4},
+                {"x": 2040, "y": 0},
+                {"x": 2060, "y": 0}
+            ],
+            "max_capacity": [
+                {"x": 2015, "y": 20.4},
+                {"x": 2016, "y": 20.4}
+            ],
+            "lifetime": 40,
+            "operational_cost_power": 20,
+            "capital_cost_power": 1500
         },
-        {
-            "name": "PP_Gas",
-            "carrier_in": {"name": "Gas", "region": "Global"},
-            "carrier_out": {"name": "Electricity", "region": "Global"},
-            "parameters": {
-                "efficiency": 0.4,
-                "technical_availability": 0.95,
-                "max_legacy_capacity": [
-                    {"x": 2015, "y": 12.5},
-                    {"x": 2016, "y": 12.5},
-                    {"x": 2040, "y": 0},
-                    {"x": 2060, "y": 0}
-                ],
-                "max_capacity": [
-                    {"x": 2015, "y": 12.5},
-                    {"x": 2016, "y": 12.5}
-                ],
-                "min_capacity": [
-                    {"x": 2015, "y": 12.5},
-                    {"x": 2016, "y": 12.5},
-                    {"x": 2040, "y": 0},
-                    {"x": 2060, "y": 0}
-                ],
-                "lifetime": 25,
-                "operational_cost_power": 13,
-                "capital_cost_power": 200
-            }
+        "PP_Gas": {
+            "carrier_in": "Gas",
+            "carrier_out": "Electricity",
+            "efficiency": 0.4,
+            "technical_availability": 0.95,
+            "max_legacy_capacity": [
+                {"x": 2015, "y": 12.5},
+                {"x": 2016, "y": 12.5},
+                {"x": 2040, "y": 0},
+                {"x": 2060, "y": 0}
+            ],
+            "max_capacity": [
+                {"x": 2015, "y": 12.5},
+                {"x": 2016, "y": 12.5}
+            ],
+            "min_capacity": [
+                {"x": 2015, "y": 12.5},
+                {"x": 2016, "y": 12.5},
+                {"x": 2040, "y": 0},
+                {"x": 2060, "y": 0}
+            ],
+            "lifetime": 25,
+            "operational_cost_power": 13,
+            "capital_cost_power": 200
         },
-        {
-            "name": "PP_Lignite",
-            "carrier_in": {"name": "Liquid_Fuel", "region": "Global"},
-            "carrier_out": {"name": "Electricity", "region": "Global"},
-            "parameters": {
-                "efficiency": 0.37,
-                "technical_availability": 0.76,
-                "max_legacy_capacity": [
-                    {"x": 2015, "y": 23.3},
-                    {"x": 2016, "y": 23.3},
-                    {"x": 2040, "y": 0},
-                    {"x": 2060, "y": 0}
-                ],
-                "max_capacity": [
-                    {"x": 2015, "y": 23.3},
-                    {"x": 2016, "y": 23.3}
-                ],
-                "lifetime": 40,
-                "operational_cost_power": 50,
-                "capital_cost_power": 1600
-            }
+        "PP_Lignite": {
+            "carrier_in": "Liquid_Fuel",
+            "carrier_out": "Electricity",
+            "efficiency": 0.37,
+            "technical_availability": 0.76,
+            "max_legacy_capacity": [
+                {"x": 2015, "y": 23.3},
+                {"x": 2016, "y": 23.3},
+                {"x": 2040, "y": 0},
+                {"x": 2060, "y": 0}
+            ],
+            "max_capacity": [
+                {"x": 2015, "y": 23.3},
+                {"x": 2016, "y": 23.3}
+            ],
+            "lifetime": 40,
+            "operational_cost_power": 50,
+            "capital_cost_power": 1600
         },
-        {
-            "name": "PP_Nuclear",
-            "carrier_in": {"name": "Uranium", "region": "Global"},
-            "carrier_out": {"name": "Electricity", "region": "Global"},
-            "parameters": {
-                "efficiency": 0.33,
-                "technical_availability": 0.95,
-                "max_legacy_capacity": [
-                    {"x": 2015, "y": 11.4},
-                    {"x": 2016, "y": 11.4},
-                    {"x": 2022, "y": 0},
-                    {"x": 2060, "y": 0}
-                ],
-                "max_capacity": [
-                    {"x": 2015, "y": 11.4},
-                    {"x": 2016, "y": 11.4},
-                    {"x": 2022, "y": 0},
-                    {"x": 2060, "y": 0}
-                ],
-                "lifetime": 60,
-                "operational_cost_power": 102,
-                "capital_cost_power": 3323,
-                "output_profile": "./time_series/Uniform.txt"
-            }
+        "PP_Nuclear": {
+            "carrier_in": "Uranium",
+            "carrier_out": "Electricity",
+            "efficiency": 0.33,
+            "technical_availability": 0.95,
+            "max_legacy_capacity": [
+                {"x": 2015, "y": 11.4},
+                {"x": 2016, "y": 11.4},
+                {"x": 2022, "y": 0},
+                {"x": 2060, "y": 0}
+            ],
+            "max_capacity": [
+                {"x": 2015, "y": 11.4},
+                {"x": 2016, "y": 11.4},
+                {"x": 2022, "y": 0},
+                {"x": 2060, "y": 0}
+            ],
+            "lifetime": 60,
+            "operational_cost_power": 102,
+            "capital_cost_power": 3323,
+            "output_profile": "./time_series/Uniform.txt"
         },
-        {
-            "name": "PP_PV",
-            "carrier_in": {"name": "Dummy", "region": "Global"},
-            "carrier_out": {"name": "Electricity", "region": "Global"},
-            "parameters": {
-                "max_legacy_capacity": [
-                    {"x": 2015, "y": 40.7},
-                    {"x": 2016, "y": 40.7},
-                    {"x": 2030, "y": 30},
-                    {"x": 2040, "y": 0},
-                    {"x": 2060, "y": 0}
-                ],
-                "max_capacity": [
-                    {"x": 2015, "y": 40.7},
-                    {"x": 2016, "y": 40.7},
-                    {"x": 2030, "y": 30},
-                    {"x": 2040, "y": 0},
-                    {"x": 2060, "y": 0}
-                ],
-                "lifetime": 25,
-                "operational_cost_power": 15,
-                "capital_cost_power": [
-                    {"x": 2015, "y": 780},
-                    {"x": 2020, "y": 780},
-                    {"x": 2050, "y": 483},
-                    {"x": 2060, "y": 483}
-                ],
-                "availability_profile": "./time_series/PV_availability.txt"
-            }
+        "PP_PV": {
+            "carrier_in": "Dummy",
+            "carrier_out": "Electricity",
+            "max_legacy_capacity": [
+                {"x": 2015, "y": 40.7},
+                {"x": 2016, "y": 40.7},
+                {"x": 2030, "y": 30},
+                {"x": 2040, "y": 0},
+                {"x": 2060, "y": 0}
+            ],
+            "max_capacity": [
+                {"x": 2015, "y": 40.7},
+                {"x": 2016, "y": 40.7},
+                {"x": 2030, "y": 30},
+                {"x": 2040, "y": 0},
+                {"x": 2060, "y": 0}
+            ],
+            "lifetime": 25,
+            "operational_cost_power": 15,
+            "capital_cost_power": [
+                {"x": 2015, "y": 780},
+                {"x": 2020, "y": 780},
+                {"x": 2050, "y": 483},
+                {"x": 2060, "y": 483}
+            ],
+            "availability_profile": "./time_series/PV_availability.txt"
         },
-        {
-            "name": "PP_Run_off_River",
-            "carrier_in": {"name": "Dummy", "region": "Global"},
-            "carrier_out": {"name": "Electricity", "region": "Global"},
-            "parameters":{
-                "max_legacy_capacity": 3.8,
-                "max_capacity": 3.8,
-                "lifetime": 100,
-                "operational_cost_power": 12,
-                "capital_cost_power": 5000,
-            }
+        "PP_Run_off_River": {
+            "carrier_in": "Dummy",
+            "carrier_out": "Electricity", 
+            "max_legacy_capacity": 3.8,
+            "max_capacity": 3.8,
+            "lifetime": 100,
+            "operational_cost_power": 12,
+            "capital_cost_power": 5000
         },
-        {
-            "name": "PP_Wind_Off",
-            "carrier_in": {"name": "Dummy", "region": "Global"},
-            "carrier_out": {"name": "Electricity", "region": "Global"},
-            "parameters": {
-                "max_legacy_capacity": [
-                    {"x": 2015, "y": 4.1},
-                    {"x": 2016, "y": 4.1},
-                    {"x": 2030, "y": 4.1},
-                    {"x": 2040, "y": 0},
-                    {"x": 2060, "y": 0}
-                ],
-                "min_legacy_capacity": [
-                    {"x": 2015, "y": 4.1},
-                    {"x": 2016, "y": 4.1},
-                    {"x": 2030, "y": 4.1},
-                    {"x": 2040, "y": 0},
-                    {"x": 2060, "y": 0}
-                ],
-                "lifetime": 25,
-                "operational_cost_power": 93,
-                "capital_cost_power": [
-                    {"x": 2015, "y": 2690},
-                    {"x": 2020, "y": 2690},
-                    {"x": 2050, "y": 1285},
-                    {"x": 2060, "y": 1285}
-                ],
-                "availability_profile": "./time_series/Offshore_Wind_Availability.txt"
-            }
+        "PP_Wind_Off": {
+            "carrier_in": "Dummy",
+            "carrier_out": "Electricity",
+            "max_legacy_capacity": [
+                {"x": 2015, "y": 4.1},
+                {"x": 2016, "y": 4.1},
+                {"x": 2030, "y": 4.1},
+                {"x": 2040, "y": 0},
+                {"x": 2060, "y": 0}
+            ],
+            "min_legacy_capacity": [
+                {"x": 2015, "y": 4.1},
+                {"x": 2016, "y": 4.1},
+                {"x": 2030, "y": 4.1},
+                {"x": 2040, "y": 0},
+                {"x": 2060, "y": 0}
+            ],
+            "lifetime": 25,
+            "operational_cost_power": 93,
+            "capital_cost_power": [
+                {"x": 2015, "y": 2690},
+                {"x": 2020, "y": 2690},
+                {"x": 2050, "y": 1285},
+                {"x": 2060, "y": 1285}
+            ],
+            "availability_profile": "./time_series/Offshore_Wind_Availability.txt"
         },
-        {
-            "name": "PP_Wind_On",
-            "carrier_in": {"name": "Dummy", "region": "Global"},
-            "carrier_out": {"name": "Electricity", "region": "Global"},
-            "parameters": {
-                "max_legacy_capacity": [
-                    {"x": 2015, "y": 45.4},
-                    {"x": 2016, "y": 45.4},
-                    {"x": 2030, "y": 30},
-                    {"x": 2040, "y": 0},
-                    {"x": 2060, "y": 0}
-                ],
-                "min_legacy_capacity": [
-                    {"x": 2015, "y": 45.4},
-                    {"x": 2016, "y": 45.4},
-                    {"x": 2030, "y": 30},
-                    {"x": 2040, "y": 0},
-                    {"x": 2060, "y": 0}
-                ],
-                "lifetime": 25,
-                "operational_cost_power": 13,
-                "capital_cost_power": [
-                    {"x": 2015, "y": 1113},
-                    {"x": 2020, "y": 1113},
-                    {"x": 2050, "y": 938},
-                    {"x": 2060, "y": 938}
-                ],
-                "availability_profile": "./time_series/Onshore_Wind_Availability.txt"
-            }
+        "PP_Wind_On": {
+            "carrier_in": "Dummy",
+            "carrier_out": "Electricity",
+            "max_legacy_capacity": [
+                {"x": 2015, "y": 45.4},
+                {"x": 2016, "y": 45.4},
+                {"x": 2030, "y": 30},
+                {"x": 2040, "y": 0},
+                {"x": 2060, "y": 0}
+            ],
+            "min_legacy_capacity": [
+                {"x": 2015, "y": 45.4},
+                {"x": 2016, "y": 45.4},
+                {"x": 2030, "y": 30},
+                {"x": 2040, "y": 0},
+                {"x": 2060, "y": 0}
+            ],
+            "lifetime": 25,
+            "operational_cost_power": 13,
+            "capital_cost_power": [
+                {"x": 2015, "y": 1113},
+                {"x": 2020, "y": 1113},
+                {"x": 2050, "y": 938},
+                {"x": 2060, "y": 938}
+            ],
+            "availability_profile": "./time_series/Onshore_Wind_Availability.txt"
         },
-        {
-            "name": "Furnace_Coal",
-            "carrier_in": {"name": "Coal", "region": "Global"},
-            "carrier_out": {"name": "Industrial_Heat_HT", "region": "Global"},
-            "parameters": {
-                "efficiency": 0.83,
-                "lifetime": 15,
-                "operational_cost_power": 3.2,
-                "capital_cost_power": 220,
-                "max_energy_out": 120,
-                "min_energy_out": 70
-            }
+        "Furnace_Coal": {
+            "carrier_in": "Coal",
+            "carrier_out": "Industrial_Heat_HT",
+            "efficiency": 0.83,
+            "lifetime": 15,
+            "operational_cost_power": 3.2,
+            "capital_cost_power": 220,
+            "max_energy_out": 120,
+            "min_energy_out": 70
         },
-        {
-            "name": "Furnace_Electric",
-            "carrier_in": {"name": "Electricity", "region": "Global"},
-            "carrier_out": {"name": "Industrial_Heat_HT", "region": "Global"},
-            "parameters": {
-                "lifetime": 13,
-                "capital_cost_power": 60,
-                "min_energy_out": 40,
-                "output_profile": "./time_series/Uniform.txt"
-            }
+        "Furnace_Electric": {
+            "carrier_in": "Electricity",
+            "carrier_out": "Industrial_Heat_HT",
+            "lifetime": 13,
+            "capital_cost_power": 60,
+            "min_energy_out": 40,
+            "output_profile": "./time_series/Uniform.txt"
         },
-        {
-            "name": "Furnace_Gas",
-            "carrier_in": {"name": "Gas", "region": "Global"},
-            "carrier_out": {"name": "Industrial_Heat_HT", "region": "Global"},
-            "parameters": {
-                "efficiency": 0.95,
-                "lifetime": 15,
-                "operational_cost_power": 0.2,
-                "capital_cost_power": 15
-            }
+        "Furnace_Gas": {
+            "carrier_in": "Gas",
+            "carrier_out": "Industrial_Heat_HT",
+            "efficiency": 0.95,
+            "lifetime": 15,
+            "operational_cost_power": 0.2,
+            "capital_cost_power": 15
         },
-        {
-            "name": "Temperiture_Downgrade",
-            "carrier_in": {"name": "Industrial_Heat_HT", "region": "Global"},
-            "carrier_out": {"name": "Industrial_Heat_LT", "region": "Global"}
+        "Temperiture_Downgrade": {
+            "carrier_in": "Industrial_Heat_HT",
+            "carrier_out": "Industrial_Heat_LT"
         },
-        {
-            "name": "Central_Biomass_Boiler",
-            "carrier_in": {"name": "Biomass", "region": "Global"},
-            "carrier_out": {"name": "Industrial_Heat_LT", "region": "Global"},
-            "parameters": {
-                "efficiency": 0.90,
-                "lifetime": 15,
-                "operational_cost_power": 3.2,
-                "capital_cost_power": 220
-            }
+        "Central_Biomass_Boiler": {
+            "carrier_in": "Biomass",
+            "carrier_out": "Industrial_Heat_LT",
+            "efficiency": 0.90,
+            "lifetime": 15,
+            "operational_cost_power": 3.2,
+            "capital_cost_power": 220
         },
-        {
-            "name": "Central_Heat_Pump",
-            "carrier_in": {"name": "Electricity", "region": "Global"},
-            "carrier_out": {"name": "Industrial_Heat_LT", "region": "Global"},
-            "parameters": {
-                "efficiency": 3.0,
-                "lifetime": 20,
-                "operational_cost_power": 1.5,
-                "capital_cost_power": [
-                    {"x": 2015, "y": 870},
-                    {"x": 2016, "y": 870},
-                    {"x": 2050, "y": 710},
-                    {"x": 2060, "y": 710}
-                ]
-            }
+        "Central_Heat_Pump": {
+            "carrier_in": "Electricity",
+            "carrier_out": "Industrial_Heat_LT",
+            "efficiency": 3.0,
+            "lifetime": 20,
+            "operational_cost_power": 1.5,
+            "capital_cost_power": [
+                {"x": 2015, "y": 870},
+                {"x": 2016, "y": 870},
+                {"x": 2050, "y": 710},
+                {"x": 2060, "y": 710}
+            ]
         },
-        {
-            "name": "Central_Waste_Boiler",
-            "carrier_in": {"name": "Waste", "region": "Global"},
-            "carrier_out": {"name": "Industrial_Heat_LT", "region": "Global"},
-            "parameters": {
-                "efficiency": 0.70,
-                "lifetime": 15,
-                "operational_cost_power": 3.2,
-                "capital_cost_power": 220,
-                "output_profile": "./time_series/Uniform.txt"
-            }
+        "Central_Waste_Boiler": {
+            "carrier_in": "Waste",
+            "carrier_out": "Industrial_Heat_LT",
+            "efficiency": 0.70,
+            "lifetime": 15,
+            "operational_cost_power": 3.2,
+            "capital_cost_power": 220,
+            "output_profile": "./time_series/Uniform.txt"
         },
-        {
-            "name": "District_Heating",
-            "carrier_in": {"name": "Industrial_Heat_LT", "region": "Global"},
-            "carrier_out": {"name": "Decentral_Heat", "region": "Global"},
-            "parameters": {
-                "efficiency": 0.90,
-                "max_legacy_capacity": [
-                    {"x": 2015, "y": 28},
-                    {"x": 2016, "y": 28},
-                    {"x": 2040, "y": 0},
-                    {"x": 2060, "y": 0}
-                ],
-                "min_legacy_capacity": [
-                    {"x": 2015, "y": 28},
-                    {"x": 2016, "y": 28},
-                    {"x": 2040, "y": 0},
-                    {"x": 2060, "y": 0}
-                ],
-                "max_capacity": [
-                    {"x": 2015, "y": 28},
-                    {"x": 2016, "y": 28}
-                ],
-                "lifetime": 25,
-                "operational_cost_power": 1.93,
-                "capital_cost_power": [
-                    {"x": 2015, "y": 120},
-                    {"x": 2020, "y": 120},
-                    {"x": 2050, "y": 103},
-                    {"x": 2060, "y": 103}
-                ],
-                "min_fraction_out": [
-                    {"x": 2015, "y": 0.1},
-                    {"x": 2016, "y": 0.1},
-                    {"x": 2040, "y": 0},
-                    {"x": 2060, "y": 0}
-                ],
-                "max_fraction_out": [
-                    {"x": 2015, "y": 0.14},
-                    {"x": 2016, "y": 0.14},
-                    {"x": 2050, "y": 0.3},
-                    {"x": 2060, "y": 0.3}
-                ]
-            }
+        "District_Heating": {
+            "carrier_in": "Industrial_Heat_LT",
+            "carrier_out": "Decentral_Heat",
+            "efficiency": 0.90,
+            "max_legacy_capacity": [
+                {"x": 2015, "y": 28},
+                {"x": 2016, "y": 28},
+                {"x": 2040, "y": 0},
+                {"x": 2060, "y": 0}
+            ],
+            "min_legacy_capacity": [
+                {"x": 2015, "y": 28},
+                {"x": 2016, "y": 28},
+                {"x": 2040, "y": 0},
+                {"x": 2060, "y": 0}
+            ],
+            "max_capacity": [
+                {"x": 2015, "y": 28},
+                {"x": 2016, "y": 28}
+            ],
+            "lifetime": 25,
+            "operational_cost_power": 1.93,
+            "capital_cost_power": [
+                {"x": 2015, "y": 120},
+                {"x": 2020, "y": 120},
+                {"x": 2050, "y": 103},
+                {"x": 2060, "y": 103}
+            ],
+            "min_fraction_out": [
+                {"x": 2015, "y": 0.1},
+                {"x": 2016, "y": 0.1},
+                {"x": 2040, "y": 0},
+                {"x": 2060, "y": 0}
+            ],
+            "max_fraction_out": [
+                {"x": 2015, "y": 0.14},
+                {"x": 2016, "y": 0.14},
+                {"x": 2050, "y": 0.3},
+                {"x": 2060, "y": 0.3}
+            ]
         },
-        {
-            "name": "Decentral_Biomass_Heater",
-            "carrier_in": {"name": "Biomass", "region": "Global"},
-            "carrier_out": {"name": "Decentral_Heat", "region": "Global"},
-            "parameters": {
-                "efficiency": 0.62,
-                "max_legacy_capacity": [
-                    {"x": 2015, "y": 26},
-                    {"x": 2016, "y": 26},
-                    {"x": 2040, "y": 0},
-                    {"x": 2060, "y": 0}
-                ],
-                "min_legacy_capacity": [
-                    {"x": 2015, "y": 26},
-                    {"x": 2016, "y": 26},
-                    {"x": 2040, "y": 0},
-                    {"x": 2060, "y": 0}
-                ],
-                "max_capacity": [
-                    {"x": 2015, "y": 26},
-                    {"x": 2016, "y": 26}
-                ],
-                "lifetime": 20,
-                "operational_cost_power": 20,
-                "capital_cost_power": [
-                    {"x": 2015, "y": 390},
-                    {"x": 2020, "y": 390},
-                    {"x": 2050, "y": 316},
-                    {"x": 2060, "y": 316}
-                ],
-                "min_fraction_out": [
-                    {"x": 2015, "y": 0.05},
-                    {"x": 2016, "y": 0.05},
-                    {"x": 2040, "y": 0},
-                    {"x": 2060, "y": 0}
-                ],
-                "output_profile": "./time_series/Household_Heat_Demand.txt"
-            }
+        "Decentral_Biomass_Heater": {
+            "carrier_in": "Biomass",
+            "carrier_out": "Decentral_Heat",
+            "efficiency": 0.62,
+            "max_legacy_capacity": [
+                {"x": 2015, "y": 26},
+                {"x": 2016, "y": 26},
+                {"x": 2040, "y": 0},
+                {"x": 2060, "y": 0}
+            ],
+            "min_legacy_capacity": [
+                {"x": 2015, "y": 26},
+                {"x": 2016, "y": 26},
+                {"x": 2040, "y": 0},
+                {"x": 2060, "y": 0}
+            ],
+            "max_capacity": [
+                {"x": 2015, "y": 26},
+                {"x": 2016, "y": 26}
+            ],
+            "lifetime": 20,
+            "operational_cost_power": 20,
+            "capital_cost_power": [
+                {"x": 2015, "y": 390},
+                {"x": 2020, "y": 390},
+                {"x": 2050, "y": 316},
+                {"x": 2060, "y": 316}
+            ],
+            "min_fraction_out": [
+                {"x": 2015, "y": 0.05},
+                {"x": 2016, "y": 0.05},
+                {"x": 2040, "y": 0},
+                {"x": 2060, "y": 0}
+            ],
+            "output_profile": "./time_series/Household_Heat_Demand.txt"
         },
-        {
-            "name": "Decentral_Gas_Heater",
-            "carrier_in": {"name": "Gas", "region": "Global"},
-            "carrier_out": {"name": "Decentral_Heat", "region": "Global"},
-            "parameters": {
-                "efficiency": 0.97,
-                "max_legacy_capacity": [
-                    {"x": 2015, "y": 135},
-                    {"x": 2016, "y": 135},
-                    {"x": 2040, "y": 0},
-                    {"x": 2060, "y": 0}
-                ],
-                "min_legacy_capacity": [
-                    {"x": 2015, "y": 135},
-                    {"x": 2016, "y": 135},
-                    {"x": 2040, "y": 0},
-                    {"x": 2060, "y": 0}
-                ],
-                "max_capacity": [
-                    {"x": 2015, "y": 135},
-                    {"x": 2016, "y": 135}
-                ],
-                "lifetime": 20,
-                "operational_cost_power": 10,
-                "capital_cost_power": [
-                    {"x": 2015, "y": 230},
-                    {"x": 2020, "y": 230},
-                    {"x": 2050, "y": 200},
-                    {"x": 2060, "y": 200}
-                ],
-                "min_fraction_out": [
-                    {"x": 2015, "y": 0.49},
-                    {"x": 2016, "y": 0.49},
-                    {"x": 2040, "y": 0},
-                    {"x": 2060, "y": 0}
-                ],
-                "max_fraction_out": 0.55,
-                "output_profile": "./time_series/Household_Heat_Demand.txt"
-            }
+        "Decentral_Gas_Heater": {
+            "carrier_in": "Gas",
+            "carrier_out": "Decentral_Heat",
+            "efficiency": 0.97,
+            "max_legacy_capacity": [
+                {"x": 2015, "y": 135},
+                {"x": 2016, "y": 135},
+                {"x": 2040, "y": 0},
+                {"x": 2060, "y": 0}
+            ],
+            "min_legacy_capacity": [
+                {"x": 2015, "y": 135},
+                {"x": 2016, "y": 135},
+                {"x": 2040, "y": 0},
+                {"x": 2060, "y": 0}
+            ],
+            "max_capacity": [
+                {"x": 2015, "y": 135},
+                {"x": 2016, "y": 135}
+            ],
+            "lifetime": 20,
+            "operational_cost_power": 10,
+            "capital_cost_power": [
+                {"x": 2015, "y": 230},
+                {"x": 2020, "y": 230},
+                {"x": 2050, "y": 200},
+                {"x": 2060, "y": 200}
+            ],
+            "min_fraction_out": [
+                {"x": 2015, "y": 0.49},
+                {"x": 2016, "y": 0.49},
+                {"x": 2040, "y": 0},
+                {"x": 2060, "y": 0}
+            ],
+            "max_fraction_out": 0.55,
+            "output_profile": "./time_series/Household_Heat_Demand.txt"
         },
-        {
-            "name": "Decentral_Heat_Pump",
-            "carrier_in": {"name": "Electricity", "region": "Global"},
-            "carrier_out": {"name": "Decentral_Heat", "region": "Global"},
-            "parameters": {
-                "efficiency": 3.7,
-                "max_capacity": [
-                    {"x": 2015, "y": 0},
-                    {"x": 2016, "y": 0}
-                ],
-                "lifetime": 17,
-                "operational_cost_power": 18,
-                "capital_cost_power": [
-                    {"x": 2015, "y": 850},
-                    {"x": 2020, "y": 850},
-                    {"x": 2050, "y": 630},
-                    {"x": 2060, "y": 630}
-                ],
-                "output_profile": "./time_series/Household_Heat_Demand.txt"
-            }
+        "Decentral_Heat_Pump": {
+            "carrier_in": "Electricity",
+            "carrier_out": "Decentral_Heat",
+            "efficiency": 3.7,
+            "max_capacity": [
+                {"x": 2015, "y": 0},
+                {"x": 2016, "y": 0}
+            ],
+            "lifetime": 17,
+            "operational_cost_power": 18,
+            "capital_cost_power": [
+                {"x": 2015, "y": 850},
+                {"x": 2020, "y": 850},
+                {"x": 2050, "y": 630},
+                {"x": 2060, "y": 630}
+            ],
+            "output_profile": "./time_series/Household_Heat_Demand.txt"
         },
-        {
+        "Decentral_Oil_Heater": {
             "comment": "name doesn't make sense",
-            "name": "Decentral_Oil_Heater",
-            "carrier_in": {"name": "Liquid_Fuel", "region": "Global"},
-            "carrier_out": {"name": "Decentral_Heat", "region": "Global"},
-            "parameters": {
-                "efficiency": 0.92,
-                "max_legacy_capacity": [
-                    {"x": 2015, "y": 75},
-                    {"x": 2016, "y": 75},
-                    {"x": 2040, "y": 0},
-                    {"x": 2060, "y": 0}
-                ],
-                "min_legacy_capacity": [
-                    {"x": 2015, "y": 75},
-                    {"x": 2016, "y": 75},
-                    {"x": 2040, "y": 0},
-                    {"x": 2060, "y": 0}
-                ],
-                "max_capacity": [
-                    {"x": 2015, "y": 75},
-                    {"x": 2016, "y": 75}
-                ],
-                "lifetime": 20,
-                "operational_cost_power": 15,
-                "capital_cost_power": [
-                    {"x": 2015, "y": 400},
-                    {"x": 2020, "y": 400},
-                    {"x": 2050, "y": 335},
-                    {"x": 2060, "y": 335}
-                ],
-                "min_fraction_out": [
-                    {"x": 2015, "y": 0.26},
-                    {"x": 2016, "y": 0.26},
-                    {"x": 2040, "y": 0},
-                    {"x": 2060, "y": 0}
-                ],
-                "output_profile": "./time_series/Household_Heat_Demand.txt"
-            }
+            "carrier_in": "Liquid_Fuel",
+            "carrier_out": "Decentral_Heat",
+            "efficiency": 0.92,
+            "max_legacy_capacity": [
+                {"x": 2015, "y": 75},
+                {"x": 2016, "y": 75},
+                {"x": 2040, "y": 0},
+                {"x": 2060, "y": 0}
+            ],
+            "min_legacy_capacity": [
+                {"x": 2015, "y": 75},
+                {"x": 2016, "y": 75},
+                {"x": 2040, "y": 0},
+                {"x": 2060, "y": 0}
+            ],
+            "max_capacity": [
+                {"x": 2015, "y": 75},
+                {"x": 2016, "y": 75}
+            ],
+            "lifetime": 20,
+            "operational_cost_power": 15,
+            "capital_cost_power": [
+                {"x": 2015, "y": 400},
+                {"x": 2020, "y": 400},
+                {"x": 2050, "y": 335},
+                {"x": 2060, "y": 335}
+            ],
+            "min_fraction_out": [
+                {"x": 2015, "y": 0.26},
+                {"x": 2016, "y": 0.26},
+                {"x": 2040, "y": 0},
+                {"x": 2060, "y": 0}
+            ],
+            "output_profile": "./time_series/Household_Heat_Demand.txt"
         },
-        {
-            "name": "Decentral_Resistive_Heater",
-            "carrier_in": {"name": "Electricity", "region": "Global"},
-            "carrier_out": {"name": "Decentral_Heat", "region": "Global"},
-            "parameters": {
-                "lifetime": 20,
-                "operational_cost_power": 15,
-                "capital_cost_power": [
-                    {"x": 2015, "y": 660},
-                    {"x": 2020, "y": 660},
-                    {"x": 2050, "y": 555},
-                    {"x": 2060, "y": 555}
-                ],
-                "min_fraction_out": [
-                    {"x": 2015, "y": 0.03},
-                    {"x": 2016, "y": 0.03},
-                    {"x": 2040, "y": 0},
-                    {"x": 2060, "y": 0}
-                ],
-                "output_profile": "./time_series/Household_Heat_Demand.txt"
-            }
+        "Decentral_Resistive_Heater": {
+            "carrier_in": "Electricity",
+            "carrier_out": "Decentral_Heat",
+            "lifetime": 20,
+            "operational_cost_power": 15,
+            "capital_cost_power": [
+                {"x": 2015, "y": 660},
+                {"x": 2020, "y": 660},
+                {"x": 2050, "y": 555},
+                {"x": 2060, "y": 555}
+            ],
+            "min_fraction_out": [
+                {"x": 2015, "y": 0.03},
+                {"x": 2016, "y": 0.03},
+                {"x": 2040, "y": 0},
+                {"x": 2060, "y": 0}
+            ],
+            "output_profile": "./time_series/Household_Heat_Demand.txt"
         },
-        {
-            "name": "Biomass_CHP_input",
-            "carrier_in": {"name": "Biomass", "region": "Global"},
-            "carrier_out": {"name": "Help_Biomass_CHP", "region": "Global"}
+        "Biomass_CHP_input": {
+            "carrier_in": "Biomass",
+            "carrier_out": "Help_Biomass_CHP"
         },
-        {
-            "name": "Biomass_CHP_output_Dummy",
-            "carrier_in": {"name": "Help_Biomass_CHP", "region": "Global"},
-            "carrier_out": {"name": "Dummy", "region": "Global"},
-            "parameters": {
-                "min_fraction_in": 0.2
-            }
+        "Biomass_CHP_output_Dummy": {
+            "carrier_in": "Help_Biomass_CHP",
+            "carrier_out": "Dummy",
+            "min_fraction_in": 0.2
         },
-        {
-            "name": "Biomass_CHP_output_Electricity",
-            "carrier_in": {"name": "Help_Biomass_CHP", "region": "Global"},
-            "carrier_out": {"name": "Electricity", "region": "Global"},
-            "parameters": {
-                "technical_availability": 0.86,
-                "min_fraction_in": 0.3,
-                "max_fraction_in": 0.3
-            }
+        "Biomass_CHP_output_Electricity": {
+            "carrier_in": "Help_Biomass_CHP",
+            "carrier_out": "Electricity",
+            "technical_availability": 0.86,
+            "min_fraction_in": 0.3,
+            "max_fraction_in": 0.3
         },
-        {
-            "name": "Biomass_CHP_output_Industrial_Heat_LT",
-            "carrier_in": {"name": "Help_Biomass_CHP", "region": "Global"},
-            "carrier_out": {"name": "Industrial_Heat_LT", "region": "Global"}
+        "Biomass_CHP_output_Industrial_Heat_LT": {
+            "carrier_in": "Help_Biomass_CHP",
+            "carrier_out": "Industrial_Heat_LT"
         },
-        {
-            "name": "Coal_CHP_input",
-            "carrier_in": {"name": "Coal", "region": "Global"},
-            "carrier_out": {"name": "Help_Coal_CHP", "region": "Global"},
-            "parameters": {
-                "technical_availability": 0.95
-            }
+        "Coal_CHP_input": {
+            "carrier_in": "Coal",
+            "carrier_out": "Help_Coal_CHP",
+            "technical_availability": 0.95
         },
-        {
-            "name": "Coal_CHP_output_Dummy",
-            "carrier_in": {"name": "Help_Coal_CHP", "region": "Global"},
-            "carrier_out": {"name": "Dummy", "region": "Global"},
-            "parameters": {
-                "min_fraction_in": 0.1
-            }
+        "Coal_CHP_output_Dummy": {
+            "carrier_in": "Help_Coal_CHP",
+            "carrier_out": "Dummy",
+            "min_fraction_in": 0.1
         },
-        {
-            "name": "Coal_CHP_output_Electricity",
-            "carrier_in": {"name": "Help_Coal_CHP", "region": "Global"},
-            "carrier_out": {"name": "Electricity", "region": "Global"},
-            "parameters": {
-                "min_fraction_in": 0.3,
-                "max_fraction_in": 0.3
-            }
+        "Coal_CHP_output_Electricity": {
+            "carrier_in": "Help_Coal_CHP",
+            "carrier_out": "Electricity",
+            "min_fraction_in": 0.3,
+            "max_fraction_in": 0.3
         },
-        {
-            "name": "Coal_CHP_output_Industrial_Heat_LT",
-            "carrier_in": {"name": "Help_Coal_CHP", "region": "Global"},
-            "carrier_out": {"name": "Industrial_Heat_LT", "region": "Global"},
-            "parameters": {
-                "output_profile": "./time_series/Household_Heat_Demand.txt"
-            }
+        "Coal_CHP_output_Industrial_Heat_LT": {
+            "carrier_in": "Help_Coal_CHP",
+            "carrier_out": "Industrial_Heat_LT",
+            "output_profile": "./time_series/Household_Heat_Demand.txt"
         },
-        {
-            "name": "Gas_CHP_input",
-            "carrier_in": {"name": "Gas", "region": "Global"},
-            "carrier_out": {"name": "Help_Coal_CHP", "region": "Global"}
+        "Gas_CHP_input": {
+            "carrier_in": "Gas",
+            "carrier_out": "Help_Coal_CHP"
         },
-        {
-            "name": "Gas_CHP_output_Dummy",
-            "carrier_in": {"name": "Help_Gas_CHP", "region": "Global"},
-            "carrier_out": {"name": "Dummy", "region": "Global"},
-            "parameters": {
-                "min_fraction_in": 0.2
-            }
+        "Gas_CHP_output_Dummy": {
+            "carrier_in": "Help_Gas_CHP",
+            "carrier_out": "Dummy",
+            "min_fraction_in": 0.2
         },
-        {
-            "name": "Gas_CHP_output_Electricity",
-            "carrier_in": {"name": "Help_Gas_CHP", "region": "Global"},
-            "carrier_out": {"name": "Electricity", "region": "Global"},
-            "parameters": {
-                "min_fraction_in": 0.42,
-                "max_fraction_in": 0.42
-            }
+        "Gas_CHP_output_Electricity": {
+            "carrier_in": "Help_Gas_CHP",
+            "carrier_out": "Electricity",
+            "min_fraction_in": 0.42,
+            "max_fraction_in": 0.42
         },
-        {
-            "name": "Gas_CHP_output_Industrial_Heat_LT",
-            "carrier_in": {"name": "Help_Gas_CHP", "region": "Global"},
-            "carrier_out": {"name": "Industrial_Heat_LT", "region": "Global"}
+        "Gas_CHP_output_Industrial_Heat_LT": {
+            "carrier_in": "Help_Gas_CHP",
+            "carrier_out": "Industrial_Heat_LT"
         },
-        {
-            "name": "Internal_Combustion_Vehicle",
-            "carrier_in": {"name": "Liquid_Fuel", "region": "Global"},
-            "carrier_out": {"name": "Vehicles_Propulsion", "region": "Global"},
-            "parameters": {
-                "efficiency": 0.36,
-                "max_legacy_capacity": [
-                    {"x": 2015, "y": 28},
-                    {"x": 2016, "y": 28},
-                    {"x": 2040, "y": 0},
-                    {"x": 2060, "y": 0}
-                ],
-                "min_legacy_capacity": [
-                    {"x": 2015, "y": 28},
-                    {"x": 2016, "y": 28},
-                    {"x": 2040, "y": 0},
-                    {"x": 2060, "y": 0}
-                ],
-                "lifetime": 15,
-                "operational_cost_power": 590,
-                "capital_cost_power": 1000,
-                "output_profile": "./time_series/Uniform.txt"
-            }
+        "Internal_Combustion_Vehicle": {
+            "carrier_in": "Liquid_Fuel",
+            "carrier_out": "Vehicles_Propulsion",
+            "efficiency": 0.36,
+            "max_legacy_capacity": [
+                {"x": 2015, "y": 28},
+                {"x": 2016, "y": 28},
+                {"x": 2040, "y": 0},
+                {"x": 2060, "y": 0}
+            ],
+            "min_legacy_capacity": [
+                {"x": 2015, "y": 28},
+                {"x": 2016, "y": 28},
+                {"x": 2040, "y": 0},
+                {"x": 2060, "y": 0}
+            ],
+            "lifetime": 15,
+            "operational_cost_power": 590,
+            "capital_cost_power": 1000,
+            "output_profile": "./time_series/Uniform.txt"
         },
-        {
-            "name": "Electric_Vehicle",
-            "carrier_in": {"name": "Electricity", "region": "Global"},
-            "carrier_out": {"name": "Vehicles_Propulsion", "region": "Global"},
-            "parameters": {
-                "max_capacity": [
-                    {"x": 2015, "y": 0},
-                    {"x": 2016, "y": 0}
-                ],
-                "lifetime": 15,
-                "operational_cost_power": 450,
-                "capital_cost_power": [
-                    {"x": 2015, "y": 20600},
-                    {"x": 2016, "y": 20600},
-                    {"x": 2050, "y": 3950},
-                    {"x": 2060, "y": 3950}
-                ],
-                "output_profile": "./time_series/Uniform.txt"
-            }
+        "Electric_Vehicle": {
+            "carrier_in": "Electricity",
+            "carrier_out": "Vehicles_Propulsion",
+            "max_capacity": [
+                {"x": 2015, "y": 0},
+                {"x": 2016, "y": 0}
+            ],
+            "lifetime": 15,
+            "operational_cost_power": 450,
+            "capital_cost_power": [
+                {"x": 2015, "y": 20600},
+                {"x": 2016, "y": 20600},
+                {"x": 2050, "y": 3950},
+                {"x": 2060, "y": 3950}
+            ],
+            "output_profile": "./time_series/Uniform.txt"
         },
-        {
-            "name": "Power_to_Gas",
-            "carrier_in": {"name": "Electricity", "region": "Global"},
-            "carrier_out": {"name": "H2", "region": "Global"},
-            "parameters": {
-                "efficiency": 0.7,
-                "operational_cost_power": [
-                    {"x":2015, "y":19.5},
-                    {"x":2020, "y":19.5},
-                    {"x":2030, "y":13.3},
-                    {"x":2050, "y":7.5},
-                    {"x":2060, "y":7.5}
-                ],
-                "capital_cost_power": [
-                    {"x": 2015, "y": 650},
-                    {"x": 2020, "y": 650},
-                    {"x": 2030, "y": 442},
-                    {"x": 2050, "y": 250},
-                    {"x": 2060, "y": 250}
-                ]
-            }
+        "Power_to_Gas": {
+            "carrier_in": "Electricity",
+            "carrier_out": "H2",
+            "efficiency": 0.7,
+            "operational_cost_power": [
+                {"x":2015, "y":19.5},
+                {"x":2020, "y":19.5},
+                {"x":2030, "y":13.3},
+                {"x":2050, "y":7.5},
+                {"x":2060, "y":7.5}
+            ],
+            "capital_cost_power": [
+                {"x": 2015, "y": 650},
+                {"x": 2020, "y": 650},
+                {"x": 2030, "y": 442},
+                {"x": 2050, "y": 250},
+                {"x": 2060, "y": 250}
+            ]
         }
-    ]
+    }
 }   
