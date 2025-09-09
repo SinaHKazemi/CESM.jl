@@ -26,18 +26,17 @@ function parse_input(path::AbstractString)::Input
         error("JSON file not found: $fullpath")
     end
 
-    open(fullpath, "r") do io
-        data = JSON.parse(read(io, String))
+    data = open(fullpath, "r") do io
+        JSON.parse(read(io, String))
     end
     
     units = get_units(data["units"])
     timesteps = parse_timesteps(data["timesteps"], base_path)
     years = parse_years(data["years"], base_path)
-    regions = parse_regions(data["regions"])
-    carriers = parse_carriers(data["carriers"], regions)
+    carriers = parse_carriers(data["carriers"])
     processes = parse_processes(data["processes"], carriers)
-    parameters = get_parameters(data["parameters"], processes, carriers, years, timesteps, units, base_path)
-    input = Input(units,  years, timesteps, regions, carriers, processes, parameters)
+    parameters = get_parameters(data["parameters"], data["processes"], data["carriers"], years, timesteps, units, base_path)
+    input = Input(units,  years, timesteps, carriers, processes, parameters)
     return input
 end
 
@@ -98,6 +97,16 @@ end
 function get_vector_or_file(x, ::Type{T}, base_path::AbstractString) where {T}
     if isa(x, Vector{T})
         return x
+    elseif isa(x, Vector)
+        result = T[]
+        for elem in x
+            try
+                push!(result, convert(T, elem))
+            catch
+                error("Element $elem is not convertable to $T.")
+            end
+        end
+        return result
     elseif isa(x, AbstractString)
         return parse_data_file(x, base_path, T)
     else
@@ -127,59 +136,21 @@ function parse_years(years_data::Union{Vector,AbstractString}, base_path::Abstra
     return [Year(y) for y in years]
 end
 
-
-function parse_regions(regions::Vector{String})::Set{Region}
-    output = Set{Region}()
-    for region in regions
-        r = Region(strip(region))
-        if ! (r in output)
-            push!(output, r)
-        else
-            throw(InvalidParameterError("Duplicate region found in the regions vector $(r)"))
-        end
-    end
-    if !(Region("Global") in output)
-        throw(InvalidParameterError("Global region not found in the regions vector"))
-    end
-    return output
+function parse_carriers(carriers_json::Dict{String,Any})::Set{Carrier}
+    return Set(Carrier(c) for c in keys(carriers_json))
 end
 
-function parse_carriers(carriers_json::Vector{Dict{String,String}}, regions::Set{Region})::Set{Carrier}
-    output = Set{Carrier}()
-    for carrier in carriers_json
-        r = Region(carrier["region"])
-        if ! (r in regions)
-            throw(InvalidParameterError("Region $(r) not found in the regions vector"))
-        end
-        c = Carrier(carrier["name"], r)
-        if ! (c in output)
-            push!(output, c)
-            carrier["struct"] = c # add carrier struct to carrier dict to be used in parameters
-        else
-            throw(InvalidParameterError("Duplicate carrier found in the carriers vector $(c)"))
-        end
-    end
-    if !(Carrier("Dummy", Region("Global")) in output)
-        throw(InvalidParameterError("Dummy carrier in region Global not found in the carriers vector"))
-    end
-    return output
-end
-
-function parse_processes(processes::Vector{Dict{String,Any}}, carriers::Set{Carrier})::Set{Process}
+function parse_processes(processes::Dict{String,Any}, carriers::Set{Carrier})::Set{Process}
     output = Set{Process}()
-    for process in processes
-        carrier_in = Carrier(process["carrier_in"]["name"], Region(process["carrier_in"]["region"]))
-        carrier_out = Carrier(process["carrier_out"]["name"], Region(process["carrier_out"]["region"]))
+    for (name,process) in processes
+        carrier_in = Carrier(process["carrier_in"])
+        carrier_out = Carrier(process["carrier_out"])
         if (carrier_in in carriers) && (carrier_out in carriers)
-            p = Process(process["name"], carrier_in, carrier_out)
-            if ! (p in output)
-                push!(output, p)
-                process["struct"] = p # add process struct to process dict to be used in parameters
-            else
-                throw(InvalidParameterError("Duplicate process found in the processes vector $(p)"))
-            end
+            p = Process(name, carrier_in, carrier_out)
+            push!(output, p)
+            # process["struct"] = p # add process struct to process dict to be used in parameters
         else
-            error("Invalid carrier in process: $(carrier_in) or $(carrier_out)")
+            error("Invalid carrier in process $(name): $(carrier_in) or $(carrier_out)")
         end
     end
     return output
@@ -197,7 +168,7 @@ function get_time_dependent(param::Union{Number,AbstractString}, timesteps::Vect
     end
 end
 
-function linear_interpolation(f::Vector{<:Dict{String,<:Number}}, xq::Vector{<:Number}, type::Type)
+function linear_interpolation(x::Vector{Int}, y::Vector{<:Number}, xq::Vector{Int}, type::Type)
     """
     Perform manual linear interpolation for a given set of x and y values.
 
@@ -211,13 +182,13 @@ function linear_interpolation(f::Vector{<:Dict{String,<:Number}}, xq::Vector{<:N
     -------
     Vector{Float64} -> Interpolated values for xq
     """
-    x = Vector{Int}()
-    y = Vector{type}()
+    # x = Vector{Int}()
+    # y = Vector{type}()
 
-    for point in f
-        push!(x, point["x"])
-        push!(y, point["y"])
-    end
+    # for point in f
+    #     push!(x, point["x"])
+    #     push!(y, point["y"])
+    # end
 
     if length(x) < 2
         throw(InvalidParameterError("At least two points are required for linear interpolation."))
@@ -259,7 +230,14 @@ function get_year_dependent(param::Union{Number,Vector}, years::Vector{Year}, ty
     if isa(param, Number)
         return Dict(y => convert(type, param) for y in years)
     elseif isa(param, Vector)
-        return Dict(zip(years, linear_interpolation(param, Int.(years), type)))
+        x = Vector{Int}()
+        y = Vector{type}()
+        for point in param
+            push!(x, point["x"])
+            push!(y, point["y"])
+        end
+
+        return Dict(zip(years, linear_interpolation(x,y, Int.(years), type)))
     else
         error("Invalid parameter type. Expected a number or a vector.")
     end
@@ -324,7 +302,7 @@ function get_independent_parameters(parameters::Dict, years::Vector{Year}, units
         end
 
         # The parameters that are not process or carrier dependent
-        if sets == Set([]) # check if the type is a vector
+        if sets == Set([]) 
             temp = convert(type, param_data["value"])
             params[param_name] = (scale !== nothing ? scale * temp : temp)
         elseif sets == Set(["Y"])
@@ -342,7 +320,7 @@ function get_independent_parameters(parameters::Dict, years::Vector{Year}, units
     return params
 end
 
-function get_dependent_parameters(parameters::Dict, processes_json::Vector{Dict{String, Any}}, carriers_json::Vector{Dict{String, Any}}, years::Vector{Year}, timesteps::Vector{Time}, units::Dict{String,Unit},  base_path::AbstractString)::Dict
+function get_dependent_parameters(parameters::Dict, processes_json::Dict{String, Any}, carriers_json::Dict{String, Any}, years::Vector{Year}, timesteps::Vector{Time}, units::Dict{String,Unit},  base_path::AbstractString)::Dict
     """
     Parse a parameter dictionary.
     Parameters
@@ -368,46 +346,45 @@ function get_dependent_parameters(parameters::Dict, processes_json::Vector{Dict{
         end
     end
 
-    for process in processes_json
-        if !("parameters" in keys(process))
-            throw(InvalidParameterError("All processes must have a 'parameters' field but found: '$(process)'"))
-        end
-        for (param_name, param_value) in process["parameters"]
+    for (name,process_dict) in processes_json
+        process = Process(name, Carrier(process_dict["carrier_in"]), Carrier(process_dict["carrier_out"]))
+        for (param_name, param_value) in process_dict
+            if param_name in ["carrier_in", "carrier_out", "comment"]
+                continue
+            end
             if ! (param_name in keys(parameters))
                 throw(InvalidParameterError("Parameter '$param_name' not found in parameters in process: '$(process)'"))
             end
             type = type_dict[parameters[param_name]["type"]]
-            sets = parameters[param_name]["sets"]
+            sets = Set(parameters[param_name]["sets"])
             if "quantity" in keys(parameters[param_name])
                 scale = units[parameters[param_name]["quantity"]].scale
             else
                 scale = nothing
             end
-            if sets == ["P"]
+            if sets == Set(["P"])
                 temp = convert(type, param_value) 
-                params[param_name][process["struct"]] = (scale !== nothing  ? scale * temp : temp)
-            elseif sets == ["P", "T"]
+                params[param_name][process] = (scale !== nothing  ? scale * temp : temp)
+            elseif sets == Set(["P", "T"])
                 temp = get_time_dependent(param_value, timesteps, type, base_path)
-                params[param_name][process["struct"]] = (scale !== nothing ? scale_dict_values(temp, scale) : temp )
-            elseif sets == ["P", "Y"]
+                params[param_name][process] = (scale !== nothing ? scale_dict_values(temp, scale) : temp )
+            elseif sets == Set(["P", "Y"])
                 temp = get_year_dependent(param_value, years, type)
-                params[param_name][process["struct"]] = (scale !== nothing ? scale_dict_values(temp, scale) : temp )
+                params[param_name][process] = (scale !== nothing ? scale_dict_values(temp, scale) : temp )
             end
         end
     end
 
-    for carrier in carriers_json
-        if !("parameters" in keys(carrier))
-            continue
-        end
-        for (param_name, param_value) in carrier["parameters"]
+    for (name,carrier_dict) in carriers_json
+        carrier = Carrier(name)
+        for (param_name, param_value) in carrier_dict
             if ! (param_name in keys(parameters))
                 throw(InvalidParameterError("Parameter '$param_name' not found in parameters in carrier: '$(carrier)'."))
             end
             type = type_dict[parameters[param_name]["type"]]
-            sets = parameters[param_name]["sets"]
-            if sets == ["C"]
-                params[param_name][carrier["struct"]] = convert(type,param_value)
+            sets = Set(parameters[param_name]["sets"])
+            if sets == Set(["C"])
+                params[param_name][carrier] = convert(type,param_value)
             end
         end
     end
@@ -415,7 +392,7 @@ function get_dependent_parameters(parameters::Dict, processes_json::Vector{Dict{
     return params
 end
 
-function get_parameters(parameters::Dict, processes_json::Vector{Dict{String, Any}}, carriers_json::Vector{Dict{String, Any}}, years::Vector{Year}, timesteps::Vector{Time}, units::Dict{String,Unit}, base_path::AbstractString)::Dict
+function get_parameters(parameters::Dict, processes_json::Dict{String, Any}, carriers_json::Dict{String, Any}, years::Vector{Year}, timesteps::Vector{Time}, units::Dict{String,Unit}, base_path::AbstractString)::Dict
     """
     Parse a parameter dictionary.
     """

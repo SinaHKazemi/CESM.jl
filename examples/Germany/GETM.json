@@ -24,7 +24,7 @@
         "annual_co2_limit": {
             "type": "Float",
             "sets": ["Y"],
-            "quantity": "CO2 Mass",
+            "quantity": "co2_emissions",
             "value": [
                 {"x": 2015, "y": 870},
                 {"x": 2016, "y": 870},
@@ -36,8 +36,8 @@
         "co2_price": {
             "type": "Float",
             "sets": ["Y"],
-            "quantity": "co2_price",
-            "default": 0
+            "quantity": "money",
+            "value": 0
         },
         "is_storage": {
             "type": "Boolean",
@@ -148,7 +148,7 @@
             "type": "Float",
             "sets": ["P"],
             "default": 0,
-            "quantity": "co2_price"
+            "quantity": "co2_emissions"
         },
         "efficiency": {
             "type": "Float",
@@ -171,57 +171,59 @@
     "timesteps" : "./time_series/4_thin_weeks.txt",
     "years" : [2015, 2020, 2025, 2030, 2035, 2040, 2045, 2050, 2055, 2060],
     "carriers": {
+        "Dummy": {},
         "Vehicles_Propulsion": {
-            "color": "tomato1"
+            "carrier_color": "tomato1"
         },
         "Decentral_Heat": {
-            "color": "firebrick2"
+            "carrier_color": "firebrick2"
         },
         "Industrial_Heat_LT": {
-            "color": "firebrick"
+            "carrier_color": "firebrick"
         },
         "Industrial_Heat_HT": {
-            "color": "red4"
+            "carrier_color": "red4"
         },
         "Electricity": {
-            "color": "orange"
+            "carrier_color": "orange"
         },
         "Biomass": {
-            "color": "springgreen1"
+            "carrier_color": "springgreen1"
         },
         "Waste": {
-            "color": "cyan1"
+            "carrier_color": "cyan1"
         },
         "Uranium": {
-            "color": "magenta1"
+            "carrier_color": "magenta1"
         },
         "Liquid_Fuel": {
-            "color": "hotpink2"
+            "carrier_color": "hotpink2"
         },
         "Crude_Oil": {
-            "color": "gray26"
+            "carrier_color": "gray26"
         },
         "Lignite": {
-            "color": "bisque3"
+            "carrier_color": "bisque3"
         },
         "Coal": {
-            "color": "black"
+            "carrier_color": "black"
         },
         "Natural_Gas": {
-            "color": "blue1"
+            "carrier_color": "blue1"
         },
         "H2": {
-            "color": "lightblue1"
+            "carrier_color": "lightblue1"
         },
         "Help_Gas_CHP": {
-            "color": "snow"
+            "carrier_color": "snow"
         },
         "Help_Coal_CHP": {
-            "color": "snow"
+            "carrier_color": "snow"
         },
         "Help_Biomass_CHP": {
-            "color": "snow"
-        }
+            "carrier_color": "snow"
+        },
+        "Gas": {}
     },
     "processes": {
         "Import_Biomass": {

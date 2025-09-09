@@ -12,23 +12,15 @@
     },
     "timesteps" : "./data_int.txt",
     "years" : [2020, 2025, 2030],
-    "regions": [
-        "base",
-        "A",
-        "B"
-    ],
     "carriers": [
         {
-            "name": "dummy",
-            "region": "base"
+            "name": "dummy"
+        },
+        {
+            "name": "gas"
         },
         {
             "name": "gas",
-            "region": "A"
-        },
-        {
-            "name": "gas",
-            "region": "B",
             "parameters":{
                 "carrier_color": "blue",
                 "carrier_order": 10
@@ -36,7 +28,6 @@
         },
         {
             "name": "oil",
-            "region": "B",
             "parameters":{
                 "carrier_color": "blue",
                 "carrier_order": 10

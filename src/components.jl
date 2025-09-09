@@ -1,6 +1,6 @@
 module Components
 
-export Carrier, Process, Region, Year, Unit, Time, Input, sina
+export Carrier, Process, Year, Unit, Time, Input
 
 struct Unit
     input::String

@@ -5,7 +5,7 @@ module Variables
     default_dict = Dict(
         "Float" => 0.0,
         "Integer" => 0,
-        "Boolean" => False,
+        "Boolean" => false,
     )
 
     variables = Dict(
