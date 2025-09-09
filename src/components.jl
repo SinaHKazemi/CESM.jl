@@ -78,9 +78,7 @@ struct Process
 end
 
 Base.:(==)(p1::Process, p2::Process) =
-    p1.name == p2.name &&
-    p1.carrier_in == p2.carrier_in &&
-    p1.carrier_out == p2.carrier_out
+    p1.name == p2.name
 
 Base.convert(::Type{String}, p::Process) = "$(p.name)_$(p.carrier_in)_$(p.carrier_out)"
 Base.String(p::Process) = "$(p.name)_$(p.carrier_in)_$(p.carrier_out)"
