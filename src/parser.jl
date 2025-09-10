@@ -204,9 +204,11 @@ function linear_interpolation(x::Vector{Int}, y::Vector{<:Number}, xq::Vector{In
     for x_i in xq
         # Extrapolate if x_i is out of bounds
         if x_i <= x[1]
-            push!(interp_vals, y[1])  # Left boundary extrapolation
+            nothing
+            # push!(interp_vals, y[1])  # Left boundary extrapolation
         elseif x_i >= x[end]
-            push!(interp_vals, y[end])  # Right boundary extrapolation
+            nothing
+            # push!(interp_vals, y[end])  # Right boundary extrapolation
         else
             # Find the two surrounding points
             for j in 1:n-1

@@ -3,18 +3,23 @@ using CESM.Parse
 
 @testset "MyPackage Tests" begin
     # parse_units
+    # excessive key
     units = Dict(
         "energy" => Dict("input" => "TWh", "scale" => 1000, "output" => "GWh", "another_key" => "value"),
         "power" => Dict("input" => "GW", "scale" => 1.0, "output" => "GW"),
         "co2_emissions" => Dict("input" => "Mio t", "scale" => 1, "output" => "Mio t"),
     )
     @test_throws Parse.InvalidParameterError Parse.get_units(units)
+
+    # non-real scale 
     units = Dict(
         "energy" => Dict("input" => "TWh", "scale" => "12", "output" => "GWh"),
         "power" => Dict("input" => "GW", "scale" => 1.0, "output" => "GW"),
         "co2_emissions" => Dict("input" => "Mio t", "scale" => 1, "output" => "Mio t"),
     )
     @test_throws Parse.InvalidParameterError Parse.get_units(units)
+    
+    # runs without error
     units = Dict(
         "energy" => Dict("input" => "TWh", "scale" => 12, "output" => "GWh"),
         "power" => Dict("input" => "GW", "scale" => 1.0, "output" => "GW"),
@@ -35,69 +40,38 @@ using CESM.Parse
     @test Parse.parse_timesteps([1,2,3,4,5,6], dirname(@__FILE__)) == [Time(t) for t in 1:6]
     # parse_years
     @test Parse.parse_years([1,2,3,4,5,6], dirname(@__FILE__)) == [Year(y) for y in 1:6]
-    # parse carriers
-
-    # parse regions
-    regions_json = [
-        "Global",
-        "Hessen",
-        "Berlin",
-        "Baden-Württemberg",
-    ]
-    regions = Set([Region("Hessen"), Region("Berlin"), Region("Baden-Württemberg"), Region("Global")])
-    
-    @test Parse.parse_regions(regions_json) == regions
 
     # parse_carriers
-    carriers_json = [
-        Dict(
-            "name" => "Dummy",
-            "region" => "Global",
-        ),
-        Dict(
-            "name" => "gas",
-            "region" => "Hessen",
-        ),
-        Dict(
-            "name" => "oil",
-            "region" => "Berlin",
-        ),
-        Dict(
-            "name" => "gas",
-            "region" => "Baden-Württemberg",
-        )
-    ]
+    carriers_json = Dict{String, Any}(
+        "Dummy" => Dict(),
+        "gas" => Dict(),
+        "oil" => Dict()
+    )
     carriers = Set([
-        Carrier("Dummy", Region("Global")),
-        Carrier("gas", Region("Hessen")),
-        Carrier("oil", Region("Berlin")),
-        Carrier("gas", Region("Baden-Württemberg")),
+        Carrier("Dummy"),
+        Carrier("gas"),
+        Carrier("oil")
     ])
 
-    @test Parse.parse_carriers(carriers_json, regions) == carriers
+    @test Parse.parse_carriers(carriers_json) == carriers
 
     # parse processes
-
-    processes_json = [
-        Dict(
-            "name" => "gas_to_oil",
-            "carrier_in" => Dict("name" => "gas", "region" => "Hessen"),
-            "carrier_out" => Dict("name" => "oil", "region" => "Berlin")
+    processes_json = Dict{String,Any}(
+        "gas_to_oil" => Dict(
+            "carrier_in" => "gas",
+            "carrier_out" => "oil"
         ),
-        Dict(
-            "name" => "oil_to_gas",
-            "carrier_in" => Dict("name" => "oil", "region" => "Berlin"),
-            "carrier_out" => Dict("name" => "gas", "region" => "Baden-Württemberg")
+        "oil_to_gas" => Dict(
+            "carrier_in" => "oil",
+            "carrier_out" => "gas"
         )
-    ]
+    )
     
     processes = Set([
-        Process("gas_to_oil", Carrier("gas", Region("Hessen")), Carrier("oil", Region("Berlin"))),
-        Process("oil_to_gas", Carrier("oil", Region("Berlin")), Carrier("gas", Region("Baden-Württemberg")))
+        Process("gas_to_oil", Carrier("gas"), Carrier("oil")),
+        Process("oil_to_gas", Carrier("oil"), Carrier("gas"))
     ])
     @test Parse.parse_processes(processes_json, carriers) == processes
-
-    # carrier_in is not in carriers
     
     
     # get_time_dependent
@@ -105,26 +79,20 @@ using CESM.Parse
     @test Parse.get_time_dependent("./testdata/data_int.txt", [Time(t) for t in 1:6], Int, dirname(@__FILE__)) == Dict(Time(i) => i for i in 1:6)
 
     # linear interpolation
-    peice_wise_data = [
-        Dict("x" => 1, "y" => 1),
-        Dict("x" => 1, "y" => 2),
-        Dict("x" => 3, "y" => 3),
-    ]
-    @test_throws Parse.InvalidParameterError Parse.linear_interpolation(peice_wise_data, [0,1.2,3.4,5.6,8], Float64)
-    peice_wise_data = [
-        Dict("x" => 1, "y" => 1),
-    ]
-    @test_throws Parse.InvalidParameterError Parse.linear_interpolation(peice_wise_data, [0,1.2,3.4,5.6,8], Float64)
-    peice_wise_data = [
-        Dict("x" => 1, "y" => 1),
-        Dict("x" => 2, "y" => 2),
-        Dict("x" => 3, "y" => 3),
-    ]
-    @test Parse.linear_interpolation(peice_wise_data, [0,1.2,3.4,5.6,8], Float64) == [1.0, 1.2, 3, 3, 3]
+    x = [1,2,3]
+    y = [1,2,3]
+    @test Parse.linear_interpolation(x, y, [0,1.2,3.4,5.6,8], Float64) == [1.0, 1.2, 3, 3, 3]
+
+
     
     # get_year_dependent
+    piece_wise_data = [
+        Dict("x"=> 1, "y"=> 1),
+        Dict("x"=> 2, "y"=> 2),
+        Dict("x"=> 3, "y"=> 3)
+    ]
     @test Parse.get_year_dependent(1, [Year(y) for y in 1:6], Int) == Dict(Year(i) => 1 for i in 1:6)
-    @test Parse.get_year_dependent(peice_wise_data, [Year(y) for y in 1:6], Int) == Dict(Year(1) => 1, Year(2) => 2, Year(3) => 3, Year(4) => 3, Year(5) => 3, Year(6) => 3)
+    @test Parse.get_year_dependent(piece_wise_data, [Year(y) for y in 1:6], Int) == Dict(Year(1) => 1, Year(2) => 2, Year(3) => 3, Year(4) => 3, Year(5) => 3, Year(6) => 3)
     # Dict(0=>1, 1 => 1, 2 => 2, 3 => 3, 4 => 3, 5 => 3, 6 => 3)
 
     # parse parameters
@@ -291,54 +259,31 @@ using CESM.Parse
             "type" => "String",
         ),
     )
-    carriers_json = [
-        Dict(
-            "name" => "gas",
-            "region" => "Hessen",
-            "parameters" => Dict(
-                "param_c_color" => "orange",
-            ),
-            "struct" => Carrier("gas", Region("Hessen"))
-        ),
-        Dict(
-            "name" => "oil",
-            "region" => "Berlin",
-            "struct" => Carrier("oil", Region("Berlin"))
-        ),
-        Dict(
-            "name" => "gas",
-            "region" => "Baden-Württemberg",
-            "struct" => Carrier("gas", Region("Baden-Württemberg"))
-        )
-    ]
+    carriers_json = Dict{String, Any}(
+        "gas" => Dict("param_c_color" => "orange"),
+        "oil" => Dict(),
+        "gas" => Dict()
+    )
 
-    processes_json = [
-        Dict(
-            "name" => "gas_to_oil",
-            "carrier_in" => Dict("name" => "gas", "region" => "Hessen"),
-            "carrier_out" => Dict("name" => "oil", "region" => "Berlin"),
-            "parameters" => Dict(
-                "param_scalar" => 1,
-                "param_t" => 2.2,
-                "param_y" => 2.3,
-            ),
-            "struct" => Process("gas_to_oil", Carrier("gas", Region("Hessen")), Carrier("oil", Region("Berlin"))),
+    processes_json = Dict{String, Any}(
+        "gas_to_oil" => Dict(
+            "carrier_in" => "gas",
+            "carrier_out" => "oil",
+            "param_scalar" => 1,
+            "param_t" => 2.2,
+            "param_y" => 2.3,
         ),
-        Dict(
-            "name" => "oil_to_gas",
-            "carrier_in" => Dict("name" => "oil", "region" => "Berlin"),
-            "carrier_out" => Dict("name" => "gas", "region" => "Baden-Württemberg"),
-            "parameters" => Dict(
-                "param_t" => "./testdata/data_float.txt",
-                "param_y" => [
-                    Dict("x" => 2, "y" => 1),
-                    Dict("x" => 3, "y" => 2),
-                    Dict("x" => 4, "y" => 3),
-                ],
-            ),
-            "struct" => Process("oil_to_gas", Carrier("oil", Region("Berlin")), Carrier("gas", Region("Baden-Württemberg")))
+        "oil_to_gas" => Dict(
+            "carrier_in" => "oil",
+            "carrier_out" => "gas",
+            "param_t" => "./testdata/data_float.txt",
+            "param_y" => [
+                Dict("x" => 2, "y" => 1),
+                Dict("x" => 3, "y" => 2),
+                Dict("x" => 4, "y" => 3),
+            ],
         )
-    ]
+    )
 
     years = [Year(y) for y in 1:6]
     timesteps = [Time(t) for t in 1:6]
@@ -346,10 +291,10 @@ using CESM.Parse
 
     @test Parse.get_dependent_parameters(parameters, processes_json, carriers_json, years, timesteps, units, dirname(@__FILE__)) == Dict(
         "param_scalar" => Dict(
-            Process("gas_to_oil", Carrier("gas", Region("Hessen")), Carrier("oil", Region("Berlin"))) => 12.0,
+            Process("gas_to_oil", Carrier("gas"), Carrier("oil")) => 12.0,
         ),
         "param_t" => Dict(
-            Process("gas_to_oil", Carrier("gas", Region("Hessen")), Carrier("oil", Region("Berlin"))) => Dict(
+            Process("gas_to_oil", Carrier("gas"), Carrier("oil")) => Dict(
                 Time(1) => 2.2,
                 Time(2) => 2.2,
                 Time(3) => 2.2,
@@ -357,7 +302,7 @@ using CESM.Parse
                 Time(5) => 2.2,
                 Time(6) => 2.2,
             ),
-            Process("oil_to_gas", Carrier("oil", Region("Berlin")), Carrier("gas", Region("Baden-Württemberg"))) => Dict(
+            Process("oil_to_gas", Carrier("oil"), Carrier("gas")) => Dict(
                 Time(1) => 1.,
                 Time(2) => 2.,
                 Time(3) => 3.,
@@ -367,7 +312,7 @@ using CESM.Parse
             )
         ),
         "param_y" => Dict(
-            Process("gas_to_oil", Carrier("gas", Region("Hessen")), Carrier("oil", Region("Berlin"))) => Dict(
+            Process("gas_to_oil", Carrier("gas"), Carrier("oil")) => Dict(
                 Year(1) => 2.3,
                 Year(2) => 2.3,
                 Year(3) => 2.3,
@@ -375,7 +320,7 @@ using CESM.Parse
                 Year(5) => 2.3,
                 Year(6) => 2.3,
             ),
-            Process("oil_to_gas", Carrier("oil", Region("Berlin")), Carrier("gas", Region("Baden-Württemberg"))) => Dict(
+            Process("oil_to_gas", Carrier("oil"), Carrier("gas")) => Dict(
                 Year(1) => 1.,
                 Year(2) => 1.,
                 Year(3) => 2.,
@@ -385,7 +330,7 @@ using CESM.Parse
             ),
         ),
         "param_c_color" => Dict(
-            Carrier("gas", Region("Hessen")) => "orange",
+            Carrier("gas") => "orange",
         ),
     )
 
@@ -409,10 +354,10 @@ using CESM.Parse
             Year(6) => 3.,
         ),
         "param_scalar" => Dict(
-            Process("gas_to_oil", Carrier("gas", Region("Hessen")), Carrier("oil", Region("Berlin"))) => 12.0,
+            Process("gas_to_oil", Carrier("gas"), Carrier("oil")) => 12.0,
         ),
         "param_t" => Dict(
-            Process("gas_to_oil", Carrier("gas", Region("Hessen")), Carrier("oil", Region("Berlin"))) => Dict(
+            Process("gas_to_oil", Carrier("gas"), Carrier("oil")) => Dict(
                 Time(1) => 2.2,
                 Time(2) => 2.2,
                 Time(3) => 2.2,
@@ -420,7 +365,7 @@ using CESM.Parse
                 Time(5) => 2.2,
                 Time(6) => 2.2,
             ),
-            Process("oil_to_gas", Carrier("oil", Region("Berlin")), Carrier("gas", Region("Baden-Württemberg"))) => Dict(
+            Process("oil_to_gas", Carrier("oil"), Carrier("gas")) => Dict(
                 Time(1) => 1.,
                 Time(2) => 2.,
                 Time(3) => 3.,
@@ -430,7 +375,7 @@ using CESM.Parse
             )
         ),
         "param_y" => Dict(
-            Process("gas_to_oil", Carrier("gas", Region("Hessen")), Carrier("oil", Region("Berlin"))) => Dict(
+            Process("gas_to_oil", Carrier("gas"), Carrier("oil")) => Dict(
                 Year(1) => 2.3,
                 Year(2) => 2.3,
                 Year(3) => 2.3,
@@ -438,7 +383,7 @@ using CESM.Parse
                 Year(5) => 2.3,
                 Year(6) => 2.3,
             ),
-            Process("oil_to_gas", Carrier("oil", Region("Berlin")), Carrier("gas", Region("Baden-Württemberg"))) => Dict(
+            Process("oil_to_gas", Carrier("oil"), Carrier("gas")) => Dict(
                 Year(1) => 1.,
                 Year(2) => 1.,
                 Year(3) => 2.,
@@ -448,7 +393,7 @@ using CESM.Parse
             ),
         ),
         "param_c_color" => Dict(
-            Carrier("gas", Region("Hessen")) => "orange",
+            Carrier("gas") => "orange",
         ),
     )
 

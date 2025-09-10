@@ -180,7 +180,7 @@ function  add_constraints!(model, vars, input::Input)::Dict
         for t in timesteps
             for y in years
                 for c in carriers
-                    c == Carrier("Dummy", Region("Global")) && continue
+                    c == Carrier("Dummy") && continue
                     constrs["power_balance"][c,y,t] = @constraint(
                         model,
                         sum(vars["power_in"][p, y, t] for p in processes if p.carrier_in == c) == 

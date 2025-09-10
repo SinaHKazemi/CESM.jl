@@ -27,4 +27,4 @@ using .CESM
 # include("src/model.jl")
 # using CESM.Parse
 # using .Components
-input = CESM.Parse.parse_input("./examples/Germany/GETM.json")
+input = CESM.Parse.parse_input("./examples/Germany/GETM.json");

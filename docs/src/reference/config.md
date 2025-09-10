@@ -1,14 +1,13 @@
 ## Config File
 
 config file is a json file that contains the configuration of the project.
-Any object in the config file could have a `comment` key that will be ignored by the parser.
+Any object in the config file could have a `comment` key that will be ignored by the parser. The main structure is as follows:
 
 ```json
 {
   "units": {..},
   "parameters" : {..},
   "timesteps": [..],
-  "regions": [..],
   "years": [..],
   "carriers": [..],
   "processes": [..]
@@ -29,9 +28,9 @@ Any object in the config file could have a `comment` key that will be ignored by
 }
 ```
 
-The units is a dictionary that must have the `power`, `energy`, `co2_emissions`, `cost_energy`, `cost_power`, `co2_spec` and `money` keys. These keys are the quantities that are referenced in the model parameters.
+The units is a dictionary. The keys are not hard coded but in the German model the `power`, `energy`, `co2_emissions`, `cost_energy`, `cost_power`, `co2_spec` and `money` keys are used. These keys are the units that are referenced in the model parameters.
 
-Each key is a dictionary that must have the `input`, `scale` and `output` keys. The input key is the unit of the input quantity, the scale key is the scale factor that is used to convert the input quantity to the output quantity, and the output key is the unit of the output quantity.
+The value corresponding to each key is also a dictionary that must have the `input`, `scale` and `output` keys. The input key is the unit of the input quantity, the scale key is the scale factor that is used to convert the input quantity to the output quantity, and the output key is the unit of the output quantity.
 
 ## Time Steps
 
@@ -71,21 +70,22 @@ Years is a list of integers that represents the years of the model.
 }
 ```
 
+The value of the "parameters" key is also a dictionary. The keys of this dictionary are the parameters of the model, and its value is another dictionary containing the following keys:
+
 ### sets
 
-Each parameter must have a `sets` key that is a list of sets that the parameter belongs to.  The value for the 'sets' key must be a list of string names representing the sets to which the parameter belongs. These sets can be $Y$, $T$, $R$, $C$ or $P$. The allowable combinations are:
+Each parameter must have a `sets` key, which is a list of the sets over which the parameter is indexed.  The value for the 'sets' key must be a list of strings representing the sets over which the parameter is indexed. These sets can be $Y$(years), $T$(timesteps), $C$(carriers) or $P$(processes). The allowable combinations are:
 
 - []
 - ["Y"]
 - ["P"]
 - ["C"]
-- ["R"]
 - ["P", "Y"]
 - ["P", "T"]
 
 ### type
 
-The `type` key is a string that is the type of the parameter. The type must be one of the following:
+The value of the `type` key is a string indicating the type of the parameter. It must be one of the following types:
 
 - Float
 - Integer
@@ -94,19 +94,18 @@ The `type` key is a string that is the type of the parameter. The type must be o
 
 ### value
 
-If the the `sets` doesn't contain $R$, $C$ or $P$ then the `value` field is mandatory and the value of the parameter must be defined here. If the `sets` contains $R$, $C$ or $P$ then the value of the parameter must be defined in the `regions`, `carriers` and `processes` fields, resspectively.
+If the value of the `sets` key doesn't contain $C$ or $P$ then the `value` field is mandatory and the value of the parameter must be defined here. If the `sets` contains  $C$ or $P$ then the value of the parameter must be defined in the  `carriers` and `processes` fields, which will be explained later.
 
 If the sets is an empty list then the value of the parameter is a scalar.
-
 If the `sets` is equal to ["Y"] then the value of the parameter could be in one of the following forms:
 
-- Scalar
+Scalar like the following example:
 
 ```json
 "value": 19.32
 ```
 
-- Piecewise linear function
+Or a piecewise linear function like this:
 
 ```json
 "value": [
@@ -115,82 +114,56 @@ If the `sets` is equal to ["Y"] then the value of the parameter could be in one 
 ]
 ```
 
-The value of the function out of the range of the function is equal to the value of the closest point in the function.
-
-## Regions
-
-Regions is a list of strings that represents the regions of the model. region `Global` must be included in the list.
-
-```json
-"regions": ["Global","Germany","Belgium"]
-```
+This piecewise function must contain at least two points.
+The value of the function out of the range of the function is not defined.
 
 ## Carriers
 
-`carrires` is a list of dictionaries that contains the carriers of the model. Each dictinary must have a `name` key that is the name of the carrier and a `region` key that is the region of the carrier. The value of the `region` key must be one of the regions in the `regions` list.
+`carrires` is a dictionary that contains the carriers of the model.
+The keys are the name of the carriers and the values are also dictionaries containing the parameters which are indexed over carriers.
 
-The 'Dummy' carrier in the 'Global' region must always be included in the list of carriers.
+The 'Dummy' carrier must always be included in the list of carriers.
 
-If a parameter is defined for a carrier then the value of the parameter must be defined in the `parameters` part of the carrier.
+If a parameter is defined for a carrier, then its value must be defined in the corresponding carrier dictionary.
 
 ```json
-"carriers": [
-    {
-        "name": "Dummy",
-        "region": "Global"
+"carriers": {
+    "Dummy": {
+        "comment": "optional comment for the carrier"
     },
-    {
-        "name": "electricity",
-        "region": "Germany"
+    "electricity": {
+        "carrier_color": "blue" 
     },
-    {
-        "comment": " optional comment for the carrier",
-        "name": "gas",
-        "region": "Belgium",
-        "parameters": {
-            "carrier_plot_color": "blue"
-        }
+    "gas": {
+        "carrier_color": "red"
     },
     // other carriers ...
-]
+}
 ```
 
 ## Processes
 
-`processes` is a list of dictionaries that contains the processes of the model. Each dictinary must have a `name` key that is the name of the process, a `carrier_in` key that is the input carrier of the conversion process and a `carrier_out` key that is the output carrier of the process. The value of the `carrier_in` and `carrier_out` key must be one of the carriers in the `carriers` list.
+`processes` is a list of dictionaries that contains the processes of the model. Each dictinary must have `carrier_in` and `carrier_out` keys that are the input and output carriers of the conversion process. The value of the `carrier_in` and `carrier_out` key must be in the list of keys in the `carriers` dictionary.
 
-If a parameter is defined for a process then the value of the parameter must be defined in the `parameters` part of the process.
+If a parameter is defined for a process then the value of the parameter must be defined in the dictionary corresponding to that process.
 
 ```json
 "processes": {
     "electricity_to_gas": {
         "comment": "comment for the process",
-        "carrier_in":{
-            "name": "electricity",
-            "region": "Germany"
-        },
-        "carrier_out": {
-            "name": "gas",
-            "region": "Belgium"
-        }
+        "carrier_in": "electricity",
+        "carrier_out": "gas",
     },
     "electricity_to_heat": {
         "comment": "comment for the process",
-        "carrier_in":{
-            "name": "electricity",
-            "region": "Germany"
-        },
-        "carrier_out": {
-            "name": "heat",
-            "region": "Belgium"
-        },
-        "parameters": {
-            "efficiency": 0.9,
-            //  other parameters ...
+        "carrier_in": "electricity",
+        "carrier_out": "heat"
+        "efficiency": 0.9,
+        //  other parameters ...
         }
     },
     // other processes ...
 }
 ```
 
-If a parameter is defined over ["P","Y"] then the value of the parameter could be either a scalar or a piecewise function. If the parameter is defined over ["P","T"] then the value of the parameter must be either a scalar or a reference to a file that contains the values of the parameter over all the time steps of a year. For example if the time steps are [1,2,10,11], then the corresponding values to the time steps are the 1th, 2th, 10th and 11th values of the file.
+If a parameter is defined over ["P","Y"] then the value of the parameter could be either a scalar or a piecewise function. If the parameter is defined over ["P","T"] then the value of the parameter must be either a scalar or a reference to a file that contains the values of the parameter over all the time steps of a year. For example if the time steps are [1,2,10,11], then the corresponding values to the time steps are the 1th, 2th, 10th and 11th values in the file.
