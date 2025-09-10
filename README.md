@@ -54,3 +54,10 @@ Compact Energy System Modeling Tool
         (Adjust the path to your main script accordingly.)
 
     * **Interactive Exploration:** You can also interact with your project's modules and functions directly in the Julia REPL after activating the environment and potentially loading your project's main module using `using YourProjectName` (if your project defines a module).
+
+5. **Run Tests:** run the following piece of code
+        ```julia
+        ]test
+        ```
+
+6. **Build Documentations:** activate the virtual environment in docs folder and run make.jl
