@@ -48,7 +48,7 @@ you could also refer to the file that contains the time steps by its path. The p
 
 ## Years
 
-Years is a list of integers that represents the years of the model.
+Years is a list of integers that represents the planning years of the model.  Similar to time steps, it can also be passed as an array or a path to the file.
 
 ```json
 "years": [2020,2030,2040]
