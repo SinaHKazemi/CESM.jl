@@ -1,33 +1,27 @@
 module Variables
 
-    export variables, default_dict
-
-    default_dict = Dict(
-        "Float" => 0.0,
-        "Integer" => 0,
-        "Boolean" => false,
-    )
-
+    export variables
+    
     variables = Dict(
-        "total_cost" => (type="Float", sets=(), quantity="Money"),
-        "capital_cost" => (type="Float", sets=(), quantity="Money"),
-        "operational_cost" => (type="Float", sets=(), quantity="Money"),
-        "total_residual_value" => (type="Float", sets=(), quantity="Money"),
-        "residual_value" => (type="Float", sets=("P", "Y"), quantity="Money"),
-        "annual_emission" => (type="Float", sets=("Y",), quantity="CO2 Emissions"),
-        "new_capacity" => (type="Float", sets=("P", "Y"), quantity="Money"),
-        "active_capacity" => (type="Float", sets=("P", "Y")),
-        "legacy_capacity" => (type="Float", sets=("P", "Y")),
-        "power_in" => (type="Float", sets=("P", "Y", "T")),
-        "power_out" => (type="Float", sets=("P", "Y", "T")),
-        "total_energy_out" => (type="Float", sets=("P", "Y")),
-        "total_energy_in" => (type="Float", sets=("P", "Y")),
-        "energy_out_time" => (type="Float", sets=("P", "Y", "T")),
-        "energy_in_time" => (type="Float", sets=("P", "Y", "T")),
-        "net_energy_generation" => (type="Float", sets=("C", "Y", "T")),
-        "net_energy_consumption" => (type="Float", sets=("C", "Y", "T")),
-        "storage_level" => (type="Float", sets=("P", "Y", "T")),
-        "max_storage_level" => (type="Float", sets=("P", "Y"))
+        "total_cost" => (type="Float", sets=(), unit="money"),
+        "capital_cost" => (type="Float", sets=(), unit="money"),
+        "operational_cost" => (type="Float", sets=(), unit="money"),
+        "total_residual_value" => (type="Float", sets=(), unit="money"),
+        "residual_value" => (type="Float", sets=("P", "Y"), unit="money"),
+        "annual_emission" => (type="Float", sets=("Y",), unit="CO2 Emissions"),
+        "new_capacity" => (type="Float", sets=("P", "Y"), unit="money"),
+        "active_capacity" => (type="Float", sets=("P", "Y"), unit="power"),
+        "legacy_capacity" => (type="Float", sets=("P", "Y"), unit="power"),
+        "power_in" => (type="Float", sets=("P", "Y", "T"), unit="power"),
+        "power_out" => (type="Float", sets=("P", "Y", "T"), unit="power"),
+        "total_energy_out" => (type="Float", sets=("P", "Y"), unit="energy"),
+        "total_energy_in" => (type="Float", sets=("P", "Y"), unit="energy"),
+        "energy_out_time" => (type="Float", sets=("P", "Y", "T"), unit="energy"),
+        "energy_in_time" => (type="Float", sets=("P", "Y", "T"), unit="energy"),
+        "net_energy_generation" => (type="Float", sets=("C", "Y", "T"), unit="energy"),
+        "net_energy_consumption" => (type="Float", sets=("C", "Y", "T"), unit="energy"),
+        "storage_level" => (type="Float", sets=("P", "Y", "T"), unit="energy"),
+        "max_storage_level" => (type="Float", sets=("P", "Y"), unit="energy")
     )
 
 end
