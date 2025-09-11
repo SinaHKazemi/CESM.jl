@@ -1,7 +1,9 @@
 {
-    "comment": "German Energy Transition Model",
-    "version": "1",
+    "_comment1": "German Energy Transition Model",
+    "_comment2": "The parser will ignore any key that starts with '_comment', such as this one.",
+    "_comment3": "",
     "units": {
+        "_comment": "Each entity must have 'input', 'output' and 'scale' keys.",
         "power":{"input": "GW",	"scale": 1, "output": "GW"},
         "energy": {"input":	"TWh", "scale": 1000, "output": "GWh"},
         "co2_emissions": {"input": "Mio t",	"scale": 1, "output": "Mio t"},
@@ -11,6 +13,11 @@
         "money": {"input": "Mio EUR", "scale": 1, "output":	"Mio EUR"}
     },
     "parameters": {
+        "_comment1": "This dictionary contains the definition of parameters. The 'type' and 'sets' keys are mandatory in all parameter definitions.",
+        "_comment2": "The value of the 'type' key must be an integer, float, boolean or string.",
+        "_comment3": "A parameter can have either a 'value' or a 'default' key, but not both at the same time.",
+        "_comment4": "The value of the 'sets' key could be [],['Y'],['C'],['P'],['P','Y'],['P','T']. Replace the surrounding quotes with double quotes.",
+        "_comment5": "If 'sets' is equal to [] or ['Y'] then the 'value' must be defined here in the definition of the parameter.",
         "discount_rate": {
             "type": "Float",
             "sets": [],
@@ -24,7 +31,7 @@
         "annual_co2_limit": {
             "type": "Float",
             "sets": ["Y"],
-            "quantity": "co2_emissions",
+            "unit": "co2_emissions",
             "value": [
                 {"x": 2015, "y": 870},
                 {"x": 2016, "y": 870},
@@ -36,7 +43,7 @@
         "co2_price": {
             "type": "Float",
             "sets": ["Y"],
-            "quantity": "money",
+            "unit": "money",
             "value": 0
         },
         "is_storage": {
@@ -56,43 +63,39 @@
         "max_legacy_capacity": {
             "type": "Float",
             "sets": ["P","Y"],
-            "quantity": "power",
-            "default": 0
+            "unit": "power"
         },
         "min_legacy_capacity": {
             "type": "Float",
             "sets": ["P","Y"],
-            "quantity": "power",
-            "default": 0
+            "unit": "power"
         },
         "max_capacity": {
             "type": "Float",
             "sets": ["P","Y"],
-            "quantity": "power",
-            "default": 0
+            "unit": "power"
         },
         "min_capacity": {
             "type": "Float",
             "sets": ["P","Y"],
-            "quantity": "power",
-            "default": 0
+            "unit": "power"
         },
         "operational_cost_energy": {
             "type": "Float",
             "sets": ["P","Y"],
-            "quantity": "cost_energy",
+            "unit": "cost_energy",
             "default": 0
         },
         "operational_cost_power": {
             "type": "Float",
             "sets": ["P","Y"],
-            "quantity": "cost_power",
+            "unit": "cost_power",
             "default": 0
         },
         "capital_cost_power": {
             "type": "Float",
             "sets": ["P","Y"],
-            "quantity": "cost_power",
+            "unit": "cost_power",
             "default": 0
         },
         "min_fraction_in": {
@@ -118,12 +121,12 @@
         "max_energy_out": {
             "type": "Float",
             "sets": ["P","Y"],
-            "quantity": "energy"
+            "unit": "energy"
         },
         "min_energy_out": {
             "type": "Float",
             "sets": ["P","Y"],
-            "quantity": "energy"
+            "unit": "energy"
         },
         "availability_profile": {
             "type": "Float",
@@ -148,7 +151,7 @@
             "type": "Float",
             "sets": ["P"],
             "default": 0,
-            "quantity": "co2_emissions"
+            "unit": "co2_emissions"
         },
         "efficiency": {
             "type": "Float",
@@ -156,13 +159,13 @@
             "default": 1
         },
         "carrier_color": {
-            "comment": "https://juliagraphics.github.io/Colors.jl/dev/namedcolors/",
+            "_comment": "https://juliagraphics.github.io/Colors.jl/dev/namedcolors/",
             "type": "String",
             "sets": ["C"],
             "default": "lightsalmon"
         },
         "process_color": {
-            "comment": "https://juliagraphics.github.io/Colors.jl/dev/namedcolors/",
+            "_comment": "https://juliagraphics.github.io/Colors.jl/dev/namedcolors/",
             "type": "String",
             "sets": ["P"],
             "default": "lightsalmon"
@@ -749,7 +752,7 @@
             "output_profile": "./time_series/Household_Heat_Demand.txt"
         },
         "Decentral_Oil_Heater": {
-            "comment": "name doesn't make sense",
+            "_comment": "name doesn't make sense",
             "carrier_in": "Liquid_Fuel",
             "carrier_out": "Decentral_Heat",
             "efficiency": 0.92,
