@@ -367,7 +367,6 @@ In all constraints, if a parameter is not defined, the default value is used. If
 \text{var\_total\_cost} = \text{var\_capital\_cost} + \text{var\_operational\_cost}
 ```
 
-
 - Capital cost is equal to the present value of all capital expenditures minus the residual value.
 
 ```math
@@ -387,14 +386,12 @@ In all constraints, if a parameter is not defined, the default value is used. If
 
 ```math
 \begin{align*}
-\text{var\_operational\_cost} &=
-\sum_{p\in P}\sum_{y \in Y} 
-\text{discount\_factor}[y] \\
-& * ( \\
-  & \quad \text{var\_active\_capacity}[p,y] * \text{operational\_cost\_power}[p,y] +\\
-  & \quad \text{var\_total\_energy\_out}[p,y] * \text{operational\_cost\_energy}[p,y] +\\
-  & \quad \text{var\_annual\_emission}[y] * \text{co2\_price}[y]\\
-&) * \left(y^+-y\quad \text{if} \quad y \neq Y[end] \quad \text{else} \quad 1 \right)
+\text{var\_operational\_cost} = 
+&\sum_{y \in Y} \text{discount\_factor}[y] * \left(y^+-y\quad \text{if} \quad y \neq Y[end]  \text{else} \quad 1 \right) * \\
+&(\text{var\_annual\_emission}[y] * \text{co2\_price}[y] + \\
+&\sum_{p\in P} 
+  \text{var\_active\_capacity}[p,y] * \text{operational\_cost\_power}[p,y] +
+  \text{var\_total\_energy\_out}[p,y] * \text{operational\_cost\_energy}[p,y])
 \end{align*}
 ```
 
