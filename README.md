@@ -55,9 +55,26 @@ Compact Energy System Modeling Tool
 
     * **Interactive Exploration:** You can also interact with your project's modules and functions directly in the Julia REPL after activating the environment and potentially loading your project's main module using `using YourProjectName` (if your project defines a module).
 
-5. **Run Tests:** run the following piece of code
+## Run Tests
+
+run the following piece of code
         ```julia
         ]test
         ```
 
-6. **Build Documentations:** activate the virtual environment in docs folder and run make.jl
+## Build Documentations
+
+Activate the virtual environment in docs folder and run make.jl
+
+## Authors
+
+- [**Sina Hajikazemi**](https://github.com/SinaHKazemi) — Julia implementation  
+- [**Julia Barbosa**](https://github.com/JP-Barbosa) — Model conceptualization and the German Energy Transition model
+
+## How to cite
+
+If you use this model please cite the repository
+
+If you use the German energy transition model, please sign the following link:
+
+Barbosa, J., Ripp, C., & Steinke, F. (2021). Accessible Modeling of the German Energy Transition: An Open, Compact, and Validated Model. Energies, 14(23), 8084. https://doi.org/10.3390/en14238084
