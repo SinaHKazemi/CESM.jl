@@ -567,7 +567,7 @@ then
 \text{var\_max\_storage\_level}[s,y] = \text{var\_active\_capacity}[s,y]/\text{c\_rate}[s] \quad \forall s \in S, \forall y \in Y
 ```
 
-- Doesn't let the storage level to be more than the maximum capacity
+- The storage level must be less than the maximum capacity.
 
 ```math
 \text{var\_storage\_level}[s,y,t] \leq \text{var\_max\_storage\_level}[s,y] \quad \forall s \in S, \forall y \in Y, \forall t \in T
