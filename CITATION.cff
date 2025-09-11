@@ -1,0 +1,27 @@
+cff-version: 1.2.0
+message: "Please use the following citation when referencing CESM.jl in academic work."
+title: "CESM.jl: Compact Energy System Modeling Tool"
+version: "main"
+date-released: "2025-09-11"
+authors:
+  - family-names: "Hajikazemi"
+    given-names: "Sina"
+    orcid: "https://orcid.org/0009-0000-1455-9890"      # optional: add if known
+  - family-names: "Barbosa"
+    given-names: "Julia"
+    orcid: "https://orcid.org/0000-0001-7807-8789"
+repository-code: "https://github.com/SinaHKazemi/CESM.jl"
+license: "MIT"
+identifiers:
+  - type: "doi"
+    value: "PLACEHOLDER_DOI"         # optional: if you mint a DOI for releases
+keywords:
+  - "energy systems"
+  - "modelling"
+  - "copper plate"
+  - "open source"
+software:
+  - name: "CESM.jl"
+    homepage: "https://github.com/SinaHKazemi/CESM.jl"
+    repository: "https://github.com/SinaHKazemi/CESM.jl"
+    license: "MIT"
