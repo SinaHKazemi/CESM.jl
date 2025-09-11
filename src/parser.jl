@@ -18,6 +18,26 @@ type_dict = Dict(
     "String" => String,
 )
 
+# Recursive function to strip "_comment*" keys from the data read from the config.json file in-place
+function strip_comments!(data)
+    if isa(data, Dict)
+        # Collect keys to remove first to avoid modifying dict during iteration
+        keys_to_remove = [k for k in keys(data) if isa(k, AbstractString) && startswith(k, "_comment")]
+        for k in keys_to_remove
+            delete!(data, k)
+        end
+        # Recursively process remaining values
+        for v in values(data)
+            strip_comments!(v)
+        end
+    elseif isa(data, Vector)
+        for item in data
+            strip_comments!(item)
+        end
+    end
+    return data
+end
+
 function parse_input(path::AbstractString)::Input
     fullpath = abspath(path)  # normalize to absolute path
     base_path = dirname(fullpath)
@@ -29,6 +49,9 @@ function parse_input(path::AbstractString)::Input
     data = open(fullpath, "r") do io
         JSON.parse(read(io, String))
     end
+
+    # strip comments
+    strip_comments!(data)
     
     units = get_units(data["units"])
     timesteps = parse_timesteps(data["timesteps"], base_path)
@@ -247,7 +270,7 @@ end
 
 function validate_parameters(parameters::Dict)
     for (param_name, param_data) in parameters
-        if !(issubset(keys(param_data), ["default", "type", "sets", "value", "quantity", "comment"]))
+        if !(issubset(keys(param_data), ["default", "type", "sets", "value", "quantity"]))
             throw(InvalidParameterError("Invalid parameter: $(param_name). there is an unkown field: $(keys(param_data))"))
         end
 
@@ -351,7 +374,7 @@ function get_dependent_parameters(parameters::Dict, processes_json::Dict{String,
     for (name,process_dict) in processes_json
         process = Process(name, Carrier(process_dict["carrier_in"]), Carrier(process_dict["carrier_out"]))
         for (param_name, param_value) in process_dict
-            if param_name in ["carrier_in", "carrier_out", "comment"]
+            if param_name in ["carrier_in", "carrier_out"]
                 continue
             end
             if ! (param_name in keys(parameters))
