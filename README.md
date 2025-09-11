@@ -1,5 +1,8 @@
 # CESM
+
 Compact Energy System Modeling Tool
+
+Documentation: https://sinahkazemi.github.io/CESM.jl/
 
 ## Running the Julia Project
 
@@ -73,8 +76,7 @@ Activate the virtual environment in docs folder and run make.jl
 
 ## How to cite
 
-If you use this model please cite the repository
-
-If you use the German energy transition model, please sign the following link:
+If you use this package please cite the repository.
+If you use the German energy transition model, please also sign the following link:
 
 Barbosa, J., Ripp, C., & Steinke, F. (2021). Accessible Modeling of the German Energy Transition: An Open, Compact, and Validated Model. Energies, 14(23), 8084. https://doi.org/10.3390/en14238084
