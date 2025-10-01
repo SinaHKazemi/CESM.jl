@@ -18,7 +18,21 @@ type_dict = Dict(
     "String" => String,
 )
 
-# Recursive function to strip "_comment*" keys from the data read from the config.json file in-place
+
+"""
+    strip_comments!(data)
+
+Recursively removes all keys starting with `"_comment"` from a dictionary `data`.
+Supports nested dictionaries and vectors containing dictionaries.
+
+This function **modifies the input in-place**.
+
+# Arguments
+- `data`: A `Dict` or `Vector` (possibly nested) containing dictionaries.
+
+# Returns
+- The modified `data` with comment keys removed.
+"""
 function strip_comments!(data)
     if isa(data, Dict)
         # Collect keys to remove first to avoid modifying dict during iteration
@@ -38,6 +52,18 @@ function strip_comments!(data)
     return data
 end
 
+"""
+    parse_input(path::AbstractString) -> Input
+
+Reads a JSON configuration file from `path` and returns an `Input` struct.
+
+# Arguments
+- `path::AbstractString`: Path to the `config.json` file.
+
+# Returns
+- `Input`: The input struct containing all configuration data.
+
+"""
 function parse_input(path::AbstractString)::Input
     fullpath = abspath(path)  # normalize to absolute path
     base_path = dirname(fullpath)
@@ -63,6 +89,19 @@ function parse_input(path::AbstractString)::Input
     return input
 end
 
+"""
+    get_units(units::Dict) -> Dict{String, Unit}
+
+Converts a dictionary of unit definitions into a dictionary mapping string keys
+to `Unit` objects.
+
+# Arguments
+- `units::Dict`: A dictionary where keys are unit names (strings) and values
+  contain unit definitions.
+
+# Returns
+- `Dict{String, Unit}`: A dictionary mapping unit names to `Unit` objects.
+"""
 function get_units(units::Dict)::Dict{String,Unit}
     output = Dict{String,Unit}()
     for (unit_name, unit_data) in units
@@ -80,6 +119,21 @@ function get_units(units::Dict)::Dict{String,Unit}
     return output
 end
 
+"""
+    parse_data_file(path::AbstractString, base_path::AbstractString, ::Type{T}) -> Vector{T}
+
+Reads a text file containing values of type `T` and returns them as a vector.
+Supports relative paths with a base directory and skips full-line comments starting with `#`.
+The values can be split using a space, tab, comma or newline.
+
+# Arguments
+- `path::AbstractString`: Path to the data file (can be relative or absolute).
+- `base_path::AbstractString`: Base path used if `path` is relative.
+- `T::Type`: Element type of the output vector (e.g., `Int`, `Float64`).
+
+# Returns
+- `Vector{T}`: A vector of parsed values of type `T`.
+"""
 function parse_data_file(path::AbstractString, base_path::AbstractString, ::Type{T}) where {T}
     # Use base_path if path is relative
     fullpath = isabspath(path) ? path : joinpath(base_path, path)
@@ -117,7 +171,29 @@ function parse_data_file(path::AbstractString, base_path::AbstractString, ::Type
     return data
 end
 
-function get_vector_or_file(x, ::Type{T}, base_path::AbstractString) where {T}
+"""
+    get_vector_or_file(x::Union{Vector,AbstractString}, ::Type{T}, base_path::AbstractString) -> Vector{T}
+
+Returns a vector of type `T` from either:
+
+1. A vector `x` containing elements of type `T` or convertible to `T`.
+2. A string `x` representing a file path containing values of type `T`.
+
+# Behavior
+- If `x` is already `Vector{T}`, it is returned as-is.
+- If `x` is a `Vector` of a different type, each element is converted to `T`.
+- If `x` is a string, the file at that path (relative to `base_path` if needed) is parsed using `parse_data_file`.
+- Any invalid input will raise an error.
+
+# Arguments
+- `x::Union{Vector,AbstractString}`: Either a vector of values or a string path to a data file.
+- `T::Type`: The type of elements in the returned vector (e.g., `Int`, `Float64`).
+- `base_path::AbstractString`: Base path used if `x` is a relative file path.
+
+# Returns
+- `Vector{T}`: The resulting vector of type `T`.
+"""
+function get_vector_or_file(x::Union{Vector,AbstractString}, ::Type{T}, base_path::AbstractString) where {T}
     if isa(x, Vector{T})
         return x
     elseif isa(x, Vector)
@@ -137,7 +213,21 @@ function get_vector_or_file(x, ::Type{T}, base_path::AbstractString) where {T}
     end
 end
 
-# Validates that all elements are unique, positive and in ascending order.
+"""
+    validate_temporal_sequence(values::Vector{Int})
+
+Validates that a vector of integer temporal values satisfies the following conditions:
+
+1. All elements are unique.
+2. All elements are positive.
+3. Elements are strictly increasing (ascending order).
+
+# Arguments
+- `values::Vector{Int}`: A vector of integer temporal values.
+
+# Throws
+- `TemporalSequenceError` if any of the validation rules are violated.
+"""
 function validate_temporal_sequence(values::Vector{Int})
     if ! (length(values) == length(unique(values)))
         throw(TemporalSequenceError("Duplicate values found in the vector"))
@@ -148,22 +238,74 @@ function validate_temporal_sequence(values::Vector{Int})
     end
 end
 
+"""
+    parse_timesteps(timesteps_data::Union{Vector,AbstractString}, base_path::AbstractString) -> Vector{Time}
 
+Parses a sequence of temporal steps and returns them as a vector of `Time` objects.
+
+# Behavior
+- If `timesteps_data` is a vector, it is used directly (elements are converted to `Int` if needed).
+- If `timesteps_data` is a string, it is treated as a file path relative to `base_path` and parsed using `get_vector_or_file`.
+- Validates that the resulting sequence is unique, positive, and strictly increasing using `validate_temporal_sequence`.
+- Converts each timestep to a `Time` object.
+
+# Arguments
+- `timesteps_data`: A vector of integers or a file path string containing integer timesteps.
+- `base_path`: Base path used if `timesteps_data` is a relative file path.
+
+# Returns
+- `Vector{Time}`: A vector of `Time` objects representing the temporal sequence.
+"""
 function parse_timesteps(timesteps_data::Union{Vector,AbstractString}, base_path::AbstractString)::Vector{Time}
     timesteps = get_vector_or_file(timesteps_data, Int, base_path)
     validate_temporal_sequence(timesteps)
     return [Time(t) for t in timesteps]
 end
 
+"""
+    parse_years(years_data::Union{Vector,AbstractString}, base_path::AbstractString) -> Vector{Year}
+
+Parses a sequence of years and returns them as a vector of `Year` objects.
+
+# Behavior
+- If `years_data` is a vector, it is used directly (elements are converted to `Int` if needed).
+- If `years_data` is a string, it is treated as a file path relative to `base_path` and parsed using `get_vector_or_file`.
+- Validates that the resulting sequence is unique, positive, and strictly increasing using `validate_temporal_sequence`.
+- Converts each year to a `Year` object.
+
+# Arguments
+- `years_data`: A vector of integers or a file path string containing integer years.
+- `base_path`: Base path used if `years_data` is a relative file path.
+
+# Returns
+- `Vector{Year}`: A vector of `Year` objects representing the temporal sequence.
+"""
 function parse_years(years_data::Union{Vector,AbstractString}, base_path::AbstractString)::Vector{Year}
     years = get_vector_or_file(years_data, Int, base_path)
     validate_temporal_sequence(years)
     return [Year(y) for y in years]
 end
 
+"""
+    parse_carriers(carriers_json::Dict{String,Any}) -> Set{Carrier}
+
+Parses a dictionary of carriers and returns a set of `Carrier` objects.
+
+# Behavior
+- The keys of the input dictionary are interpreted as carrier names.
+- Each key is converted to a `Carrier` object.
+- Returns a `Set{Carrier}` containing all carriers.
+
+# Arguments
+- `carriers_json::Dict{String,Any}`: A dictionary where keys are carrier names and values contain carrier properties (values are ignored here).
+
+# Returns
+- `Set{Carrier}`: A set of `Carrier` objects.
+"""
 function parse_carriers(carriers_json::Dict{String,Any})::Set{Carrier}
     return Set(Carrier(c) for c in keys(carriers_json))
 end
+
 
 function parse_processes(processes::Dict{String,Any}, carriers::Set{Carrier})::Set{Process}
     output = Set{Process}()
@@ -220,7 +362,7 @@ function linear_interpolation(x::Vector{Int}, y::Vector{<:Number}, xq::Vector{In
     interp_vals = Vector{type}()
 
     for x_i in xq
-        # Extrapolate if x_i is out of bounds
+        # Ignore if x_i is out of bounds
         if x_i <= x[1]
             nothing
             # push!(interp_vals, y[1])  # Left boundary extrapolation

@@ -10,7 +10,7 @@ export run_model
 function run_model(input::Input)
     model = JuMP.Model(Gurobi.Optimizer)
     vars = add_vars!(model, input)
-    add_constraints!(model, vars, input)
+    constraints = add_constraints!(model, vars, input)
     set_obj!(model, vars)
     optimize!(model)
     output = get_output(input, vars)

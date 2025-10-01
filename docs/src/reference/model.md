@@ -318,12 +318,12 @@ All variables are non-negative unless otherwise specified.
   - unit: Energy
   - type: Float
 
-- **var\_total\_energy\_in**: Total energy input of conversion process $p \in P$ in year $y \in Y$.
+- **var\_total\_energy\_in[p,y]**: Total energy input of conversion process $p \in P$ in year $y \in Y$.
   - indices: $P \times Y$
   - unit: Energy
   - type: Float
 
-- **var\_energy\_out\_time**: Energy output of conversion process $p \in P$ in year $y \in Y$ at time step $t \in T$.
+- **var\_energy\_out\_time[p,y,t]**: Energy output of conversion process $p \in P$ in year $y \in Y$ at time step $t \in T$.
   - indices: $P \times Y \times T$
   - unit: Energy
   - type: Float
