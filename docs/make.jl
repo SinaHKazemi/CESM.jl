@@ -9,14 +9,14 @@ makedocs(
         "index.md",
         "Tutorials" => [
             "Installation" => "tutorials/installation.md",
-            "Subsection 2" => "tutorials/sub2.md"
+            # "Subsection 2" => "tutorials/sub2.md"
         ],
         "Reference" => [
             "Model" => "reference/model.md",
             "Config File" => "reference/config.md",
             "Input and Output" => "reference/inout.md",
             "Variables" => "reference/variables.md",
-            "API" => "reference/api.md",
+            # "API" => "reference/api.md",
         ],
 
     ],

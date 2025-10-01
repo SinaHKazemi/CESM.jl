@@ -1,7 +1,7 @@
-## Config File
+# Config File
 
 config file is a json file that contains the configuration of the project.
-Any object in the config file could have a `comment` key that will be ignored by the parser. The main structure is as follows:
+Any object in the config file could have a `_comment` key that will be ignored by the parser. The main structure is as follows:
 
 ```json
 {
@@ -60,7 +60,7 @@ Years is a list of integers that represents the planning years of the model.  Si
 {
     "parameters" : {
         "discount_rate" : {
-            "comment": "sets and type properties are mandatory",
+            "_comment": "sets and type properties are mandatory",
             "sets": ["Y"], 
             "type": "Float",
             "value":  0.05
@@ -129,13 +129,13 @@ If a parameter is defined for a carrier, then its value must be defined in the c
 ```json
 "carriers": {
     "Dummy": {
-        "comment": "optional comment for the carrier"
+        "_comment": "optional comment for the carrier"
     },
     "electricity": {
-        "carrier_color": "blue" 
+        "carrier_color": "tomato1" 
     },
     "gas": {
-        "carrier_color": "red"
+        "carrier_color": "orange2"
     },
     // other carriers ...
 }
@@ -143,7 +143,7 @@ If a parameter is defined for a carrier, then its value must be defined in the c
 
 ## Processes
 
-`processes` is a list of dictionaries that contains the processes of the model. Each dictinary must have `carrier_in` and `carrier_out` keys that are the input and output carriers of the conversion process. The value of the `carrier_in` and `carrier_out` key must be in the list of keys in the `carriers` dictionary.
+`processes` is a list of dictionaries that contains the processes of the model. Each dictionary must have `carrier_in` and `carrier_out` keys that are the input and output carriers of the conversion process. The value of the `carrier_in` and `carrier_out` key must be in the list of keys in the `carriers` dictionary.
 
 If a parameter is defined for a process then the value of the parameter must be defined in the dictionary corresponding to that process.
 

@@ -1,3 +1,6 @@
+[![License](https://img.shields.io/pypi/l/pypsa.svg)](LICENSE.txt)
+
+
 # CESM
 
 Compact Energy System Modeling Tool

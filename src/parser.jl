@@ -67,7 +67,7 @@ function get_units(units::Dict)::Dict{String,Unit}
     output = Dict{String,Unit}()
     for (unit_name, unit_data) in units
         if keys(unit_data) != Set(("input", "output", "scale"))
-            throw(InvalidParameterError("each unit must have 'input', 'output', and 'scale' fields but found: '$unit_name'"))
+            throw(InvalidParameterError("Each unit must have 'input', 'output', and 'scale' fields but found: '$unit_name'"))
         end
 
         if !(unit_data["input"] isa String && unit_data["output"] isa String && unit_data["scale"] isa Real)
@@ -137,6 +137,7 @@ function get_vector_or_file(x, ::Type{T}, base_path::AbstractString) where {T}
     end
 end
 
+# Validates that all elements are unique, positive and in ascending order.
 function validate_temporal_sequence(values::Vector{Int})
     if ! (length(values) == length(unique(values)))
         throw(TemporalSequenceError("Duplicate values found in the vector"))
@@ -146,6 +147,7 @@ function validate_temporal_sequence(values::Vector{Int})
         throw(TemporalSequenceError("Non-increasing values found in the vector"))
     end
 end
+
 
 function parse_timesteps(timesteps_data::Union{Vector,AbstractString}, base_path::AbstractString)::Vector{Time}
     timesteps = get_vector_or_file(timesteps_data, Int, base_path)
@@ -171,9 +173,8 @@ function parse_processes(processes::Dict{String,Any}, carriers::Set{Carrier})::S
         if (carrier_in in carriers) && (carrier_out in carriers)
             p = Process(name, carrier_in, carrier_out)
             push!(output, p)
-            # process["struct"] = p # add process struct to process dict to be used in parameters
         else
-            error("Invalid carrier in process $(name): $(carrier_in) or $(carrier_out)")
+            InvalidParameterError("Invalid carrier in process $(name): $(carrier_in) or $(carrier_out)")
         end
     end
     return output
@@ -194,6 +195,7 @@ end
 function linear_interpolation(x::Vector{Int}, y::Vector{<:Number}, xq::Vector{Int}, type::Type)
     """
     Perform manual linear interpolation for a given set of x and y values.
+    Ignores any value for xq out of the x range.
 
     Parameters
     ----------
@@ -205,13 +207,6 @@ function linear_interpolation(x::Vector{Int}, y::Vector{<:Number}, xq::Vector{In
     -------
     Vector{Float64} -> Interpolated values for xq
     """
-    # x = Vector{Int}()
-    # y = Vector{type}()
-
-    # for point in f
-    #     push!(x, point["x"])
-    #     push!(y, point["y"])
-    # end
 
     if length(x) < 2
         throw(InvalidParameterError("At least two points are required for linear interpolation."))
@@ -268,6 +263,7 @@ function get_year_dependent(param::Union{Number,Vector}, years::Vector{Year}, ty
     end
 end
 
+# Initial validation of the parameter definitions
 function validate_parameters(parameters::Dict)
     for (param_name, param_data) in parameters
         if !(issubset(keys(param_data), ["default", "type", "sets", "value", "quantity"]))
@@ -280,10 +276,9 @@ function validate_parameters(parameters::Dict)
 
         # check if the type is valid
         if !(param_data["type"] in keys(type_dict))
-            throw(InvalidParameterError("allowable types are: '$(keys(type_dict))', but found: '$(param_name)' with type: '$(param_data["type"])'"))
+            throw(InvalidParameterError("Allowable types are: '$(keys(type_dict))', but found: '$(param_name)' with type: '$(param_data["type"])'"))
         end
 
-        type = type_dict[param_data["type"]]
         sets = Set(param_data["sets"])
 
         if ! issubset(sets,Set(["P","Y","T","C"]))
