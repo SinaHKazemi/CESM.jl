@@ -1,5 +1,7 @@
 # Germany PV availability in 2016
 # 2016_PVAvail_DE
+# Data from 2016 based on the actual supply divided by the installed capacity. Full load hours: 867
+# References: [6]
 0.000000
 0.000000
 0.000000

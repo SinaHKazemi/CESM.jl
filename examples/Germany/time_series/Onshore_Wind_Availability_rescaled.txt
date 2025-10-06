@@ -1,5 +1,7 @@
 # Onshore wind turbine availability timeseries rescaled
 # 2016_OnshoreWind_Rescaled_2700
+# Adapted from the Wind Onshore TS. Availability has been increased to match the expected full load hours for new technologies. Full load hours: 2700.
+# References: [6][3]
 0.289641
 0.290534
 0.295965

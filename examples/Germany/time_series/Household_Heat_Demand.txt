@@ -1,4 +1,6 @@
 # D_Heat_Household_J
+# Data from 2016 based on gas demand using the standard load profile and temperature data.
+# References: [7]
 2.583551
 2.762503
 2.810113

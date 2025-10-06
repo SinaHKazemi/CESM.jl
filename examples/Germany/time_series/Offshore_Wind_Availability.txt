@@ -1,5 +1,7 @@
 # Offshore wind turbine availability timeseries
 # 2016_Offshore_WindAvail_DE
+# Data from 2016 based on the actual supply divided by the installed capacity. Full load hours: 3209.
+# References: [6]
 0.681463
 0.664578
 0.599775

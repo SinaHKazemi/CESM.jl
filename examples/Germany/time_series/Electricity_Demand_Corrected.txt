@@ -1,5 +1,7 @@
 # electricity demand timeseries for Germany in 2016.
 # corrected_eletricity_demand_2016
+# It has been corrected to cover electricity as the final energy use only.
+# References: [6][1][7]
 0.000076
 0.000072
 0.000069

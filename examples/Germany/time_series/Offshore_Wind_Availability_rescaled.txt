@@ -1,5 +1,7 @@
 # Offshore wind turbine availability timeseries
 # 2016_OffshoreWind_Rescaled_4300
+# Adapted from Wind Offshore TS. Availability has been increased to match the expected full load hours for new technologies. Full load hours: 4300.
+# References: [6][3]
 0.847874
 0.836496
 0.792828

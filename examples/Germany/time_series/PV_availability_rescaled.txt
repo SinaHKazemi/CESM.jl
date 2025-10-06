@@ -1,5 +1,7 @@
 # Germany PV availability in 2016
 # 2016_PV_Rescaled_1004
+# Adapted from PV TS. Availability has been increased to match the expected full load hours for new technologies. Full load hours: 1004.
+# References: [6][3]
 0.000000
 0.000000
 0.000000
