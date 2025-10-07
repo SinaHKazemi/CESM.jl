@@ -1,5 +1,12 @@
-References
------------
+# German Energy Transition Model
+
+This models is based on the following paper.
+
+Barbosa, Julia, Christopher Ripp, and Florian Steinke. "Accessible modeling of the German energy transition: An open, compact, and validated model." Energies 14.23 (2021): 8084.
+
+The data is openly accessible. The data files reference the following sources.
+
+## References
 
 1. BMWi. Energiedaten: Gesamtausgabe, 2021. URL: https://www.bmwi.de/Redaktion/DE/Artikel/Energie/ energiedaten-gesamtausgabe.html, [Accessed: 04/2021].
 2. G. K. Petra Icha, Entwicklung der spezifischen Kohlendioxid-Emissionen des deutschen Strommix in den Jahren 1990-2017, resreport ISSN 1862- 4359, Umweltbundesamt, Dessau-Roßlau, 2018. URL: https://www.umweltbundesamt.de/en/publikationen/entwicklung-der-spezifischen-kohlendioxid-6
@@ -32,8 +39,3 @@ URL: https://www.umweltbundesamt.de/publikationen/daten-fakten-zu-braun-steinkoh
 URL: https://www.dena.de/newsroom/publikationsdetailansicht/pub/dena-factsheets-powerfuels/
 18. D. Howey, R. Martinez-Botas, B. Cussons, L. Lytton. Comparative measurements of the energy consumption of 51 electric, hybrid and internal combustion engine vehicles. Transportation Research Part D: Transport and Environment 16 (2011) 459–464. URL:https://www.sciencedirect.com/science/article/pii/S1361920
 URL: https://www.sciencedirect.com/science/article/pii/S1361920911000459?casa_token=4vC8iPLufhcAAAAA:v9E_AepBEO1gy_qAJ5Ht4wn4oq6dIMzDUA0uRo2VJ2S-6kgIuM9GZGOPEnUNhgx4hP8jufc7bv2X
-
-
-
-
-
