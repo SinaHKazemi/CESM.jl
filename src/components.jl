@@ -1,6 +1,6 @@
 module Components
 
-export Carrier, Process, Year, Unit, Time, Input
+export Carrier, Process, Year, Unit, Time, Input, Output
 
 struct Unit
     input::String
@@ -68,6 +68,8 @@ struct Carrier
     name::String
 end
 
+Base.show(io::IO, c::Carrier) = print(io, "Carrier_$(c.name)")
+
 Base.:(==)(c1::Carrier, c2::Carrier) = 
     c1.name == c2.name
 
@@ -80,8 +82,8 @@ end
 Base.:(==)(p1::Process, p2::Process) =
     p1.name == p2.name
 
-Base.convert(::Type{String}, p::Process) = "$(p.name)_$(p.carrier_in)_$(p.carrier_out)"
-Base.String(p::Process) = "$(p.name)_$(p.carrier_in)_$(p.carrier_out)"
+# Base.convert(::Type{String}, p::Process) = "$(p.name)_$(p.carrier_in)_$(p.carrier_out)"
+Base.show(io::IO, p::Process) = print(io, "Process_$(p.name)")
 
 """
     Input
@@ -99,6 +101,21 @@ struct Input
     parameters::Dict{String, Any}
 end
 
+
+struct Output{K,V}
+    data::Dict{K,V}
 end
 
+Output() = Output(Dict{Any, Any}())  # default flexible constructor
 
+# Forward the common dict operations
+Base.getindex(o::Output, k) = o.data[k]
+Base.setindex!(o::Output, v, k) = (o.data[k] = v)
+Base.haskey(o::Output, k) = haskey(o.data, k)
+Base.keys(o::Output) = keys(o.data)
+Base.values(o::Output) = values(o.data)
+Base.iterate(o::Output, s...) = iterate(o.data, s...)
+Base.length(o::Output) = length(o.data)
+
+
+end

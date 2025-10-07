@@ -5,16 +5,14 @@ module Variables
     const ALLOWED_TYPES = Set(["Integer", "Float", "Boolean"])
     const ALLOWED_SETS  = Set(["Y", "T", "C", "P"])
 
-    Base.@kwdef struct VariableDef
+    struct VariableDef
         type::String
         sets::Tuple
         unit::String
         function VariableDef(; type::String, sets::Tuple, unit::String)
-            # Check type validity
             type ∈ ALLOWED_TYPES || error("Invalid type: $type. Must be one of $ALLOWED_TYPES")
-            # Check sets validity
             all(s -> s ∈ ALLOWED_SETS, sets) || error("Invalid sets: $sets. Each element must be one of $ALLOWED_SETS")
-            new(type, sets, unit)
+            return new(type, sets, unit)
         end
     end
 

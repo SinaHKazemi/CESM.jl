@@ -131,11 +131,13 @@
         "availability_profile": {
             "type": "Float",
             "sets": ["P","T"],
-            "default": 1
+            "default": 1,
+            "normalized": false
         },
         "output_profile": {
             "type": "Float",
-            "sets": ["P","T"]
+            "sets": ["P","T"],
+            "normalized": true
         },
         "lifetime": {
             "type": "Integer",
@@ -161,14 +163,22 @@
         "carrier_color": {
             "_comment": "https://juliagraphics.github.io/Colors.jl/dev/namedcolors/",
             "type": "String",
-            "sets": ["C"],
-            "default": "lightsalmon"
+            "sets": ["C"]
+        },
+        "carrier_order": {
+            "_comment": "Order of plotting: The lowest order appears in the lowest position.",
+            "type": "Integer",
+            "sets": ["C"]
         },
         "process_color": {
             "_comment": "https://juliagraphics.github.io/Colors.jl/dev/namedcolors/",
             "type": "String",
-            "sets": ["P"],
-            "default": "lightsalmon"
+            "sets": ["P"]
+        },
+        "process_order": {
+            "_comment": "Order of plotting: The lowest order appears in the lowest position.",
+            "type": "Integer",
+            "sets": ["P"]
         }
     },
     "timesteps" : "./time_series/4_thin_weeks.txt",
@@ -282,17 +292,6 @@
             "carrier_in": "Dummy",
             "carrier_out": "Waste",
             "max_energy_out": 69
-        },
-        "Import_H2": {
-            "carrier_in": "Dummy",
-            "carrier_out": "H2",
-            "operational_cost_energy": [
-                {"x": 2015, "y": 135},
-                {"x": 2020, "y": 135},
-                {"x": 2030, "y": 105},
-                {"x": 2050, "y": 70},
-                {"x": 2060, "y": 70}
-            ]
         },
         "Oil_Processing": {
             "carrier_in": "Crude_Oil",
@@ -469,7 +468,7 @@
             "capital_cost_power": 3323,
             "output_profile": "./time_series/Uniform.txt"
         },
-        "PP_PV": {
+        "PP_PV_legacy": {
             "carrier_in": "Dummy",
             "carrier_out": "Electricity",
             "max_legacy_capacity": [
@@ -486,6 +485,19 @@
                 {"x": 2040, "y": 0},
                 {"x": 2060, "y": 0}
             ],
+            "operational_cost_power": 15,
+            "availability_profile": "./time_series/PV_availability.txt"
+        },
+        "PP_PV_new": {
+            "carrier_in": "Dummy",
+            "carrier_out": "Electricity",
+            "max_legacy_capacity": 0,
+            "max_capacity": [
+                {"x": 2015, "y": 0},
+                {"x": 2016, "y": 0},
+                {"x": 2017, "y": 158},
+                {"x": 2060, "y": 158}
+            ],
             "lifetime": 25,
             "operational_cost_power": 15,
             "capital_cost_power": [
@@ -494,7 +506,7 @@
                 {"x": 2050, "y": 483},
                 {"x": 2060, "y": 483}
             ],
-            "availability_profile": "./time_series/PV_availability.txt"
+            "availability_profile": "./time_series/PV_availability_rescaled.txt"
         },
         "PP_Run_off_River": {
             "carrier_in": "Dummy",
@@ -505,7 +517,7 @@
             "operational_cost_power": 12,
             "capital_cost_power": 5000
         },
-        "PP_Wind_Off": {
+        "PP_Wind_Off_legacy": {
             "carrier_in": "Dummy",
             "carrier_out": "Electricity",
             "max_legacy_capacity": [
@@ -522,7 +534,13 @@
                 {"x": 2040, "y": 0},
                 {"x": 2060, "y": 0}
             ],
-            "lifetime": 25,
+            "max_capacity": [
+                {"x": 2015, "y": 4.1},
+                {"x": 2016, "y": 4.1},
+                {"x": 2030, "y": 4.1},
+                {"x": 2040, "y": 0},
+                {"x": 2060, "y": 0}
+            ],
             "operational_cost_power": 93,
             "capital_cost_power": [
                 {"x": 2015, "y": 2690},
@@ -532,7 +550,27 @@
             ],
             "availability_profile": "./time_series/Offshore_Wind_Availability.txt"
         },
-        "PP_Wind_On": {
+        "PP_Wind_Off_new": {
+            "carrier_in": "Dummy",
+            "carrier_out": "Electricity",
+            "max_legacy_capacity": 0,
+            "max_capacity": [
+                {"x": 2015, "y": 0},
+                {"x": 2016, "y": 0},
+                {"x": 2035, "y": 355},
+                {"x": 2060, "y": 355}
+            ],
+            "lifetime": 25,
+            "operational_cost_power": 93,
+            "capital_cost_power": [
+                {"x": 2015, "y": 2690},
+                {"x": 2020, "y": 2690},
+                {"x": 2050, "y": 1285},
+                {"x": 2060, "y": 1285}
+            ],
+            "availability_profile": "./time_series/Offshore_Wind_Availability_rescaled.txt"
+        },
+        "PP_Wind_On_legacy": {
             "carrier_in": "Dummy",
             "carrier_out": "Electricity",
             "max_legacy_capacity": [
@@ -549,6 +587,26 @@
                 {"x": 2040, "y": 0},
                 {"x": 2060, "y": 0}
             ],
+            "max_capacity": [
+                {"x": 2015, "y": 45.4},
+                {"x": 2016, "y": 45.4},
+                {"x": 2030, "y": 30},
+                {"x": 2040, "y": 0},
+                {"x": 2060, "y": 0}
+            ],
+            "operational_cost_power": 13,
+            "availability_profile": "./time_series/Onshore_Wind_Availability.txt"
+        },
+        "PP_Wind_On_new": {
+            "carrier_in": "Dummy",
+            "carrier_out": "Electricity",
+            "max_legacy_capacity": 0,
+            "max_capacity": [
+                {"x": 2015, "y": 0},
+                {"x": 2016, "y": 0},
+                {"x": 2035, "y": 180},
+                {"x": 2060, "y": 180}
+            ],
             "lifetime": 25,
             "operational_cost_power": 13,
             "capital_cost_power": [
@@ -557,7 +615,7 @@
                 {"x": 2050, "y": 938},
                 {"x": 2060, "y": 938}
             ],
-            "availability_profile": "./time_series/Onshore_Wind_Availability.txt"
+            "availability_profile": "./time_series/Onshore_Wind_Availability_rescaled.txt"
         },
         "Furnace_Coal": {
             "carrier_in": "Coal",
@@ -805,6 +863,10 @@
                 {"x": 2040, "y": 0},
                 {"x": 2060, "y": 0}
             ],
+            "max_legacy_capacity": [
+                {"x": 2014, "y": 0},
+                {"x": 2015, "y": 0}
+            ],
             "output_profile": "./time_series/Household_Heat_Demand.txt"
         },
         "Biomass_CHP_input": {
@@ -820,8 +882,21 @@
             "carrier_in": "Help_Biomass_CHP",
             "carrier_out": "Electricity",
             "technical_availability": 0.86,
+            "max_legacy_capacity": [
+                {"x": 2015, "y": 3.5},
+                {"x": 2016, "y": 3.5},
+                {"x": 2040, "y": 0},
+                {"x": 2060, "y": 0}
+            ],
+            "max_capacity": [
+                {"x": 2015, "y": 3.5},
+                {"x": 2016, "y": 3.5}
+            ],
+            "lifetime": 45,
             "min_fraction_in": 0.3,
-            "max_fraction_in": 0.3
+            "max_fraction_in": 0.3,
+            "operational_cost_power": 104,
+            "capital_cost_power": 3500
         },
         "Biomass_CHP_output_Industrial_Heat_LT": {
             "carrier_in": "Help_Biomass_CHP",
@@ -840,6 +915,21 @@
         "Coal_CHP_output_Electricity": {
             "carrier_in": "Help_Coal_CHP",
             "carrier_out": "Electricity",
+            "max_legacy_capacity": [
+                {"x": 2015, "y": 12.2},
+                {"x": 2016, "y": 12.2},
+                {"x": 2040, "y": 0},
+                {"x": 2060, "y": 0}
+            ],
+            "min_legacy_capacity": [
+                {"x": 2015, "y": 12.2},
+                {"x": 2016, "y": 12.2},
+                {"x": 2020, "y": 0},
+                {"x": 2060, "y": 0}
+            ],
+            "lifetime": 45,
+            "operational_cost_power": 54,
+            "capital_cost_power": 2880,
             "min_fraction_in": 0.3,
             "max_fraction_in": 0.3
         },
@@ -860,6 +950,25 @@
         "Gas_CHP_output_Electricity": {
             "carrier_in": "Help_Gas_CHP",
             "carrier_out": "Electricity",
+            "max_legacy_capacity": [
+                {"x": 2015, "y": 14.3},
+                {"x": 2016, "y": 14.3},
+                {"x": 2040, "y": 0},
+                {"x": 2060, "y": 0}
+            ],
+            "min_capacity": [
+                {"x": 2015, "y": 14.3},
+                {"x": 2016, "y": 14.3},
+                {"x": 2040, "y": 0},
+                {"x": 2060, "y": 0}
+            ],
+            "max_capacity": [
+                {"x": 2015, "y": 14.3},
+                {"x": 2016, "y": 14.3}
+            ],
+            "lifetime": 30,
+            "operational_cost_power": 41,
+            "capital_cost_power": 1020,
             "min_fraction_in": 0.42,
             "max_fraction_in": 0.42
         },

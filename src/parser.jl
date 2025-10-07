@@ -1,4 +1,4 @@
-module Parse
+module Parser
 
 using JSON
 using ..Components
@@ -322,15 +322,31 @@ function parse_processes(processes::Dict{String,Any}, carriers::Set{Carrier})::S
     return output
 end
 
-function get_time_dependent(param::Union{Number,AbstractString}, timesteps::Vector{Time}, type::Type, base_path) :: Dict{Time, Number}
+function get_time_dependent(param::Union{Number,AbstractString}, timesteps::Vector{Time}, type::Type, normalized::Bool, base_path) :: Dict{Time, Number}
     """
     get a time-dependent parameter that is either a number or a data file path
     """
     if isa(param, Number)
         return Dict(t => convert(type, param) for t in timesteps)
     elseif isa(param, AbstractString)
-        values = parse_data_file(param, base_path, type)
-        return Dict(t => values[Int(t)] for t in timesteps)
+        elements = parse_data_file(param, base_path, type)
+        result = Dict(t => elements[Int(t)] for t in timesteps)
+        if normalized
+            total = sum(values(result))
+            for k in keys(result)
+                result[k]/= total
+            end
+            total = sum(values(result))
+            diff = total - 1
+            for k in keys(result)
+                if result[k] > diff
+                    result[k] -= diff
+                    break
+                end
+            end
+            println(sum(values(result)))
+        end
+        return result
     end
 end
 
@@ -359,16 +375,14 @@ function linear_interpolation(x::Vector{Int}, y::Vector{<:Number}, xq::Vector{In
     end
 
     n = length(x)
-    interp_vals = Vector{type}()
+    interp_vals = Vector()
 
     for x_i in xq
         # Ignore if x_i is out of bounds
-        if x_i <= x[1]
-            nothing
-            # push!(interp_vals, y[1])  # Left boundary extrapolation
-        elseif x_i >= x[end]
-            nothing
-            # push!(interp_vals, y[end])  # Right boundary extrapolation
+        if x_i < x[1]
+            push!(interp_vals, nothing)
+        elseif x_i > x[end]
+            push!(interp_vals, nothing)  # Right boundary extrapolation
         else
             # Find the two surrounding points
             for j in 1:n-1
@@ -398,8 +412,7 @@ function get_year_dependent(param::Union{Number,Vector}, years::Vector{Year}, ty
             push!(x, point["x"])
             push!(y, point["y"])
         end
-
-        return Dict(zip(years, linear_interpolation(x,y, Int.(years), type)))
+        return Dict(y => v for (y, v) in zip(years, linear_interpolation(x,y, Int.(years), type)) if v !== nothing)
     else
         error("Invalid parameter type. Expected a number or a vector.")
     end
@@ -408,7 +421,7 @@ end
 # Initial validation of the parameter definitions
 function validate_parameters(parameters::Dict)
     for (param_name, param_data) in parameters
-        if !(issubset(keys(param_data), ["default", "type", "sets", "value", "quantity"]))
+        if !(issubset(keys(param_data), ["default", "type", "sets", "value", "normalized", "unit"]))
             throw(InvalidParameterError("Invalid parameter: $(param_name). there is an unkown field: $(keys(param_data))"))
         end
 
@@ -448,8 +461,8 @@ function get_independent_parameters(parameters::Dict, years::Vector{Year}, units
     for (param_name, param_data) in parameters
         type = type_dict[param_data["type"]]
         sets = Set(param_data["sets"])
-        if "quantity" in keys(param_data)
-            scale = units[param_data["quantity"]].scale
+        if "unit" in keys(param_data)
+            scale = units[param_data["unit"]].scale
         else
             scale = nothing
         end
@@ -519,8 +532,8 @@ function get_dependent_parameters(parameters::Dict, processes_json::Dict{String,
             end
             type = type_dict[parameters[param_name]["type"]]
             sets = Set(parameters[param_name]["sets"])
-            if "quantity" in keys(parameters[param_name])
-                scale = units[parameters[param_name]["quantity"]].scale
+            if "unit" in keys(parameters[param_name])
+                scale = units[parameters[param_name]["unit"]].scale
             else
                 scale = nothing
             end
@@ -528,7 +541,7 @@ function get_dependent_parameters(parameters::Dict, processes_json::Dict{String,
                 temp = convert(type, param_value) 
                 params[param_name][process] = (scale !== nothing  ? scale * temp : temp)
             elseif sets == Set(["P", "T"])
-                temp = get_time_dependent(param_value, timesteps, type, base_path)
+                temp = get_time_dependent(param_value, timesteps, type, parameters[param_name]["normalized"], base_path)
                 params[param_name][process] = (scale !== nothing ? scale_dict_values(temp, scale) : temp )
             elseif sets == Set(["P", "Y"])
                 temp = get_year_dependent(param_value, years, type)

@@ -3,7 +3,7 @@ module Model
 using JuMP, HiGHS, Gurobi
 
 using ..Variables
-using ..Components
+using ..Components: Carrier, Input, Output, Year, Process
 
 export run_model
 
@@ -13,13 +13,14 @@ function run_model(input::Input)
     constraints = add_constraints!(model, vars, input)
     set_obj!(model, vars)
     optimize!(model)
-    output = get_output(input, vars)
-    return output
+    get_iis_model(model)
+    # output = get_output(input, vars)
+    # return output
 end
 
 function get_iis_model(model)
     # needs to be completed, it is just a draft
-    write_to_file(model, "model.mps")
+    # write_to_file(model, "model.mps")
     grb_model = model.moi_backend.optimizer.model.inner
     compute_conflict!(model)
     list_of_conflicting_constraints = ConstraintRef[]
@@ -35,13 +36,14 @@ function get_iis_model(model)
     end
     iis_model, _ = copy_conflict(model)
     print(iis_model)
+    write_to_file(iis_model, "model.lp")
 end
 
 
 # add variables
 function add_vars!(model, input)
     vars = Dict()
-    for (var_name, attributes) in variables
+    for (var_name, attributes) in Variables.variables
         set_names = attributes.sets
         if length(set_names) >= 1
             sets = Vector()
@@ -58,9 +60,15 @@ function add_vars!(model, input)
                     throw(InvalidParameterError("unrecognized set: $set_name , should be Y, T, P, C"))
                 end
             end
-            vars[var_name] = Dict(
-                index_tuple => @variable(model, base_name= string(var_name) * "_" * join(index_tuple, "_"), lower_bound=0) for index_tuple in Iterators.product(sets...)
-            )               
+            if length(sets) > 1
+                vars[var_name] = Dict(
+                    index_tuple => @variable(model, base_name= string(var_name) * "_" * join(index_tuple, "_"), lower_bound=0) for index_tuple in Iterators.product(sets...)
+                )
+            else
+                vars[var_name] = Dict(
+                    index => @variable(model, base_name= string(var_name) * "_" * string(index), lower_bound=0) for index in sets[1]
+                )
+            end
         elseif length(set_names) == 0
             vars[var_name] = @variable(model, base_name= string(var_name), lower_bound=0)
         else
@@ -90,7 +98,7 @@ function  add_constraints!(model, vars, input::Input)::Dict
             keys = (keys,)
         end
         current = input.parameters[param_name]
-        for key in key_chain
+        for key in keys
             if current isa AbstractDict && haskey(current, key)
                 current = current[key]
             elseif haskey(input.parameters["defaults"], param_name)
@@ -255,27 +263,27 @@ function  add_constraints!(model, vars, input::Input)::Dict
 
     # Power-Energy
 
-    constrs["energy_out_time"] = Dict()
+    constrs["energy_out_time_con"] = Dict()
     for y in years
         for t in timesteps
             for p in processes
-                constrs["energy_out_time"][p,y,t] = @constraint(
+                constrs["energy_out_time_con"][p,y,t] = @constraint(
                     model,
                     vars["energy_out_time"][p,y,t] == vars["power_out"][p,y,t] * (8760 /length(input.timesteps)),
-                    base_name = "energy_out_time_$(p)_$(y)_$(t)"
+                    base_name = "energy_out_time_con_$(p)_$(y)_$(t)"
                 )
             end
         end
     end
 
-    constrs["energy_in_time"] = Dict()
+    constrs["energy_in_time_con"] = Dict()
     for y in years
         for t in timesteps
             for p in processes
-                constrs["energy_in_time"][p,y,t] = @constraint(
+                constrs["energy_in_time_con"][p,y,t] = @constraint(
                     model,
                     vars["energy_in_time"][p,y,t] == vars["power_in"][p,y,t] * (8760 /length(input.timesteps)),
-                    base_name = "energy_in_time_$(p)_$(y)_$(t)"
+                    base_name = "energy_in_time_con_$(p)_$(y)_$(t)"
                 )
             end
         end
@@ -375,7 +383,7 @@ function  add_constraints!(model, vars, input::Input)::Dict
                 vars["active_capacity"][p,y] == vars["legacy_capacity"][p,y] + sum(
                     vars["new_capacity"][p,yy] 
                     for yy in years 
-                    if yy in y-get_param("lifetime",p)+1:y
+                    if Int(yy) in y-get_param("lifetime",p)+1:Int(y)
                 ),
                 base_name = "active_capacity_$(p)_$(y)"
             )
