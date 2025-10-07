@@ -1014,9 +1014,10 @@
             ],
             "output_profile": "./time_series/Uniform.txt"
         },
-        "Power_to_Gas": {
+        "Power_to_H2": {
             "carrier_in": "Electricity",
             "carrier_out": "H2",
+            "max_energy_out": 0,
             "efficiency": 0.7,
             "operational_cost_power": [
                 {"x":2015, "y":19.5},

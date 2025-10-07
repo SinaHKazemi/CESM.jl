@@ -12,8 +12,10 @@ function run_model(input::Input)
     vars = add_vars!(model, input)
     constraints = add_constraints!(model, vars, input)
     set_obj!(model, vars)
+    # write_to_file(model, "model.mps")
     optimize!(model)
-    get_iis_model(model)
+    # get_iis_model(model)
+
     # output = get_output(input, vars)
     # return output
 end
@@ -81,8 +83,9 @@ end
 function  add_constraints!(model, vars, input::Input)::Dict
     # helper function
     function discount_factor(y::Year)::Float64
-        return (1 + input.parameters["discount_rate"]^(Int(input.years[1]) - Int(y)))
+        return (1 + input.parameters["discount_rate"])^(Int(input.years[1]) - Int(y))
     end
+
 
     function year_gap(y::Year)::Int
         index = findfirst(==(y), years)

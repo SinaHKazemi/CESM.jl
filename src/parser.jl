@@ -344,7 +344,6 @@ function get_time_dependent(param::Union{Number,AbstractString}, timesteps::Vect
                     break
                 end
             end
-            println(sum(values(result)))
         end
         return result
     end
