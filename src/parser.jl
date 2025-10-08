@@ -387,7 +387,13 @@ function linear_interpolation(x::Vector{Int}, y::Vector{<:Number}, xq::Vector{In
             for j in 1:n-1
                 if x[j] <= x_i <= x[j+1]
                     # Linear interpolation formula
-                    y_interp = y[j] + (y[j+1] - y[j]) * (x_i - x[j]) / (x[j+1] - x[j])
+                    if x[j] == x_i
+                        y_interp = y[j]
+                    elseif x_i == x[j+1]
+                        y_interp = y[j+1]
+                    else
+                        y_interp = y[j] + (y[j+1] - y[j]) * (x_i - x[j]) / (x[j+1] - x[j])
+                    end
                     push!(interp_vals, y_interp)
                     break
                 end
