@@ -3,7 +3,7 @@ module Model
 using JuMP, HiGHS, Gurobi
 
 using ..Variables
-using ..Components: Carrier, Input, Output, Year, Process
+using ..Components
 
 export run_model
 
@@ -12,12 +12,11 @@ function run_model(input::Input)
     vars = add_vars!(model, input)
     constraints = add_constraints!(model, vars, input)
     set_obj!(model, vars)
-    # write_to_file(model, "model.mps")
+    write_to_file(model, "model.mps")
     optimize!(model)
-    # get_iis_model(model)
 
-    # output = get_output(input, vars)
-    # return output
+    output = get_output(input, vars)
+    return output
 end
 
 function get_iis_model(model)
@@ -45,7 +44,7 @@ end
 # add variables
 function add_vars!(model, input)
     vars = Dict()
-    for (var_name, attributes) in Variables.variables
+    for (var_name, attributes) in VARIABLES
         set_names = attributes.sets
         if length(set_names) >= 1
             sets = Vector()
@@ -575,36 +574,46 @@ function set_obj!(model, vars)
     @objective(model, Min, vars["total_cost"])
 end
 
-function get_output(input::Input, vars)
-    output = Dict()
-    for (var_name, attributes) in variables
+function get_output(input::Input, vars)::Output
+    output = Output()
+    for (var_name, attributes) in VARIABLES
         set_names = attributes.sets
         if length(set_names) > 0
             output[var_name] = Dict()
             sets = Vector()
             for set_name in set_names
                 if set_name == "Y"
-                    push!(sets, years)
+                    push!(sets, input.years)
                 elseif set_name == "T"
-                    push!(sets, timesteps)
+                    push!(sets, input.timesteps)
                 elseif set_name == "P"
-                    push!(sets, processes)
+                    push!(sets, input.processes)
                 elseif set_name == "C"
-                    push!(sets, carriers)
+                    push!(sets, input.carriers)
                 else
                     throw(InvalidParameterError("unrecognized set: $set_name , should be Y, T, P, C"))
                 end
             end
-            for index_tuple in Iterators.product(sets...)
-                var_value = value(vars[var_name][index_tuple])
-                if var_value != default_dict[attributes["type"]]
-                    output[var_name][index_tuple...] = var_value
+            if length(sets) > 1
+                for index_tuple in Iterators.product(sets...)
+                    var_value = value(vars[var_name][index_tuple])
+                    if var_value != 0
+                        output[var_name][index_tuple...] = var_value
+                    end
                 end
-            end            
+            else
+                for index in sets[1]
+                    var_value = value(vars[var_name][index])
+                    if var_value != 0
+                        output[var_name][index] = var_value
+                    end
+                end
+            end
         elseif length(set_names) == 0
             output[var_name] = value(vars[var_name])
         end
     end
+    return output
 end
 
 end
