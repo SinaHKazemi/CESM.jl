@@ -26,3 +26,10 @@ data/
 Manifest.toml
 
 todo.md
+
+# mps and lp files
+*.mps
+*.lp
+
+# serialization files
+*.jls
