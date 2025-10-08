@@ -1,6 +1,6 @@
 module Variables
 
-    export variables
+    export VARIABLES
     
     const ALLOWED_TYPES = Set(["Integer", "Float", "Boolean"])
     const ALLOWED_SETS  = Set(["Y", "T", "C", "P"])
@@ -16,7 +16,7 @@ module Variables
         end
     end
 
-    variables = Dict{String, VariableDef}(
+    const VARIABLES = Dict{String, VariableDef}(
         "total_cost"           => VariableDef(type="Float", sets=(), unit="money"),
         "capital_cost"         => VariableDef(type="Float", sets=(), unit="money"),
         "operational_cost"     => VariableDef(type="Float", sets=(), unit="money"),
