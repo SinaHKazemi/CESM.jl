@@ -336,14 +336,7 @@ function get_time_dependent(param::Union{Number,AbstractString}, timesteps::Vect
             for k in keys(result)
                 result[k]/= total
             end
-            total = sum(values(result))
-            diff = total - 1
-            for k in keys(result)
-                if result[k] > diff
-                    result[k] -= diff
-                    break
-                end
-            end
+            # total = sum(values(result))
         end
         return result
     end

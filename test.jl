@@ -18,7 +18,7 @@
 # end
 
 # using JuMP, Gurobi
-# model = read_from_file("model.lp")
+# model = read_from_file("model.mps")
 # set_optimizer(model, Gurobi.Optimizer)
 # optimize!(model)
 
@@ -28,9 +28,28 @@
 include("./src/CESM.jl")
 using .CESM
 input = CESM.Parser.parse_input("./examples/Germany/GETM.json");
-CESM.Model.run_model(input)
+output = CESM.Model.run_model(input)
+using Serialization
+serialize("output.jls", output)
+serialize("input.jls", input)
+output = deserialize("output.jls")
+input = deserialize("input.jls")
+# println(keys(input.parameters))
+# for key in keys(input.parameters)
+#     println(key)
+#     println(input.parameters[key])
+# end
+# CESM.Visualization.plot_P_Y(input,output,"new_capacity", carrier_out=CESM.Components.Carrier("Industrial_Heat_LT"))
+CESM.Visualization.plot_P_Y(input,output,"new_capacity", carrier_out=CESM.Components.Carrier("Electricity"))
+# CESM.Visualization.plot_P_Y(input,output,"active_capacity", carrier_out=CESM.Components.Carrier("Electricity"))
+# CESM.Visualization.plot_Y(input,output,"annual_emission")
+# CESM.Visualization.plot_P_Y_T(input,output,"energy_out_time", CESM.Components.Year(2030), carrier_out= carrier_out=CESM.Components.Carrier("Electricity"))
+# CESM.Visualization.plot_scalar(input,output,["total_cost", "operational_cost", "capital_cost"])
+# CESM.Visualization.plot_sankey(input,output,2050)
 
 # using CairoMakie
+# using WGLMakie
+# WGLMakie.activate!()
 
 # tbl = (cat = [100, 100, 100, 200, 200, 200, 300, 300, 300], # column 
 #        height = 0.1:0.1:0.9, # values
@@ -47,10 +66,50 @@ CESM.Model.run_model(input)
 #                 title = "Stacked bars"),
 #         )
 
-# using Serialization
+# using SankeyMakie
+# using GLMakie
+# GLMakie.activate!()
+# using Random
 
-# # Save (serialize) any Julia object
-# serialize("output.jls", my_data)
+# connections = [
+#     (1, 2, 1100),
+#     (2, 4, 300),
+#     (6, 2, 1400),
+#     (2, 3, 500),
+#     (2, 5, 300),
+#     (5, 7, 100),
+#     (2, 8, 100),
+#     (3, 9, 150),
+#     (2, 10, 500),
+#     (10, 11, 50),
+#     (10, 12, 80),
+#     (5, 13, 150),
+#     (3, 14, 100),
+#     (10, 15, 300),
+# ]
 
-# # Load it back
-# data = deserialize("output.jls")
+# labels = [
+#     "Salary",
+#     "Income",
+#     "Rent",
+#     "Insurance",
+#     "Car",
+#     "Salary 2",
+#     "Depreciation",
+#     "Internet",
+#     "Electricity",
+#     "Food & Household",
+#     "Fast Food",
+#     "Drinks",
+#     "Gas",
+#     "Water",
+#     "Groceries",
+# ]
+
+# sankey(connections,
+#     nodelabels = labels,
+#     nodecolor = Makie.to_colormap(:tab20)[1:length(labels)],
+#     linkcolor = SankeyMakie.Gradient(0.7),
+#     axis = hidden_axis(),
+#     figure = (; size = (1000, 500))
+# )

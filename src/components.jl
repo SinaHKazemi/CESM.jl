@@ -68,7 +68,7 @@ struct Carrier
     name::String
 end
 
-Base.show(io::IO, c::Carrier) = print(io, "Carrier_$(c.name)")
+Base.show(io::IO, c::Carrier) = print(io, "$(c.name)")
 
 Base.:(==)(c1::Carrier, c2::Carrier) = 
     c1.name == c2.name
@@ -83,7 +83,7 @@ Base.:(==)(p1::Process, p2::Process) =
     p1.name == p2.name
 
 # Base.convert(::Type{String}, p::Process) = "$(p.name)_$(p.carrier_in)_$(p.carrier_out)"
-Base.show(io::IO, p::Process) = print(io, "Process_$(p.name)")
+Base.show(io::IO, p::Process) = print(io, "$(p.name)")
 
 """
     Input

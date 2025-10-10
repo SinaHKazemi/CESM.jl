@@ -9,12 +9,15 @@ export run_model
 
 function run_model(input::Input)
     model = JuMP.Model(Gurobi.Optimizer)
+    set_attribute(model, "Crossover", 0)
+    set_attribute(model, "Method", 2)
     vars = add_vars!(model, input)
     constraints = add_constraints!(model, vars, input)
     set_obj!(model, vars)
-    write_to_file(model, "model.mps")
+    
+    # write_to_file(model, "model.mps")
     optimize!(model)
-
+    # get_iis_model(model)
     output = get_output(input, vars)
     return output
 end
@@ -94,6 +97,7 @@ function  add_constraints!(model, vars, input::Input)::Dict
             return years[index+1] - years[index]
         end
     end
+
 
     function get_param(param_name, keys)
         if ! (keys isa AbstractArray || keys isa Tuple)
@@ -353,9 +357,7 @@ function  add_constraints!(model, vars, input::Input)::Dict
 
     constrs["max_legacy_cap"] = Dict()
     for p in processes
-        !has_param("max_legacy_capacity", p) && continue
         for y in years
-            !has_param("max_legacy_capacity", (p,y)) && continue
             constrs["max_legacy_cap"][p,y] = @constraint(
                 model,
                 vars["legacy_capacity"][p,y] <= get_param("max_legacy_capacity", (p,y)),
@@ -385,7 +387,7 @@ function  add_constraints!(model, vars, input::Input)::Dict
                 vars["active_capacity"][p,y] == vars["legacy_capacity"][p,y] + sum(
                     vars["new_capacity"][p,yy] 
                     for yy in years 
-                    if Int(yy) in y-get_param("lifetime",p)+1:Int(y)
+                    if Int(yy) >= (Int(y)-get_param("lifetime",p)+1) && Int(yy) <=Int(y)
                 ),
                 base_name = "active_capacity_$(p)_$(y)"
             )
@@ -420,24 +422,24 @@ function  add_constraints!(model, vars, input::Input)::Dict
 
     # Auxiliary Linking Variables
 
-    constrs["energy_power_out"] = Dict() 
+    constrs["energy_out"] = Dict() 
     for p in processes
         for y in years
-            constrs["energy_power_out"][p,y] = @constraint(
+            constrs["energy_out"][p,y] = @constraint(
                 model,
                 vars["total_energy_out"][p,y] == sum(vars["energy_out_time"][p,y,t] for t in timesteps),
-                base_name = "energy_power_out_$(p)_$(y)"
+                base_name = "energy_out_$(p)_$(y)"
             )
         end
     end
     
-    constrs["energy_power_in"] = Dict()
+    constrs["energy_in"] = Dict()
     for p in processes
         for y in years
-            constrs["energy_power_in"][p,y] = @constraint(
+            constrs["energy_in"][p,y] = @constraint(
                 model,
                 vars["total_energy_in"][p,y] == sum(vars["energy_in_time"][p,y,t] for t in timesteps),
-                base_name = "energy_power_in_$(p)_$(y)"
+                base_name = "energy_in_$(p)_$(y)"
             )
         end
     end
@@ -461,7 +463,7 @@ function  add_constraints!(model, vars, input::Input)::Dict
             for t in timesteps
                 constrs["net_consumption"][c,y,t] = @constraint(
                     model,
-                    vars["net_energy_consumption"][c,y,t] == sum(vars["energy_in_time"][p,y,t] for p in input.processes if p.carrier_in == c),
+                    vars["net_energy_consumption"][c,y,t] == sum(vars["energy_in_time"][p,y,t] for p in processes if p.carrier_in == c),
                     base_name = "net_consumption_$(c)_$(y)_$(t)"
                 )
             end
@@ -497,11 +499,13 @@ function  add_constraints!(model, vars, input::Input)::Dict
     constrs["load_shape"] = Dict()
     for p in processes
         !has_param("output_profile",p) && continue
+        # _, index = findmax([get_param("output_profile",(p,t)) for t in timesteps])
         for y in years
             for t in timesteps
+                # t == timesteps[index] && continue
                 constrs["load_shape"][p,y,t] = @constraint(
                     model,
-                    vars["energy_out_time"][p,y,t] == get_param("output_profile",(p,t)) * vars["total_energy_out"][p,y],
+                    vars["energy_out_time"][p,y,t] >= get_param("output_profile",(p,t)) * vars["total_energy_out"][p,y],
                     base_name = "load_shape_$(p)_$(y)_$(t)"
                 )
             end

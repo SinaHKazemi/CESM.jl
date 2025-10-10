@@ -63,7 +63,8 @@
         "max_legacy_capacity": {
             "type": "Float",
             "sets": ["P","Y"],
-            "unit": "power"
+            "unit": "power",
+            "default": 0
         },
         "min_legacy_capacity": {
             "type": "Float",
@@ -100,23 +101,19 @@
         },
         "min_fraction_in": {
             "type": "Float",
-            "sets": ["P","Y"],
-            "default": 0
+            "sets": ["P","Y"]
         },
         "min_fraction_out": {
             "type": "Float",
-            "sets": ["P","Y"],
-            "default": 0
+            "sets": ["P","Y"]
         },
         "max_fraction_in": {
             "type": "Float",
-            "sets": ["P","Y"],
-            "default": 1
+            "sets": ["P","Y"]
         },
         "max_fraction_out": {
             "type": "Float",
-            "sets": ["P","Y"],
-            "default": 1
+            "sets": ["P","Y"]
         },
         "max_energy_out": {
             "type": "Float",
@@ -131,7 +128,6 @@
         "availability_profile": {
             "type": "Float",
             "sets": ["P","T"],
-            "default": 1,
             "normalized": false
         },
         "output_profile": {
@@ -153,7 +149,7 @@
             "type": "Float",
             "sets": ["P"],
             "default": 0,
-            "unit": "co2_emissions"
+            "unit": "co2_spec"
         },
         "efficiency": {
             "type": "Float",
@@ -181,7 +177,7 @@
             "sets": ["P"]
         }
     },
-    "timesteps" : "./time_series/4_thin_weeks.txt",
+    "timesteps" : "./time_series/8_weeks_Manual.txt",
     "years" : [2015, 2020, 2025, 2030, 2035, 2040, 2045, 2050, 2055, 2060],
     "carriers": {
         "Dummy": {},
@@ -236,7 +232,9 @@
         "Help_Biomass_CHP": {
             "carrier_color": "snow"
         },
-        "Gas": {}
+        "Gas": {
+            "carrier_color": "gray40"
+        }
     },
     "processes": {
         "Import_Biomass": {
@@ -257,6 +255,7 @@
                 {"x": 2050, "y": 8.5},
                 {"x": 2060, "y": 8.5}
             ],
+            "specific_co2": 0.34,
             "process_color": "lightcyan2",
             "process_order": 2
         },
@@ -270,6 +269,7 @@
                 {"x": 2050, "y": 33.9},
                 {"x": 2060, "y": 33.9}
             ],
+            "specific_co2": 0.27,
             "process_color": "lightcyan4",
             "process_order": 3
         },
@@ -277,6 +277,7 @@
             "carrier_in": "Dummy",
             "carrier_out": "Lignite",
             "operational_cost_energy": 6.1,
+            "specific_co2": 0.4,
             "process_color": "teal",
             "process_order": 4
         },
@@ -290,6 +291,7 @@
                 {"x": 2050, "y": 29.7},
                 {"x": 2060, "y": 29.7}
             ],
+            "specific_co2": 0.2,
             "process_color": "cyan4",
             "process_order": 5
         },
@@ -303,6 +305,7 @@
             "carrier_in": "Dummy",
             "carrier_out": "Waste",
             "max_energy_out": 69,
+            "specific_co2": 0.38,
             "process_color": "darkturquoise",
             "process_order": 7
         },
@@ -708,7 +711,7 @@
             "process_color": "palevioletred1",
             "process_order": 502
         },
-        "Temperiture_Downgrade": {
+        "Temperature_Downgrade": {
             "carrier_in": "Industrial_Heat_HT",
             "carrier_out": "Industrial_Heat_LT",
             "process_color": "peachpuff1",
@@ -875,8 +878,8 @@
             "carrier_out": "Decentral_Heat",
             "efficiency": 3.7,
             "max_capacity": [
-                {"x": 2015, "y": 0},
-                {"x": 2016, "y": 0}
+                {"x": 2014, "y": 0},
+                {"x": 2015, "y": 0}
             ],
             "lifetime": 17,
             "operational_cost_power": 18,
@@ -1035,13 +1038,13 @@
         "Coal_CHP_output_Industrial_Heat_LT": {
             "carrier_in": "Help_Coal_CHP",
             "carrier_out": "Industrial_Heat_LT",
-            "output_profile": "./time_series/Household_Heat_Demand.txt",
             "process_color": "grey30",
             "process_order": 803
         },
         "Gas_CHP_input": {
             "carrier_in": "Gas",
             "carrier_out": "Help_Coal_CHP",
+            "technical_availability": 0.95,
             "process_color": "beige",
             "process_order": 900
         },
@@ -1064,8 +1067,7 @@
             "min_capacity": [
                 {"x": 2015, "y": 14.3},
                 {"x": 2016, "y": 14.3},
-                {"x": 2040, "y": 0},
-                {"x": 2060, "y": 0}
+                {"x": 2040, "y": 0}
             ],
             "max_capacity": [
                 {"x": 2015, "y": 14.3},

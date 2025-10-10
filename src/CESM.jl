@@ -13,7 +13,5 @@ using .Components
 using .Parser
 using .Visualization
 
-# export whatever you want to make public
-# export Variables, Model, Components, Parser, Visualization
 
 end # module CESM
