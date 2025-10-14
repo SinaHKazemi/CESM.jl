@@ -245,6 +245,7 @@ function  add_constraints!(model, vars, input::Input)::Dict
         end
     end
 
+
     constrs["technical_availability"] = Dict()
     for p in processes
         has_param("availability_profile",p) && continue
@@ -258,6 +259,7 @@ function  add_constraints!(model, vars, input::Input)::Dict
             end
         end
     end
+
 
     constrs["renewable_availability"] = Dict()
     for p in processes
@@ -502,13 +504,13 @@ function  add_constraints!(model, vars, input::Input)::Dict
         end
     end
 
+    # In theory, these constraints should be equalities, but in practice, when combined with the energy_out constraints, one of these constraints becomes redundant, which causes numerical issues for the solver.
+    # One solution is to remove one of these constraints; another is to keep them all and change them to '≥' or '≤' (this works the same).
     constrs["load_shape"] = Dict()
     for p in processes
         !has_param("output_profile",p) && continue
-        # _, index = findmax([get_param("output_profile",(p,t)) for t in timesteps])
         for y in years
             for t in timesteps
-                # t == timesteps[index] && continue
                 constrs["load_shape"][p,y,t] = @constraint(
                     model,
                     vars["energy_out_time"][p,y,t] >= get_param("output_profile",(p,t)) * vars["total_energy_out"][p,y],

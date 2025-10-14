@@ -21,7 +21,7 @@ The documentation is organized into the following sections:
 ---
 
 **Q: Is this tool suitable for industrial projects?**  
-**A:** No, for industrial projects, tools like [*PyPSA*](https://github.com/pypsa/pypsa), [*NREL-Sienna*](https://github.com/NREL-Sienna), [*SpineOpt*](https://github.com/spine-tools/SpineOpt.jl) or [*TulipaEnergy*](https://github.com/TulipaEnergy/TulipaEnergyModel.jl) are better suited.
+**A:** No, for industrial projects, tools like [*TulipaEnergy*](https://github.com/TulipaEnergy/TulipaEnergyModel.jl) are better suited.
 
 ---
 
