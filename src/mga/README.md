@@ -10,11 +10,11 @@ MGA explores the solution space to find alternatives that are near-optimal yet d
 
 ## Litrature
 
-For an introduction to MGA in energy system planning see:
+For an introduction to MGA in energy system planning, see the following:
 
 - Voll, P., Jennings, M., Hennen, M., Shah, N., & Bardow, A. (2015). The optimum is not enough: A near-optimal solution paradigm for energy systems synthesis. Energy, 82, 446-456. Link: https://www.sciencedirect.com/science/article/pii/S0360544215000791
 
-For a review of the methods used for energy system models see:
+For a review of the methods used in energy system modeling, see:
 
 - Lau, M., Patankar, N., & Jenkins, J. D. (2024). Measuring Exploration: Review and Systematic Evaluation of Modelling to Generate Alternatives Methods in Macro-Energy Systems Planning Models. arXiv preprint arXiv:2405.17342. Link: https://arxiv.org/abs/2405.17342
 
