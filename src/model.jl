@@ -8,9 +8,14 @@ using ..Components
 export run_model
 
 function run_model(input::Input)
+    # Gurobi
     model = JuMP.Model(Gurobi.Optimizer)
     set_attribute(model, "Crossover", 0)
     set_attribute(model, "Method", 2)
+
+    # HiGHS
+    # model = JuMP.Model(HiGHS.Optimizer)
+    
     vars = add_vars!(model, input)
     constraints = add_constraints!(model, vars, input)
     set_obj!(model, vars)
@@ -242,9 +247,10 @@ function  add_constraints!(model, vars, input::Input)::Dict
 
     constrs["technical_availability"] = Dict()
     for p in processes
+        has_param("availability_profile",p) && continue
         for y in years
             for t in timesteps
-                @constraint(
+                constrs["technical_availability"][p,y,t] = @constraint(
                     model,
                     vars["power_out"][p,y,t] <= vars["active_capacity"][p,y] * get_param("technical_availability",p),
                     base_name = "technical_availability_$(p)_$(y)_$(t)"
