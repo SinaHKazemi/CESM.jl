@@ -546,7 +546,7 @@ In all constraints, if a parameter is not defined, the default value is used. If
 
 - The output profile is used to model demands
 
-In theory, these constraints must be equalities, but in practice, when combined with the total_energy_out constraint, one of these constraints becomes redundant, which causes numerical issues for the solver.
+In theory, these constraints must be equalities, but in practice, when combined with the total\_energy\_out constraint, one of these constraints becomes redundant, which causes numerical issues for the solver.
  One solution is to remove one of these constraints; another is to keep them all and change them to '≥' or '≤' (this works the same).
 ```math
 \text{var\_energy\_out\_time}[p,y,t] \geq \text{var\_total\_energy\_out}[p,y] 
