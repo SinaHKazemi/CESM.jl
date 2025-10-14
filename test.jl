@@ -25,13 +25,13 @@
 # println("Conversion complete: '$input_file' -> '$output_file'")
 
 
-include("./src/CESM.jl")
+include("./src/core/CESM.jl")
 using .CESM
-input = CESM.Parser.parse_input("./examples/Germany/GETM.json");
-output = CESM.Model.run_model(input)
-using Serialization
-serialize("output.jls", output)
-serialize("input.jls", input)
+# input = CESM.Parser.parse_input("./examples/Germany/GETM.json");
+# output = CESM.Model.run_model(input)
+# using Serialization
+# serialize("output.jls", output)
+# serialize("input.jls", input)
 output = deserialize("output.jls")
 input = deserialize("input.jls")
 # println(keys(input.parameters))
@@ -40,12 +40,12 @@ input = deserialize("input.jls")
 #     println(input.parameters[key])
 # end
 # CESM.Visualization.plot_P_Y(input,output,"new_capacity", carrier_out=CESM.Components.Carrier("Industrial_Heat_LT"))
-CESM.Visualization.plot_P_Y(input,output,"new_capacity", carrier_out=CESM.Components.Carrier("Electricity"))
-# CESM.Visualization.plot_P_Y(input,output,"active_capacity", carrier_out=CESM.Components.Carrier("Electricity"))
-# CESM.Visualization.plot_Y(input,output,"annual_emission")
-# CESM.Visualization.plot_P_Y_T(input,output,"energy_out_time", CESM.Components.Year(2030), carrier_out= carrier_out=CESM.Components.Carrier("Electricity"))
-# CESM.Visualization.plot_scalar(input,output,["total_cost", "operational_cost", "capital_cost"])
-# CESM.Visualization.plot_sankey(input,output,2050)
+CESM.Visualization.plot_P_Y(input,output,"new_capacity", carrier_out="Electricity")
+CESM.Visualization.plot_P_Y(input,output,"active_capacity", carrier_out="Electricity")
+CESM.Visualization.plot_Y(input,output,"annual_emission")
+CESM.Visualization.plot_P_Y_T(input,output,"energy_out_time", 2030, carrier_out= "Electricity")
+CESM.Visualization.plot_scalar(input,output,["total_cost", "operational_cost", "capital_cost"])
+CESM.Visualization.plot_sankey(input,output,2050)
 
 # using CairoMakie
 # using WGLMakie

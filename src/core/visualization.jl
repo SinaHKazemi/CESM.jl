@@ -9,8 +9,8 @@ module  Visualization
     export plot_P_Y, plot_Y, plot_P_Y_T, plot_scalar
 
     function plot_P_Y(input::Input , output::Output, var_name::String; 
-                carrier_in::Union{Carrier,Nothing} = nothing,
-                carrier_out::Union{Carrier,Nothing} = nothing
+                carrier_in::Union{String,Nothing} = nothing,
+                carrier_out::Union{String,Nothing} = nothing
                 )
         processes = collect(input.processes)
         if VARIABLES[var_name].sets != ("P","Y")
@@ -18,10 +18,18 @@ module  Visualization
         end
             
         if carrier_in !== nothing
-            processes = filter(p -> p.carrier_in == carrier_in, processes)       
+            carrier = Carrier(carrier_in)
+            if !(carrier in input.carriers)
+                error("The list of carriers does not include $(carrier_in).")
+            end
+            processes = filter(p -> p.carrier_in == carrier, processes)       
         end
         if carrier_out !== nothing
-            processes = filter(p -> p.carrier_out == carrier_out, processes)       
+            carrier = Carrier(carrier_out)
+            if !(carrier in input.carriers)
+                error("The list of carriers does not include $(carrier_out).")
+            end
+            processes = filter(p -> p.carrier_out == carrier, processes)       
         end
 
         processes = sort(processes; by = p -> get(input.parameters["process_order"], p, 0))
@@ -106,9 +114,9 @@ module  Visualization
 
 
     function plot_P_Y_T(input::Input , output::Output, var_name::String, 
-            year::Union{Year,Nothing} = nothing;
-            carrier_in::Union{Carrier,Nothing} = nothing,
-            carrier_out::Union{Carrier,Nothing} = nothing)
+            year::Union{Int,Nothing} = nothing;
+            carrier_in::Union{String,Nothing} = nothing,
+            carrier_out::Union{String,Nothing} = nothing)
         
         processes = collect(input.processes)
         if VARIABLES[var_name].sets != ("P","Y","T")
@@ -116,10 +124,18 @@ module  Visualization
         end
             
         if carrier_in !== nothing
-            processes = filter(p -> p.carrier_in == carrier_in, processes)       
+            carrier = Carrier(carrier_in)
+            if !(carrier in input.carriers)
+                error("The list of carriers does not include $(carrier_in).")
+            end
+            processes = filter(p -> p.carrier_in == carrier, processes)        
         end
         if carrier_out !== nothing
-            processes = filter(p -> p.carrier_out == carrier_out, processes)       
+            carrier = Carrier(carrier_out)
+            if !(carrier in input.carriers)
+                error("The list of carriers does not include $(carrier_out).")
+            end
+            processes = filter(p -> p.carrier_out == carrier, processes)        
         end
 
         processes = sort(processes; by = p -> get(input.parameters["process_order"], p, 0))
@@ -143,6 +159,7 @@ module  Visualization
             title = "$var_name $(string(year)) plot",
         )
 
+        year = Year(year)
         xs = 1:length(input.timesteps)
         ys_high = zeros(length(input.timesteps))
         nonzero_processes = Vector{Process}()

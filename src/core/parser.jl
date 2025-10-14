@@ -3,6 +3,8 @@ module Parser
 using JSON
 using ..Components
 
+export parse_input
+
 struct TemporalSequenceError <: Exception
     msg::String
 end
