@@ -7,24 +7,35 @@ using ..Components
 
 export run_model
 
-function run_model(input::Input)
-    # Gurobi
-    model = JuMP.Model(Gurobi.Optimizer)
-    set_attribute(model, "Crossover", 0)
-    set_attribute(model, "Method", 2)
-
-    # HiGHS
-    # model = JuMP.Model(HiGHS.Optimizer)
-    
-    vars = add_vars!(model, input)
-    constraints = add_constraints!(model, vars, input)
-    set_obj!(model, vars)
-    
+function run_optimization(input::Input)
+    model,vars,constraints = build_model(input)
+    optimize_model(model)    
     # write_to_file(model, "model.mps")
-    optimize!(model)
     # get_iis_model(model)
     output = get_output(input, vars)
     return output
+end
+
+
+function build_model(input::Input, model::Union{JuMP.Model,Nothing}=nothing)
+    if model === nothing
+        # Gurobi
+        model = JuMP.Model(Gurobi.Optimizer)
+        # set_attribute(model, "Crossover", 0)
+        # set_attribute(model, "Method", 2)
+
+        # HiGHS
+        # model = JuMP.Model(HiGHS.Optimizer)
+        model = JuMP.Model(Gurobi.Optimizer)
+    end
+    vars = add_vars!(model, input)
+    constraints = add_constraints!(model, vars, input)
+    set_obj!(model, vars)
+    return (model,vars,constraints)
+end
+
+function optimize_model(model::JuMP.Model)
+    optimize!(model)
 end
 
 function get_iis_model(model)

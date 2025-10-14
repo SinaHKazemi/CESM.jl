@@ -5,6 +5,7 @@ authors = ["Sina Hajikazemi <sina.hkazemi@gmail.com>"]
 
 [deps]
 CSV = "336ed68f-0bac-5ca0-87d4-7b16caf5d00b"
+Dualization = "191a621a-6537-11e9-281d-650236a99e60"
 GLMakie = "e9467ef8-e4e7-5192-8a1a-b1aee30e663a"
 Gurobi = "2e9cd046-0924-5485-92f1-d5272153d98b"
 HiGHS = "87dc4568-4c63-4d18-b0c0-bb2238e4078b"
@@ -19,6 +20,7 @@ Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [compat]
 CSV = "0.10.15"
+Dualization = "0.7.1"
 GLMakie = "0.11.11"
 Gurobi = "1.6.3"
 HiGHS = "1.13.0"

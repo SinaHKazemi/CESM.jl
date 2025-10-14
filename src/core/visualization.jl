@@ -8,6 +8,11 @@ module  Visualization
 
     export plot_P_Y, plot_Y, plot_P_Y_T, plot_scalar
 
+
+    function var_to_label(var_name::String)
+        titlecase(replace(var_name, "_" => " "))
+    end
+
     function plot_P_Y(input::Input , output::Output, var_name::String; 
                 carrier_in::Union{String,Nothing} = nothing,
                 carrier_out::Union{String,Nothing} = nothing
@@ -56,7 +61,7 @@ module  Visualization
             xticks = ([Int(y) for y in input.years], [string(y) for y in input.years]),
             xlabel = "Years",
             ylabel = "$(input.units[VARIABLES[var_name].unit].output)",
-            title = "$var_name plot"
+            title = "$(var_to_label(var_name)) Plot"
         )
 
         barplot!(
@@ -100,7 +105,7 @@ module  Visualization
             xticks = ([Int(y) for y in input.years], [string(y) for y in input.years]),
             xlabel = "Years",
             ylabel = "$(input.units[VARIABLES[var_name].unit].output)",
-            title = "$var_name plot",
+            title = "$(var_to_label(var_name)) Plot",
         )
 
         barplot!(ax,
@@ -156,7 +161,7 @@ module  Visualization
             xticks = (ticks, string.(ticks)),
             xlabel = "Timesteps",
             ylabel = "$(input.units[VARIABLES[var_name].unit].output)",
-            title = "$var_name $(string(year)) plot",
+            title = "$(var_to_label(var_name)) $(string(year)) Plot",
         )
 
         year = Year(year)
@@ -192,7 +197,7 @@ module  Visualization
     function plot_scalar(input::Input , output::Output, var_names::Vector{String})
         for var_name in var_names
             if VARIABLES[var_name].sets != ()
-                error("the sets of $var_name is not equal to ()")
+                error("the sets of $(var_to_label(var_name)) is not equal to ()")
             end
         end
 
@@ -207,7 +212,7 @@ module  Visualization
         ax = Axis(
             fig[1,1],
             xticks = (1:length(var_names), var_names), 
-            title = "Scalar plot",
+            title = "Scalar Plot",
         )
 
         barplot!(ax,

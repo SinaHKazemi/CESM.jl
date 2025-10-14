@@ -38,10 +38,10 @@ input = deserialize("input.jls")
 
 # CESM.Visualization.plot_P_Y(input,output,"new_capacity", carrier_out=CESM.Components.Carrier("Industrial_Heat_LT"))
 # CESM.Visualization.plot_P_Y(input,output,"new_capacity", carrier_out="Electricity")
-CESM.Visualization.plot_P_Y(input,output,"active_capacity", carrier_out="Electricity")
+# CESM.Visualization.plot_P_Y(input,output,"active_capacity", carrier_out="Electricity")
 # CESM.Visualization.plot_P_Y(input,output,"total_energy_out", carrier_out="Electricity")
 # CESM.Visualization.plot_Y(input,output,"annual_emission")
-# CESM.Visualization.plot_P_Y_T(input,output,"energy_out_time", 2030, carrier_out= "Electricity")
+CESM.Visualization.plot_P_Y_T(input,output,"energy_out_time", 2030, carrier_out= "Electricity")
 # CESM.Visualization.plot_scalar(input,output,["total_cost", "operational_cost", "capital_cost"])
 # CESM.Visualization.plot_sankey(input,output,2050)
 
