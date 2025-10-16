@@ -21,12 +21,11 @@ function build_model(input::Input, model::Union{JuMP.Model,Nothing}=nothing)
     if model === nothing
         # Gurobi
         model = JuMP.Model(Gurobi.Optimizer)
-        # set_attribute(model, "Crossover", 0)
-        # set_attribute(model, "Method", 2)
+        set_attribute(model, "Crossover", 0)
+        set_attribute(model, "Method", 2)
 
         # HiGHS
         # model = JuMP.Model(HiGHS.Optimizer)
-        model = JuMP.Model(Gurobi.Optimizer)
     end
     vars = add_vars!(model, input)
     constraints = add_constraints!(model, vars, input)
@@ -515,8 +514,6 @@ function  add_constraints!(model, vars, input::Input)::Dict
         end
     end
 
-    # In theory, these constraints should be equalities, but in practice, when combined with the energy_out constraints, one of these constraints becomes redundant, which causes numerical issues for the solver.
-    # One solution is to remove one of these constraints; another is to keep them all and change them to '≥' or '≤' (this works the same).
     constrs["load_shape"] = Dict()
     for p in processes
         !has_param("output_profile",p) && continue
@@ -524,7 +521,7 @@ function  add_constraints!(model, vars, input::Input)::Dict
             for t in timesteps
                 constrs["load_shape"][p,y,t] = @constraint(
                     model,
-                    vars["energy_out_time"][p,y,t] >= get_param("output_profile",(p,t)) * vars["total_energy_out"][p,y],
+                    vars["energy_out_time"][p,y,t] == get_param("output_profile",(p,t)) * vars["total_energy_out"][p,y],
                     base_name = "load_shape_$(p)_$(y)_$(t)"
                 )
             end
@@ -532,7 +529,6 @@ function  add_constraints!(model, vars, input::Input)::Dict
     end
 
     # Storage
-
     constrs["c_rate_relation"] = Dict()
     for p in processes
         !(get_param("is_storage", p)) && continue
