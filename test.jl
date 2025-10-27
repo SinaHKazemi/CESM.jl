@@ -21,19 +21,36 @@
 # model = read_from_file("model.mps")
 # set_optimizer(model, Gurobi.Optimizer)
 # optimize!(model)
+# PP_Wind = first(filter(p -> p.name == "PP_Wind", input.processes))
+# println(sum(get(output["new_capacity"],(Battery,y),0) for y in input.years))
 
 # println("Conversion complete: '$input_file' -> '$output_file'")
 
+# (model,vars,constraints) = CESM.Model.build_model(input)
+# Battery = first(filter(p -> p.name == "Battery", input.processes))
+# @constraint(model, sum(vars["new_capacity"][Battery,y] for y in input.years if Int(y)<=2050) >= 2, base_name="battery_increase")
+# CESM.Model.optimize_model(model)
+# output = CESM.Model.get_output(input, vars)
+
+
+
+using JuMP
 
 include("./src/core/CESM.jl")
 using .CESM
 # input = CESM.Parser.parse_input("./examples/House/config.json");
-# output = CESM.Model.run_model(input)
-# using Serialization
-# serialize("output.jls", output)
-# serialize("input.jls", input)
-output = deserialize("output.jls")
-input = deserialize("input.jls")
+# input = CESM.Parser.parse_input("./examples/Germany/GETM.json");
+# output = CESM.Model.run_optimization(input)
+using Serialization
+# serialize("output_Germany.jls", output)
+# serialize("input_Germany.jls", input)
+# output = deserialize("output_Germany.jls")
+# input = deserialize("input_Germany.jls")
+
+# serialize("output_House.jls", output)
+# serialize("input_House.jls", input)
+output = deserialize("output_House.jls")
+input = deserialize("input_House.jls")
 
 
 # CESM.Visualization.plot_P_Y(input,output,"new_capacity", carrier_out=CESM.Components.Carrier("Industrial_Heat_LT"))
@@ -44,6 +61,8 @@ input = deserialize("input.jls")
 CESM.Visualization.plot_P_Y_T(input,output,"energy_out_time", 2030, carrier_out= "Electricity")
 # CESM.Visualization.plot_scalar(input,output,["total_cost", "operational_cost", "capital_cost"])
 # CESM.Visualization.plot_sankey(input,output,2050)
+
+
 
 # using CairoMakie
 # using WGLMakie

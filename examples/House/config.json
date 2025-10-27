@@ -178,9 +178,6 @@
         "Vehicles_Propulsion": {
             "carrier_color": "tomato1"
         },
-        "Heat": {
-            "carrier_color": "firebrick2"
-        },
         "Electricity": {
             "carrier_color": "orange"
         }
@@ -189,17 +186,9 @@
         "Import_Electricity": {
             "carrier_in": "Dummy",
             "carrier_out": "Electricity",
-            "operational_cost_energy": 0.30,
+            "operational_cost_energy": 0.50,
             "process_color": "lightcyan",
             "process_order": 1
-        },
-        "Demand_Heat": {
-            "carrier_in": "Heat",
-            "carrier_out": "Dummy",            
-            "min_energy_out": 3000,
-            "output_profile": "./time_series/Household_Heat_Demand.txt",
-            "process_color": "plum2",
-            "process_order": 300
         },
         "Demand_Electricity": {
             "carrier_in": "Electricity",
@@ -214,7 +203,7 @@
             "carrier_out": "Electricity",
             "lifetime": 20,
             "operational_cost_power": 15,
-            "capital_cost_power": 1500,
+            "capital_cost_power": 1200,
             "availability_profile": "./time_series/PV_availability_rescaled.txt",
             "process_color": "darkgoldenrod1",
             "process_order": 406
@@ -224,29 +213,19 @@
             "carrier_out": "Electricity",
             "lifetime": 25,
             "operational_cost_power": 20,
-            "capital_cost_power": 4000,
+            "capital_cost_power": 3500,
             "availability_profile": "./time_series/Onshore_Wind_Availability_rescaled.txt",
             "process_color": "royalblue1",
             "process_order": 409
-        },
-        "Heat_Pump": {
-            "carrier_in": "Electricity",
-            "carrier_out": "Heat",
-            "efficiency": 3.7,
-            "lifetime": 17,
-            "operational_cost_power": 20,
-            "capital_cost_power": 2000,
-            "process_color": "tomato2",
-            "process_order": 603
         },
         "Battery": {
             "_comment": "energy storage capacity of the battery is equal to the capacity of the conversion process(max power in and out) divided by c_rate",
             "carrier_in": "Electricity",
             "carrier_out": "Electricity",
             "lifetime": 15,
-            "capital_cost_power": 1500,
+            "capital_cost_power": 2000,
             "is_storage": true,
-            "c_rate": 0.5,
+            "c_rate": 0.3,
             "process_color": "green2",
             "process_order": 1001
         }

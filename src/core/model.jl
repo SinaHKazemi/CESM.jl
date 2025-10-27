@@ -21,7 +21,7 @@ function build_model(input::Input, model::Union{JuMP.Model,Nothing}=nothing)
     if model === nothing
         # Gurobi
         model = JuMP.Model(Gurobi.Optimizer)
-        set_attribute(model, "Crossover", 0)
+        # set_attribute(model, "Crossover", 0)
         set_attribute(model, "Method", 2)
 
         # HiGHS

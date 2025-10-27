@@ -42,14 +42,14 @@ module  Visualization
         columns = Vector{Int}()
         values = Vector{Float64}()
         colors = Vector{String}()
-        stacks = Vector{String}()
+        stacks = Vector{Int}()
 
         for p in processes
             for y in input.years
                 if (p,y) in keys(output[var_name])
                     push!(columns,Int(y))
                     push!(values, output[var_name][p,y])
-                    push!(stacks, string(p))
+                    push!(stacks, findfirst(==(p), processes))
                     push!(colors, input.parameters["process_color"][p])
                 end
             end
@@ -68,15 +68,14 @@ module  Visualization
             ax,
             columns,
             values,
-            stack = UInt64.(hash.(stacks)),
+            stack = stacks,
             color = colors
         )
         
         # Legend
-        uniqueidx(v) = unique(i -> v[i], eachindex(v))
-        indices = uniqueidx(stacks)
-        labels = stacks[indices]
-        elements = [PolyElement(polycolor =colors[i]) for i in indices]
+        indices = unique(stacks)
+        labels = [string(processes[i]) for i in reverse(indices)]
+        elements = [PolyElement(polycolor =input.parameters["process_color"][processes[i]]) for i in reverse(indices)]
         title = "Processes"
 
         Legend(fig[1,2], elements, labels, title)
