@@ -8,6 +8,13 @@ However, in real-world decision-making, stakeholders often want to see different
 
 MGA explores the solution space to find alternatives that are near-optimal yet diverse in their decision variables.
 
+## Implemented methods
+
+The following methods are implemented in this package:
+
+- Random Vector Method
+- Min\Max Variables
+
 ## Litrature
 
 For an introduction to MGA in energy system planning, see the following:
@@ -17,11 +24,3 @@ For an introduction to MGA in energy system planning, see the following:
 For a review of the methods used in energy system modeling, see:
 
 - Lau, M., Patankar, N., & Jenkins, J. D. (2024). Measuring Exploration: Review and Systematic Evaluation of Modelling to Generate Alternatives Methods in Macro-Energy Systems Planning Models. arXiv preprint arXiv:2405.17342. Link: https://arxiv.org/abs/2405.17342
-
-## Implemented methods
-
-The following methods are implemented in this package:
-
-- TBA
-
-
