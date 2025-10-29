@@ -5,7 +5,26 @@ using JuMP, HiGHS, Gurobi
 using ..Variables
 using ..Components
 
-export run_model
+export run_model, get_parameter
+
+function get_parameter(input, param_name, keys)
+    if ! (keys isa AbstractArray || keys isa Tuple)
+        keys = (keys,)
+    end
+    current = input.parameters[param_name]
+    for key in keys
+        if current isa AbstractDict && haskey(current, key)
+            current = current[key]
+        elseif haskey(input.parameters["defaults"], param_name)
+            return input.parameters["defaults"][param_name]
+        else
+            return nothing
+        end
+    end
+    return current
+end
+
+
 
 function run_optimization(input::Input)
     model,vars,constraints = build_model(input)
@@ -113,22 +132,8 @@ function  add_constraints!(model, vars, input::Input)::Dict
         end
     end
 
-
     function get_param(param_name, keys)
-        if ! (keys isa AbstractArray || keys isa Tuple)
-            keys = (keys,)
-        end
-        current = input.parameters[param_name]
-        for key in keys
-            if current isa AbstractDict && haskey(current, key)
-                current = current[key]
-            elseif haskey(input.parameters["defaults"], param_name)
-                return input.parameters["defaults"][param_name]
-            else
-                return nothing
-            end
-        end
-        return current
+        return get_parameter(input, param_name, keys)
     end
 
     function has_param(param_name, keys)
