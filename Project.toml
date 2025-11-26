@@ -5,6 +5,7 @@ authors = ["Sina Hajikazemi <sina.hkazemi@gmail.com>"]
 
 [deps]
 CSV = "336ed68f-0bac-5ca0-87d4-7b16caf5d00b"
+CairoMakie = "13f3f980-e62b-5c42-98c6-ff1f3baf88f0"
 Dualization = "191a621a-6537-11e9-281d-650236a99e60"
 GLMakie = "e9467ef8-e4e7-5192-8a1a-b1aee30e663a"
 Gurobi = "2e9cd046-0924-5485-92f1-d5272153d98b"
@@ -17,9 +18,11 @@ Revise = "295af30f-e4ad-537b-8983-00126c2a3abe"
 SankeyMakie = "1323c716-dab9-4207-0457-9cc5295a221b"
 StatsPlots = "f3b207a7-027a-5e70-b257-86293d7955fd"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+cuOpt = "29a73d17-8276-40b7-9ffb-d89e58023643"
 
 [compat]
 CSV = "0.10.15"
+CairoMakie = "0.13.10"
 Dualization = "0.7.1"
 GLMakie = "0.11.11"
 Gurobi = "1.6.3"
@@ -32,3 +35,4 @@ Revise = "3.8.0"
 SankeyMakie = "0.1.1"
 StatsPlots = "0.15.7"
 Test = "1.11.0"
+cuOpt = "0.1.1"

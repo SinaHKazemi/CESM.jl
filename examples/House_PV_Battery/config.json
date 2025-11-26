@@ -1,0 +1,223 @@
+{
+    "_comment1": "House Model",
+    "_comment2": "The parser will ignore any key that starts with '_comment', such as this one.",
+    "_comment3": "",
+    "units": {
+        "_comment": "Each entity must have 'input', 'output' and 'scale' keys.",
+        "power":{"input": "kW",	"scale": 1, "output": "kW"},
+        "energy": {"input":	"kWh", "scale": 1, "output": "kWh"},
+        "co2_emissions": {"input": "kg",	"scale": 1, "output": "kg"},
+        "cost_energy": {"input": "EUR/kWh",	"scale": 1, "output": "EUR/kWh"},
+        "cost_power": {"input": "EUR/kW", "scale": 1, "output":	"EUR/kW"},
+        "co2_spec": {"input": "kg/kWh",	"scale": 1, "output": "kg/kWh"},
+        "money": {"input": "EUR", "scale": 1, "output":	"EUR"}
+    },
+    "parameters": {
+        "_comment1": "This dictionary contains the definition of parameters. The 'type' and 'sets' keys are mandatory in all parameter definitions.",
+        "_comment2": "The value of the 'type' key must be an integer, float, boolean or string.",
+        "_comment3": "A parameter can have either a 'value' or a 'default' key, but not both at the same time.",
+        "_comment4": "The value of the 'sets' key could be [],['Y'],['C'],['P'],['P','Y'],['P','T']. Replace the surrounding quotes with double quotes.",
+        "_comment5": "If 'sets' is equal to [] or ['Y'] then the 'value' must be defined here in the definition of the parameter.",
+        "discount_rate": {
+            "type": "Float",
+            "sets": [],
+            "value": 0.05
+        },
+        "dt": {
+            "type": "Integer",
+            "sets": [],
+            "value": 1
+        },
+        "annual_co2_limit": {
+            "type": "Float",
+            "sets": ["Y"],
+            "unit": "co2_emissions",
+            "value": 0
+        },
+        "co2_price": {
+            "type": "Float",
+            "sets": ["Y"],
+            "unit": "money",
+            "value": 0
+        },
+        "is_storage": {
+            "type": "Boolean",
+            "sets": ["P"],
+            "default": false
+        },
+        "charge_efficiency": {
+            "type": "Float",
+            "sets": ["P"],
+            "default": 1
+        },
+        "c_rate": {
+            "type": "Float",
+            "sets": ["P"]
+        },
+        "max_legacy_capacity": {
+            "type": "Float",
+            "sets": ["P","Y"],
+            "unit": "power",
+            "default": 0
+        },
+        "min_legacy_capacity": {
+            "type": "Float",
+            "sets": ["P","Y"],
+            "unit": "power"
+        },
+        "max_capacity": {
+            "type": "Float",
+            "sets": ["P","Y"],
+            "unit": "power"
+        },
+        "min_capacity": {
+            "type": "Float",
+            "sets": ["P","Y"],
+            "unit": "power"
+        },
+        "operational_cost_energy": {
+            "type": "Float",
+            "sets": ["P","Y"],
+            "unit": "cost_energy",
+            "default": 0
+        },
+        "operational_cost_power": {
+            "type": "Float",
+            "sets": ["P","Y"],
+            "unit": "cost_power",
+            "default": 0
+        },
+        "capital_cost_power": {
+            "type": "Float",
+            "sets": ["P","Y"],
+            "unit": "cost_power",
+            "default": 0
+        },
+        "min_fraction_in": {
+            "type": "Float",
+            "sets": ["P","Y"]
+        },
+        "min_fraction_out": {
+            "type": "Float",
+            "sets": ["P","Y"]
+        },
+        "max_fraction_in": {
+            "type": "Float",
+            "sets": ["P","Y"]
+        },
+        "max_fraction_out": {
+            "type": "Float",
+            "sets": ["P","Y"]
+        },
+        "max_energy_out": {
+            "type": "Float",
+            "sets": ["P","Y"],
+            "unit": "energy"
+        },
+        "min_energy_out": {
+            "type": "Float",
+            "sets": ["P","Y"],
+            "unit": "energy"
+        },
+        "availability_profile": {
+            "type": "Float",
+            "sets": ["P","T"],
+            "normalized": false
+        },
+        "output_profile": {
+            "type": "Float",
+            "sets": ["P","T"],
+            "normalized": true
+        },
+        "lifetime": {
+            "type": "Integer",
+            "sets": ["P"],
+            "default": 100
+        },
+        "technical_availability": {
+            "type": "Float",
+            "sets": ["P"],
+            "default": 1
+        },
+        "specific_co2": {
+            "type": "Float",
+            "sets": ["P"],
+            "default": 0,
+            "unit": "co2_spec"
+        },
+        "efficiency": {
+            "type": "Float",
+            "sets": ["P"],
+            "default": 1
+        },
+        "carrier_color": {
+            "_comment": "https://juliagraphics.github.io/Colors.jl/dev/namedcolors/",
+            "type": "String",
+            "sets": ["C"]
+        },
+        "carrier_order": {
+            "_comment": "Order of plotting: The lowest order appears in the lowest position.",
+            "type": "Integer",
+            "sets": ["C"]
+        },
+        "process_color": {
+            "_comment": "https://juliagraphics.github.io/Colors.jl/dev/namedcolors/",
+            "type": "String",
+            "sets": ["P"]
+        },
+        "process_order": {
+            "_comment": "Order of plotting: The lowest order appears in the lowest position.",
+            "type": "Integer",
+            "sets": ["P"]
+        }
+    },
+    "timesteps" : "./time_series/8760h.txt",
+    "years" : [2015, 2020, 2025, 2030, 2035, 2040, 2045, 2050, 2055, 2060],
+    "carriers": {
+        "Dummy": {},
+        "Vehicles_Propulsion": {
+            "carrier_color": "tomato1"
+        },
+        "Electricity": {
+            "carrier_color": "orange"
+        }
+    },
+    "processes": {
+        "Import_Electricity": {
+            "carrier_in": "Dummy",
+            "carrier_out": "Electricity",
+            "operational_cost_energy": 0.50,
+            "process_color": "lightcyan",
+            "process_order": 1
+        },
+        "Demand_Electricity": {
+            "carrier_in": "Electricity",
+            "carrier_out": "Dummy",
+            "min_energy_out": 2500,
+            "output_profile": "./time_series/Electricity_Demand_Corrected.txt",
+            "process_color": "magenta1",
+            "process_order": 301
+        },
+        "PP_PV": {
+            "carrier_in": "Dummy",
+            "carrier_out": "Electricity",
+            "lifetime": 20,
+            "operational_cost_power": 15,
+            "capital_cost_power": 1200,
+            "availability_profile": "./time_series/PV_availability_rescaled.txt",
+            "process_color": "darkgoldenrod1",
+            "process_order": 406
+        },
+        "Battery": {
+            "_comment": "energy storage capacity of the battery is equal to the capacity of the conversion process(max power in and out) divided by c_rate",
+            "carrier_in": "Electricity",
+            "carrier_out": "Electricity",
+            "lifetime": 15,
+            "capital_cost_power": 2000,
+            "is_storage": true,
+            "c_rate": 0.3,
+            "process_color": "green2",
+            "process_order": 1001
+        }
+    }
+}   

@@ -6,11 +6,12 @@ using ..CESM
 using ..CESM.Model
 using JuMP, Dualization, Gurobi
 
-DUALITY_GAP_THRESHOLD = 0.001
-CONVERGENCE_THRESHOLD = 0.001
+DUALITY_GAP_THRESHOLD = 0.05
+CONVERGENCE_THRESHOLD = 0.01
+CONVERGENCE_OBJ = 1e-4
 INITIAL_MU = .1
-INCREASE_RATE = 0.1
-MANIPULATION_LIMIT = 0.10
+INCREASE_RATE = 0.10
+MANIPULATION_LIMIT = 0.14
 MU_INCREASE_FACTOR = 2
 MAX_INNER_ITER = 40
 MAX_OUTER_ITER = 30
@@ -171,6 +172,7 @@ function PADM_alg(input)
         println("Outer Loop: $(outer_counter)")
         outer_counter += 1
         inner_counter = 0
+        total_obj = Inf64
         while true
             println("Inner Loop: $(inner_counter)")
             inner_counter += 1
@@ -179,18 +181,21 @@ function PADM_alg(input)
             new_upper_values = Dict(t => value(upper_vars["delta"][t]) for t in input.timesteps)
             update_dual_obj(input, dual_model, new_upper_values, dual_vars, changed_profile_process)
             optimize!(dual_model)
-            
+            new_total_obj = objective_value(primal_model)
 
+
+            println("total obj: $(objective_value(primal_model))")
             println("primal obj: $(value(primal_obj))")
             # test_primal(input, input_without_profile, changed_profile_process, new_upper_values)
             dual_obj = objective_function(dual_model)
             println("dual obj: $(value(dual_obj))")
             println("upper obj: $(value(upper_obj))")
             println(maximum(values(Dict(t => abs(new_upper_values[t] - upper_values[t]) for t in input.timesteps))))
-            if maximum(values(Dict(t => abs(new_upper_values[t] - upper_values[t]) for t in input.timesteps))) < CONVERGENCE_THRESHOLD
+            if maximum(values(Dict(t => abs(new_upper_values[t] - upper_values[t]) for t in input.timesteps))) < CONVERGENCE_THRESHOLD || abs(new_total_obj - total_obj) < CONVERGENCE_OBJ || inner_counter > MAX_INNER_ITER
                 break
             else
                 upper_values = new_upper_values
+                total_obj = new_total_obj
             end
         end
         if abs(value(primal_obj) - value(dual_obj)) < DUALITY_GAP_THRESHOLD || outer_counter > MAX_OUTER_ITER
@@ -202,7 +207,8 @@ function PADM_alg(input)
     println("primal obj: $(value(primal_obj))")
     println("dual obj: $(value(dual_obj))")
     println("upper obj: $(value(upper_obj))")
-    return upper_values
+    changed_output = CESM.Model.get_output(input, primal_vars)
+    return (upper_values, output, changed_output)
 end
 
 end
