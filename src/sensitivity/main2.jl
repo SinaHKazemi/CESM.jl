@@ -20,9 +20,9 @@ function get_iis_model(model)
             end
         end
     end
-    for x in list_of_conflicting_constraints
-        println(x)
-    end
+    # for x in list_of_conflicting_constraints
+    #     println(x)
+    # end
     iis_model, _ = copy_conflict(model)
     print(iis_model)
     write_to_file(iis_model, "model.lp")
@@ -48,10 +48,11 @@ function start()
     dual_obj = objective_function(dual_model)
     (model,vars,constrs) = CESM.Model.build_model(input,dual_model)
     primal_obj = objective_function(model)
-    # set_attribute(model, "Crossover", 0)
-    # set_attribute(model, "Method", 2)
+    set_attribute(model, "Crossover", 0)
+    set_attribute(model, "Method", 1)
     set_attribute(model, "OutputFlag", 0)
-    set_attribute(model, "BarHomogeneous", 1)
+    
+    # set_attribute(model, "BarHomogeneous", 1)
 
     function get_param(param_name, keys)
         if ! (keys isa AbstractArray || keys isa Tuple)
@@ -92,6 +93,8 @@ function start()
     for t in timesteps
         @constraint(model, vars["delta"][t] >= -0.1, base_name="delta_lowerbound_$(t)")
         @constraint(model, vars["delta"][t] <= 0.1, base_name="delta_upperbound_$(t)")
+        @constraint(model, get_param("availability_profile",(PP_Wind,t)) * (1 + vars["delta"][t]) <= 1, base_name="delta_upperbound_one_$(t)")
+        @constraint(model, 1 + vars["delta"][t] >= 0, base_name="delta_lowerbound_zero_$(t)")
         @constraint(model, vars["abs_delta"][t] >= vars["delta"][t], base_name="abs_delta_lowerbound_$(t)")
         @constraint(model, vars["abs_delta"][t] >= -vars["delta"][t], base_name="abs_delta_upperbound_$(t)")
         @constraint(model, vars["abs_delta"][t] >= 0, base_name="abs_delta_zero_bound_$(t)")
@@ -111,7 +114,7 @@ function start()
             constrs["renewable_availability"][PP_Wind,y,t] = @constraint(
                 model,
                 vars["power_out"][PP_Wind,y,t] <= (vars["active_capacity"][PP_Wind,y] * (1 + params["delta"][t]) + params["cap"][y] * vars["ddelta"][t]) * get_param("availability_profile",(PP_Wind,t)),
-                base_name = "renewable_availability_$(PP_Wind)_$(y)_$(t)"
+                base_name = "renewable_availability_replaced_$(PP_Wind)_$(y)_$(t)"
             )
         end
     end
@@ -120,7 +123,7 @@ function start()
         con = constraint_by_name(model, "dual_con_active_capacity_$(PP_Wind)_$(y)")
         f = JuMP.constraint_object(con).func + sum(vars["dual"][y,t] * params["delta"][t] * get_param("availability_profile",(PP_Wind,t)) for t in timesteps) + sum(params["dual"][y,t] * vars["ddelta"][t] * get_param("availability_profile",(PP_Wind,t)) for t in timesteps)
         delete(model, con)
-        @constraint(model, f>=0, base_name="dual_con_active_capacity_$(PP_Wind)_$(y)")
+        @constraint(model, f>=0, base_name="dual_con_active_capacity_replaced_$(PP_Wind)_$(y)")
     end
 
     # set parameters to zero
@@ -140,14 +143,15 @@ function start()
 
     # fix variables at zero
     for t in timesteps
-        fix(vars["delta"][t], 0)
-        fix(vars["ddelta"][t], 0)
-        fix(vars["abs_delta"][t], 0)
+        fix(vars["delta"][t], 0.0)
+        fix(vars["ddelta"][t], 0.0)
+        fix(vars["abs_delta"][t], 0.0)
     end
 
     optimize!(model)
     println(sum(value(vars["new_capacity"][Battery,y]) for y in years))
-    println(value(primal_obj))
+    println("primal obj after fixing: ", value(primal_obj))
+    println("dual obj after fixing: ", value(dual_obj))
 
     dual_values = Dict((y,t) => value(vars["dual"][y,t]) for y in years, t in timesteps)
     cap_values = Dict(y => value(vars["active_capacity"][PP_Wind,y]) for y in years)
@@ -170,7 +174,7 @@ function start()
     end
     obj_value = Inf64
 
-    initial_trust_region_radius = 0.02
+    initial_trust_region_radius = 0.05
     trust_region_radius = initial_trust_region_radius
     set_parameter_value(params["trust_region_radius"], trust_region_radius)
 
@@ -182,7 +186,7 @@ function start()
         while true
             j += 1
             println("Inner Iteration: ", j)
-                    # unfix the upper-level variables
+            # unfix the upper-level variables
             for t in timesteps
                 set_parameter_value(params["delta"][t], delta_values[t])
                 if is_fixed(vars["delta"][t])
@@ -195,8 +199,11 @@ function start()
                     unfix(vars["abs_delta"][t])
                 end
             end
+
             optimize!(model)
-            if maximum([abs(value(vars["ddelta"][t])) for t in timesteps]) < 1e-6
+            println("termination_status: ", termination_status(model))
+            println("Sum delta values: ", sum(value(vars["delta"][t])* get_param("availability_profile",(PP_Wind,t)) for t in timesteps))
+            if maximum([abs(value(vars["ddelta"][t])) for t in timesteps]) < 1e-4
                 println("Delta values converged in inner loop")
                 break
             end
@@ -208,13 +215,26 @@ function start()
             abs_delta_values = Dict(t => value(vars["abs_delta"][t]) for t in timesteps)
             for t in timesteps
                 set_parameter_value(params["delta"][t], new_delta_values[t])
-                fix(vars["delta"][t], new_delta_values[t])
+                # fix(vars["delta"][t], new_delta_values[t])
                 fix(vars["ddelta"][t], 0)
-                fix(vars["abs_delta"][t], abs_delta_values[t])
+                # fix(vars["abs_delta"][t], abs_delta_values[t])
             end
+           
+
+            for y in years
+                for t in timesteps
+                    delete(model, constrs["renewable_availability"][PP_Wind,y,t])
+                end
+            end
+
+            for y in years
+                con = constraint_by_name(model, "dual_con_active_capacity_replaced_$(PP_Wind)_$(y)")
+                delete(model, con)
+            end
+            set_attribute(model, "DualReductions", 0)
             optimize!(model)
-            println("primal obj after fixing: ", value(primal_obj))
-            println("dual obj after fixing: ", value(dual_obj))
+            get_iis_model(model)
+            println("termination_status: ", termination_status(model))
 
             # check for feasibility
             if termination_status(model) == MOI.INFEASIBLE_OR_UNBOUNDED || termination_status(model) == MOI.INFEASIBLE
@@ -224,6 +244,8 @@ function start()
                 continue
             else
                 println("Feasible solution")
+                println("primal obj after fixing: ", value(primal_obj))
+                println("dual obj after fixing: ", value(dual_obj))
                 println("Change in objective value: ", obj_value - objective_value(model))
                 println("Sum of delta: ", sum(abs(new_delta_values[t]-delta_values[t]) for t in timesteps))
                 if (obj_value - objective_value(model)) / sum(abs(value(vars["ddelta"][t])) for t in timesteps) < 1e-6
@@ -231,6 +253,7 @@ function start()
                     set_parameter_value(params["trust_region_radius"], trust_region_radius)
                     continue
                 end
+                obj_value = objective_value(model)
                 # adjust delta values or other parameters as needed
                 dual_values = Dict((y,t) => value(vars["dual"][y,t]) for y in years, t in timesteps)
                 cap_values = Dict(y => value(vars["active_capacity"][PP_Wind,y]) for y in years)
@@ -246,12 +269,11 @@ function start()
                     set_parameter_value(params["delta"][t], new_delta_values[t])
                 end
                 delta_values = new_delta_values
-                obj_value = objective_value(model)
                 trust_region_radius = min(trust_region_radius * 2, initial_trust_region_radius)
                 set_parameter_value(params["trust_region_radius"], trust_region_radius)
             end
         end
-        if value(primal_obj) - value(dual_obj) < 1e-4
+        if value(primal_obj) - value(dual_obj) < 1e-2
             println("Converged in outer loop")
             break
         end
@@ -261,7 +283,6 @@ function start()
         set_parameter_value(params["trust_region_radius"], trust_region_radius)
         @objective(model, Min, sum(vars["abs_delta"][t] for t in timesteps) + MU * (primal_obj-dual_obj))
         obj_value = Inf64
-        
     end
 end
 
