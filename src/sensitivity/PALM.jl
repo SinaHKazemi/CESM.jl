@@ -1,11 +1,30 @@
 
+module PALM
 # PALM algorithm
 using JuMP, Dualization, Gurobi
-using Logging
+using Logging, LoggingExtras
 using SHA
 
 include("../core/CESM.jl")
 using .CESM
+
+export Setting, run_PALM, logfile_name
+
+function pretty_print(io::IO, x)
+    T = typeof(x)
+    fields = fieldnames(T)
+    values = [getfield(x, f) for f in fields]
+
+    # Determine column width for alignment
+    maxlen = maximum(length.(String.(fields)))
+
+    println(io, "=== $(T) ===")
+    for (f, v) in zip(fields, values)
+        fname = String(f)
+        padding = " " ^ (maxlen - length(fname))
+        println(io, fname, padding, " : ", v)
+    end
+end
 
 struct Setting
     config_file::String
@@ -22,6 +41,10 @@ struct Setting
     max_outer_iterations::Int64
     max_inner_iterations::Int64
     log_folder_path::String
+end
+
+function Base.show(io::IO, s::Setting)
+    pretty_print(io, s)
 end
 
 function Setting(; 
@@ -69,10 +92,23 @@ function logfile_name(s::Setting)
     return "log_$(s.manipulated_cp)_$(s.target_cp)_$(h).txt"
 end
 
+function simple_file_logger(path::String)
+    io = open(path, "w")
+    return FormatLogger(io) do io, log
+        # Print only: "Info: message"
+        println(io, "$(log.level): ", log.message)
+
+        # flush so logs appear immediately
+        flush(io)
+    end
+end
+
+
 function run_PALM(setting::Setting)
-    io = open(joinpath(setting.log_folder_path, logfile_name(setting)), "a")
-    file_logger = SimpleLogger(io, Logging.Info)
+
+    file_logger = simple_file_logger(joinpath(setting.log_folder_path, logfile_name(setting)))
     global_logger(file_logger)
+    @info "Starting PALM algorithm with settings: $(setting)"
 
     input = CESM.Parser.parse_input(setting.config_file);
 
@@ -255,22 +291,24 @@ function run_PALM(setting::Setting)
                 fix(vars["ddelta"][t], 0)
             end
         
-            set_attribute(model, "DualReductions", 0)
+            # to distinguish between infeasible and unbounded
+            # set_attribute(model, "DualReductions", 0)
             optimize!(model)
             @info "termination_status:  $(termination_status(model))"
 
             # check for feasibility
             if termination_status(model) == MOI.INFEASIBLE_OR_UNBOUNDED || termination_status(model) == MOI.INFEASIBLE
-                @info "Infeasible solution."
+                @info "Infeasible Solution."
                 trust_region_radius /= 2
                 set_parameter_value(trust_region_radius_param, trust_region_radius)
                 continue
             else
-                @info "Feasible solution."
-                @info "primal obj after fixing: $(value(primal_obj))"
-                @info "dual obj after fixing: $(value(dual_obj))"
-                @info "Change in objective value: $(obj_value - objective_value(model))"
-                @info "Sum of delta: $(sum(abs(new_delta_values[t]-delta_values[t]) for t in timesteps))"
+                @info "Feasible Solution."
+                @info "primal obj: $(value(primal_obj))"
+                @info "dual obj: $(value(dual_obj))"
+                @info "duality gap: $(value(primal_obj) - value(dual_obj))"
+                @info "obj value improvement: $(obj_value - objective_value(model))"
+                @info "sum of delta: $(sum(abs(new_delta_values[t]-delta_values[t]) for t in timesteps))"
                 if (obj_value - objective_value(model)) / maximum(abs(value(vars["ddelta"][t])) for t in timesteps) < setting.min_obj_improvement_rate
                     @info "Objective improvement rate is below the threshold."
                     trust_region_radius /= 2
@@ -282,7 +320,7 @@ function run_PALM(setting::Setting)
                 
                 # adjust delta values or other parameters as needed
                 dual_values = Dict((y,t) => value(vars["dual"][y,t]) for y in years, t in timesteps)
-                cap_values = Dict(y => value(vars["active_capacity"][PP_Wind,y]) for y in years)
+                cap_values = Dict(y => value(vars["active_capacity"][manipulated_cp,y]) for y in years)
                 delta_values = new_delta_values
 
                 trust_region_radius = min(trust_region_radius * 2, setting.init_trust_region_radius)
@@ -290,7 +328,7 @@ function run_PALM(setting::Setting)
             end
         end
         if value(primal_obj) - value(dual_obj) < 1e-2
-            println("Converged in outer loop")
+            @info "Converged in outer loop"
             return (delta_values)
             break
         end
@@ -302,3 +340,7 @@ function run_PALM(setting::Setting)
         obj_value = Inf64
     end
 end
+
+    
+end
+

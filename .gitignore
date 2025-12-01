@@ -36,3 +36,6 @@ todo.md
 
 # log files
 logs/
+
+# result files
+results/

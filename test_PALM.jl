@@ -8,6 +8,11 @@ if !isdir(log_folder_path)
     mkdir(log_folder_path)
 end
 
+result_folder_path = "./results"
+if !isdir(result_folder_path)
+    mkdir(result_folder_path)
+end
+
 
 setting = Setting(
     config_file = "./examples/House/config.json",
@@ -23,4 +28,9 @@ setting = Setting(
     log_folder_path = log_folder_path
 )
 
+
 delta_values = run_PALM(setting)
+
+if delta_values !== nothing
+    serialize(joinpath(result_folder_path, "$(logfile_name(setting)).jls"), delta_values)
+end
