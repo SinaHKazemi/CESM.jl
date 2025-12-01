@@ -1,0 +1,26 @@
+include("./src/core/CESM.jl")
+include("./src/sensitivity/PALM.jl")
+
+using Serialization
+
+log_folder_path = "./logs"
+if !isdir(log_folder_path)
+    mkdir(log_folder_path)
+end
+
+
+setting = Setting(
+    config_file = "./examples/House/config.json",
+    manipulation_bound = 0.1,
+    manipulated_cp = "PP_Wind",
+    target_cp = "Battery",
+    target_change = 0.2,
+    init_mu = 1.0,
+    init_trust_region_radius = 0.05,
+    min_stationary_change = 1e-4,
+    min_obj_improvement_rate = 1e-2,
+    last_year = 2050,
+    log_folder_path = log_folder_path
+)
+
+delta_values = run_PALM(setting)

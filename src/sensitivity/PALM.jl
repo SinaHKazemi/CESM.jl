@@ -1,26 +1,67 @@
 
 # PALM algorithm
 using JuMP, Dualization, Gurobi
-using Logging, LoggingExtras
+using Logging
 using SHA
 
 include("../core/CESM.jl")
 using .CESM
 
-
 struct Setting
     config_file::String
-    manipulation_bound::Float64, # 0.1
-    manipulated_cp::String, # "Battery"
-    target_cp::String, # "PP_Wind" it has to be a renwewable
-    target_change::Float64, # 0.2
-    init_mu::Float64, # 1.0
-    init_trust_region_radius::Float64, # 0.05
-    min_stationary_change::Float64, # 1e-4
-    min_obj_improvement_rate::Float64, # 1e-2
+    manipulation_bound::Float64 # 0.1
+    manipulated_cp::String # "Battery"
+    target_cp::String # "PP_Wind" it has to be a renwewable
+    target_change::Float64 # 0.2
+    init_mu::Float64 # 1.0
+    init_trust_region_radius::Float64 # 0.05
+    min_stationary_change::Float64 # 1e-4
+    min_obj_improvement_rate::Float64 # 1e-2
     last_year::Int64 # 2050
+    duality_gap_tolerance::Float64 # 1e-2
+    max_outer_iterations::Int64
+    max_inner_iterations::Int64
+    log_folder_path::String
 end
 
+function Setting(; 
+        config_file::String,
+        manipulation_bound::Float64,
+        manipulated_cp::String,
+        target_cp::String,
+        target_change::Float64,
+        init_mu::Float64,
+        init_trust_region_radius::Float64=0.05,
+        min_stationary_change::Float64=1e-4,
+        min_obj_improvement_rate::Float64=1e-2,
+        last_year::Int64=typemax(Int),
+        duality_gap_tolerance::Float64=1e-2,
+        max_outer_iterations::Int64=40,
+        max_inner_iterations::Int64=50,
+        log_folder_path::String="."
+    )
+    
+    if manipulation_bound < 0.0 || manipulation_bound > 1.0
+        throw(ArgumentError("manipulation_bound must be between 0 and 1, got $manipulation_bound"))
+    end
+
+    return Setting(
+        config_file,
+        manipulation_bound,
+        manipulated_cp,
+        target_cp,
+        target_change,
+        init_mu,
+        init_trust_region_radius,
+        min_stationary_change,
+        min_obj_improvement_rate,
+        last_year,
+        duality_gap_tolerance,
+        max_outer_iterations,
+        max_inner_iterations,
+        log_folder_path
+    )
+end
 
 function logfile_name(s::Setting)
     data = sprint(io -> show(io, s))
@@ -28,38 +69,43 @@ function logfile_name(s::Setting)
     return "log_$(s.manipulated_cp)_$(s.target_cp)_$(h).txt"
 end
 
-io = open(logfile_name(setting), "a")
-file_logger = SimpleLogger(io, Logging.Info)
-global_logger(file_logger)
+function run_PALM(setting::Setting)
+    io = open(joinpath(setting.log_folder_path, logfile_name(setting)), "a")
+    file_logger = SimpleLogger(io, Logging.Info)
+    global_logger(file_logger)
 
-setting = Setting(
-    config_file = "config_sensitivity.yaml",
-    manipulation_bound = 0.1,
-    manipulated_cp = "Battery",
-    target_cp = "PP_Wind",
-    target_change = 0.2,
-    init_mu = 1.0,
-    init_trust_region_radius = 0.05,
-    min_stationary_change = 1e-4,
-    min_obj_improvement_rate = 1e-2,
-    last_year = 2050
-)
-
-function start()
     input = CESM.Parser.parse_input(setting.config_file);
+
+    function get_param(param_name, keys)
+        return CESM.Model.get_parameter(input, param_name, keys)
+    end
+
     timesteps = input.timesteps
     years = input.years
     (model,vars,constraints) = CESM.Model.build_model(input)
-    CESM.Model.optimize_model(model)    
+    set_attribute(model, "OutputFlag", 0)
+    CESM.Model.optimize_model(model)
     @info "Initial optimization completed."
     @info "Objective value:  $(objective_value(model))"
     output = CESM.Model.get_output(input, vars)
-    target_cp = first(filter(p -> p.name == setting.target_cp, input.processes))
+    
+    target_cp = nothing
+    try
+        target_cp = first(filter(p -> p.name == setting.target_cp, input.processes))
+    catch e
+        @error "Could not find target_cp: $(setting.target_cp) in processes."
+    end
+
+    manipulated_cp = nothing
+    try
+        manipulated_cp = first(filter(p -> p.name == setting.manipulated_cp, input.processes))
+    catch e
+        @error "Could not find manipulated_cp: $(setting.manipulated_cp) in processes."
+    end
+
     target_cp_capacity = sum(get(output["new_capacity"],(target_cp,y),0) for y in years if Int(y)<=setting.last_year)
     @info "$(setting.target_cp) capacity: $(target_cp_capacity)"
-    manipulated_cp = first(filter(p -> p.name == setting.manipulated_cp, input.processes))
-
-
+    
     dual_model = dualize(model,Gurobi.Optimizer; dual_names = DualNames("dual_var_", "dual_con_"))
     dual_obj = objective_function(dual_model)
     (model,vars,constrs) = CESM.Model.build_model(input,dual_model)
@@ -68,26 +114,7 @@ function start()
     # set the solver to dual simplex
     set_attribute(model, "Method", 1) # https://docs.gurobi.com/projects/optimizer/en/current/reference/parameters.html#method
 
-    function get_param(param_name, keys)
-        if ! (keys isa AbstractArray || keys isa Tuple)
-            keys = (keys,)
-        end
-        current = input.parameters[param_name]
-        for key in keys
-            if current isa AbstractDict && haskey(current, key)
-                current = current[key]
-            elseif haskey(input.parameters["defaults"], param_name)
-                return input.parameters["defaults"][param_name]
-            else
-                return nothing
-            end
-        end
-        return current
-    end
 
-    function has_param(param_name, keys)
-        return get_param(param_name, keys) !== nothing
-    end
 
     vars["delta"] = Dict(index => @variable(model, base_name= "delta" * "_" * string(index)) for index in timesteps)
     vars["ddelta"] = Dict(index => @variable(model, base_name= "ddelta" * "_" * string(index)) for index in timesteps)
@@ -97,9 +124,11 @@ function start()
     trust_region_radius_param = @variable(model, base_name= "trust_region_radius", set = Parameter(0.0))
 
     constrs["upper_delta"] = Dict()
+    
     for t in timesteps
         constrs["upper_delta"][t] = @constraint(model, vars["delta"][t] == vars["ddelta"][t] , base_name="delta_ddelta_$(t)")
     end
+
     function change_upper_constraints(delta_values)
         for t in timesteps
             set_normalized_rhs(constrs["upper_delta"][t], delta_values[t])
@@ -120,7 +149,7 @@ function start()
 
     @constraint(model, sum(vars["delta"][t]* get_param("availability_profile",(manipulated_cp,t)) for t in timesteps) == 0, base_name="zero_sum")
 
-    MU = setting.initial_mu
+    MU = setting.init_mu
 
     @objective(model, Min, sum(vars["abs_delta"][t] for t in timesteps) + MU * (primal_obj-dual_obj))
     @constraint(model, sum(vars["new_capacity"][target_cp,y] for y in years if Int(y)<=setting.last_year) >= target_cp_capacity * (1+setting.target_change), base_name="$(target_cp)_change")
@@ -180,10 +209,19 @@ function start()
     outer_counter = 0
     while true
         outer_counter += 1
-        println("Outer Iteration: ", outer_counter)
+        if outer_counter > setting.max_outer_iterations
+            @info "Reached maximum number of outer iterations."
+            break
+        end
+        @info "Outer Iteration: $(outer_counter)"
+
         inner_counter = 0
         while true
             inner_counter += 1
+            if inner_counter > setting.max_inner_iterations
+                @info "Reached maximum number of inner iterations."
+                break
+            end
             total_inner_counter += 1
             
             @info "Inner Iteration:  $(inner_counter)"            
@@ -193,30 +231,19 @@ function start()
             change_primal_constraints(delta_values, cap_values)
             
             # unfix the upper-level variables
-            for t in timesteps             
-                if is_fixed(vars["delta"][t])
-                    unfix(vars["delta"][t])
-                end
+            for t in timesteps
                 if is_fixed(vars["ddelta"][t])
                     unfix(vars["ddelta"][t])
-                end
-                if is_fixed(vars["abs_delta"][t])
-                    unfix(vars["abs_delta"][t])
                 end
             end
 
             optimize!(model)
-
             @info "termination_status:  $(termination_status(model))"
-            # println("Sum delta values: ", sum(value(vars["delta"][t])* get_param("availability_profile",(manipulated_cp,t)) for t in timesteps))
             if maximum([abs(value(vars["ddelta"][t])) for t in timesteps]) < setting.min_stationary_change
                 @info "Inner loop converged"
                 break
             end
             new_delta_values = Dict(t => value(vars["delta"][t]) for t in timesteps)
-            # ddelta_values = Dict(t => value(vars["ddelta"][t]) for t in timesteps)
-            # println("New delta values: ", maximum(abs.(values(ddelta_values))))
-
 
             # fix the upper-level variables
             change_upper_constraints(new_delta_values)
@@ -264,6 +291,7 @@ function start()
         end
         if value(primal_obj) - value(dual_obj) < 1e-2
             println("Converged in outer loop")
+            return (delta_values)
             break
         end
         
@@ -274,5 +302,3 @@ function start()
         obj_value = Inf64
     end
 end
-
-start()

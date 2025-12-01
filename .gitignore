@@ -33,3 +33,6 @@ todo.md
 
 # serialization files
 *.jls
+
+# log files
+logs/
