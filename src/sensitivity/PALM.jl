@@ -149,6 +149,7 @@ function run_PALM(setting::Setting)
 
     # set the solver to dual simplex
     set_attribute(model, "Method", 1) # https://docs.gurobi.com/projects/optimizer/en/current/reference/parameters.html#method
+    set_attribute(model, "OutputFlag", 0)
 
 
 

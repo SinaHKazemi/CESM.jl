@@ -4,7 +4,7 @@ include("variables.jl")
 include("components.jl")
 include("parser.jl")
 include("model.jl")
-include("visualization.jl")
+# include("visualization.jl")
 
 # using relative imports inside the project
 using .Variables
