@@ -261,7 +261,8 @@ function run_PALM(setting::Setting)
             end
             total_inner_counter += 1
             
-            @info "Inner Iteration:  $(inner_counter)"            
+            @info "Inner Iteration:  $(inner_counter)"
+            @info "Total Inner Iterations:  $(total_inner_counter)"          
             
             change_upper_constraints(delta_values)
             change_dual_constraints(delta_values, dual_values)
@@ -275,7 +276,7 @@ function run_PALM(setting::Setting)
             end
 
             optimize!(model)
-            @info "termination_status:  $(termination_status(model))"
+            @info "termination_status (find delta):  $(termination_status(model))"
             if maximum([abs(value(vars["ddelta"][t])) for t in timesteps]) < setting.min_stationary_change
                 @info "Inner loop converged"
                 break
@@ -295,7 +296,7 @@ function run_PALM(setting::Setting)
             # to distinguish between infeasible and unbounded
             # set_attribute(model, "DualReductions", 0)
             optimize!(model)
-            @info "termination_status:  $(termination_status(model))"
+            @info "termination_status (find feasible primal and dual):  $(termination_status(model))"
 
             # check for feasibility
             if termination_status(model) == MOI.INFEASIBLE_OR_UNBOUNDED || termination_status(model) == MOI.INFEASIBLE
@@ -309,7 +310,7 @@ function run_PALM(setting::Setting)
                 @info "dual obj: $(value(dual_obj))"
                 @info "duality gap: $(value(primal_obj) - value(dual_obj))"
                 @info "obj value improvement: $(obj_value - objective_value(model))"
-                @info "sum of delta: $(sum(abs(new_delta_values[t]-delta_values[t]) for t in timesteps))"
+                @info "sum of delta: $(sum(abs(new_delta_values[t]) for t in timesteps))"
                 if (obj_value - objective_value(model)) / maximum(abs(value(vars["ddelta"][t])) for t in timesteps) < setting.min_obj_improvement_rate
                     @info "Objective improvement rate is below the threshold."
                     trust_region_radius /= 2
