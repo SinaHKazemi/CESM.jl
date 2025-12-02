@@ -1,27 +1,15 @@
 module PADM
 
-include("../core/CESM.jl")
-using .CESM
-using .CESM.Model
+using ..CESM
+using ..CESM.Model:  get_parameter
 using ..Utils
+
+
 using JuMP, Dualization, Gurobi
 
 using Logging, LoggingExtras
 
 export run_PADM
-
-# DUALITY_GAP_THRESHOLD = 0.05
-# CONVERGENCE_THRESHOLD = 0.01
-# CONVERGENCE_OBJ = 1e-4
-# INITIAL_MU = .1
-# INCREASE_RATE = 0.10
-# MANIPULATION_LIMIT = 0.14
-# MU_INCREASE_FACTOR = 2
-# MAX_INNER_ITER = 40
-# MAX_OUTER_ITER = 30
-
-# CHANGED_PROFILE_PROCESS = "Demand_Electricity"
-# CHANGED_CAPACITY_PROCESS = "PP_PV"
 
 function add_upper_vars(input, primal_model)
     upper_vars = Dict()
@@ -42,7 +30,7 @@ function add_upper_constrs(input,primal_model,upper_vars, changed_profile_proces
         @constraint(primal_model, upper_vars["abs"][t] >= -upper_vars["delta"][t], base_name="abs_lower_bound_$(t)")
         @constraint(primal_model, upper_vars["abs"][t] <= setting.manipulation_bound, base_name="manipulation_bound_$(t)")
     end
-    # @constraint(primal_model, sum(upper_vars["delta"][t] * get_parameter(input,"output_profile",(changed_profile_process,t)) for t in input.timesteps)==0, base_name="total_change")
+    @constraint(primal_model, sum(upper_vars["delta"][t] * get_parameter(input,"output_profile",(changed_profile_process,t)) for t in input.timesteps)==0, base_name="total_change")
 end
 
 function add_manipulation_constrs(input,primal_model,primal_vars,changed_capacity_process, capacity, setting)
@@ -113,7 +101,7 @@ end
 # end
 
 
-function test_primal(input, input_without_profile, changed_profile_process, upper_values)
+function test_primal(input, input_without_profile, changed_profile_process,changed_capacity_process, upper_values)
     input = deepcopy(input)
     for t in input.timesteps
         input.parameters["output_profile"][changed_profile_process][t] *= (1+ upper_values[t])
@@ -123,17 +111,16 @@ function test_primal(input, input_without_profile, changed_profile_process, uppe
     set_attribute(primal_model, "OutputFlag", 0)
     optimize!(primal_model)
     output = CESM.Model.get_output(input, primal_vars)
-    # capacity = sum(get(output["new_capacity"],(changed_capacity_process,y),0) for y in input.years if Int(y)<=2050)
-    # println(capacity)
+    capacity = sum(get(output["new_capacity"],(changed_capacity_process,y),0) for y in input.years if Int(y)<=2050)
+    println(capacity)
     println("primal test: $(objective_value(primal_model))")
 end
 
 
 function run_PADM(setting::Setting)
-
     file_logger = simple_file_logger(joinpath(setting.log_folder_path, "PADM_" * logfile_name(setting) * ".txt"))
     global_logger(file_logger)
-    @info "Starting PADM algorithm with settings: $(setting)"
+    @info "Starting PADM algorithm with settings: \n$(setting)"
 
     input = CESM.Parser.parse_input(setting.config_file);
     changed_profile_process =  first(filter(p -> p.name == setting.manipulated_cp, input.processes))
@@ -216,6 +203,7 @@ function run_PADM(setting::Setting)
             mu *= 2
         end
     end
+    test_primal(input, input_without_profile, changed_profile_process, changed_capacity_process, upper_values)
     return upper_values
 end
 

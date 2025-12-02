@@ -14,7 +14,6 @@ function pretty_print(io::IO, x)
     # Determine column width for alignment
     maxlen = maximum(length.(String.(fields)))
 
-    println(io, "=== $(T) ===")
     for (f, v) in zip(fields, values)
         fname = String(f)
         padding = " " ^ (maxlen - length(fname))

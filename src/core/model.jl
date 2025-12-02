@@ -5,7 +5,7 @@ using JuMP, HiGHS, Gurobi
 using ..Variables
 using ..Components
 
-export run_model, get_parameter
+export run_model, get_parameter, build_model, optimize_model, get_output
 
 function get_parameter(input, param_name, keys)
     if ! (keys isa AbstractArray || keys isa Tuple)
@@ -28,9 +28,8 @@ end
 
 function run_optimization(input::Input)
     model,vars,constraints = build_model(input)
+    set_attribute(model, "Method", 1)
     optimize_model(model)    
-    write_to_file(model, "model.mps")
-    # get_iis_model(model)
     output = get_output(input, vars)
     return output
 end
