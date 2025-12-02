@@ -1,7 +1,11 @@
-include("./src/core/CESM.jl")
-include("./src/sensitivity/PALM.jl")
+include("../../core/CESM.jl")
+include("../utils.jl")
+include("../PALM.jl")
+
 
 using Serialization
+using .Utils
+using .PALM
 
 log_folder_path = "./logs"
 if !isdir(log_folder_path)
@@ -14,7 +18,7 @@ if !isdir(result_folder_path)
 end
 
 settings = [
-    PALM.Setting(
+    Utils.Setting(
         config_file = "./examples/House/config.json",
         manipulation_bound = 0.05,
         manipulated_cp = "PP_Wind",
@@ -27,7 +31,7 @@ settings = [
         last_year = 2050,
         log_folder_path = log_folder_path
     ),
-    PALM.Setting(
+    Utils.Setting(
         config_file = "./examples/House/config.json",
         manipulation_bound = 0.05,
         manipulated_cp = "PP_Wind",
@@ -40,7 +44,7 @@ settings = [
         last_year = 2050,
         log_folder_path = log_folder_path
     ),
-    PALM.Setting(
+    Utils.Setting(
         config_file = "./examples/House/config.json",
         manipulation_bound = 0.05,
         manipulated_cp = "PP_Wind",
@@ -53,7 +57,7 @@ settings = [
         last_year = 2050,
         log_folder_path = log_folder_path
     ),
-    PALM.Setting(
+    Utils.Setting(
         config_file = "./examples/House/config.json",
         manipulation_bound = 0.05,
         manipulated_cp = "PP_Wind",
@@ -71,6 +75,6 @@ settings = [
 for setting in settings
     delta_values = PALM.run_PALM(setting)
     if delta_values !== nothing
-        serialize(joinpath(result_folder_path, "$(PALM.logfile_name(setting)).jls"), delta_values)
+        serialize(joinpath(result_folder_path, "PALM_$(Utils.logfile_name(setting)).jls"), delta_values)
     end
 end
