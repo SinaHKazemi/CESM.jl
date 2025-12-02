@@ -85,7 +85,7 @@ end
 function logfile_name(s::Setting)
     data = sprint(io -> show(io, s))
     h = bytes2hex(sha1(data))[1:10]  # shortened hash
-    return "log_$(s.manipulated_cp)_$(s.target_cp)_$(h)"
+    return "$(s.manipulated_cp)_$(s.target_cp)_$(h)"
 end
 
 function simple_file_logger(path::String)
