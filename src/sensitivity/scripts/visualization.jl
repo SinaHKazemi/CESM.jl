@@ -1,84 +1,64 @@
 include("../../core/CESM.jl")
 include("../utils.jl")
 include("../PADM.jl")
-
+include("./settings.jl")
 
 using Serialization
 using .Utils
+using .Settings
 
 using GLMakie
 GLMakie.activate!()
 # using CairoMakie
 
+function plot(input, output, changed_input, changed_output, setting)
+    manipulated_cp =  first(filter(p -> p.name == setting.manipulated_cp, input.processes))
+    target_cp = first(filter(p -> p.name == setting.target_cp, input.processes))
 
-log_folder_path = "./logs"
-result_folder_path = "./results"
-
-settings = [
-    Utils.Setting(
-        config_file = "./examples/House/config.json",
-        manipulation_bound = 0.1,
-        manipulated_cp = "Demand_Electricity",
-        target_cp = "PP_PV",
-        target_change = 0.1,
-        init_mu = 1.0,
-        min_stationary_change = 1e-4,
-        min_obj_improvement_rate = 1e-2,
-        last_year = 2050,
-        log_folder_path = log_folder_path
-    ),
-    Utils.Setting(
-        config_file = "./examples/House/config.json",
-        manipulation_bound = 0.05,
-        manipulated_cp = "Demand_Electricity",
-        target_cp = "PP_PV",
-        target_change = 0.3,
-        init_mu = 1.0,
-        min_stationary_change = 1e-4,
-        min_obj_improvement_rate = 1e-2,
-        last_year = 2050,
-        log_folder_path = log_folder_path
-    ),
-    Utils.Setting(
-        config_file = "./examples/House/config.json",
-        manipulation_bound = 0.05,
-        manipulated_cp = "Demand_Electricity",
-        target_cp = "PP_PV",
-        target_change = 0.4,
-        init_mu = 1.0,
-        min_stationary_change = 1e-4,
-        min_obj_improvement_rate = 1e-2,
-        last_year = 2050,
-        log_folder_path = log_folder_path
-    ),
-    Utils.Setting(
-        config_file = "./examples/House/config.json",
-        manipulation_bound = 0.05,
-        manipulated_cp = "Demand_Electricity",
-        target_cp = "PP_PV",
-        target_change = 0.5,
-        init_mu = 1.0,
-        min_stationary_change = 1e-4,
-        min_obj_improvement_rate = 1e-2,
-        last_year = 2050,
-        log_folder_path = log_folder_path
-    )
-]
+    series = input.parameters["output_profile"][manipulated_cp]
+    manipulated_series = changed_input.parameters["output_profile"][manipulated_cp]
 
 
-for setting in settings
-    # find the name of the file
+    x = 1:length(input.timesteps)
+    fig = Figure()
+    # ax = Axis(fig[1, 1], title = "Two Vectors", xlabel = "Index", ylabel = "Value")
+    ax1 = Axis(fig[1, 1], title = "Two Vectors", xlabel = "Index", ylabel = "Value")
+    # ax2 = Axis(fig[1, 1], yticklabelcolor = :red, yaxisposition = :right)
+    # demand = [series[t] for t in input.timesteps] .* input.parameters["min_energy_out"][manipulated_cp][CESM.Components.Year(2030)]
+    demand_changed = [changed_output["energy_out_time"][manipulated_cp, input.years[end], t] for t in input.timesteps]
+    demand = [get(output["energy_out_time"], (manipulated_cp, input.years[end], t), 0) for t in input.timesteps]
+    println(length([get(input.parameters["availability_profile"][target_cp],t,0) for t in input.timesteps]))
+    lines!(ax1, x, demand_changed, color = :red, label = "changed")
+    lines!(ax1, x, demand, color = :blue, label = "base")
+    cap = (8760/length(input.timesteps)) * get(output["active_capacity"],(target_cp,input.years[end]),0)
+    cap_changed = (8760/length(input.timesteps)) * get(changed_output["active_capacity"],(target_cp,input.years[end]),0)
+    PV = [get(output["energy_out_time"], (target_cp, input.years[end], t), 0) for t in input.timesteps]
+    PV_changed = [get(changed_output["energy_out_time"], (target_cp, input.years[end], t), 0) for t in input.timesteps]
+    # output["new_capacity"][target_cp,y]
+    lines!(ax1, x, [input.parameters["availability_profile"][target_cp][t] * cap for t in input.timesteps], color = :blue, label = "availability", linestyle = :dash)
+    lines!(ax1, x, [input.parameters["availability_profile"][target_cp][t] * cap_changed for t in input.timesteps], color = :red, label = "availability changed", linestyle = :dash)
+    lines!(ax1, x, PV, color = :green, label = "production", linestyle = :dash)
+    lines!(ax1, x, PV_changed, color = :orange, label = "production changed", linestyle = :dash)
+    band!(ax1, x, PV, max.(PV, PV_changed), color=(:red, 0.5))
+    xlims!(ax1, 1, length(input.timesteps))
+    # xlims!(ax2, 1, length(input.timesteps))
+    axislegend(ax1, position = :lt)
+    fig
+    display(fig)
+end
+
+for setting in Settings.PADM_settings[1:end]
+    # print the hash of the setting
+    println(Utils.logfile_name(setting))
     # build the original model
     input = CESM.Parser.parse_input(setting.config_file)
     # run the original model
-    # output = CESM.Model.run_optimization(input)
+    output = CESM.Model.run_optimization(input)
+    # output = nothing
     # change the input according to PALM
-    println(Utils.logfile_name(setting))
-    # continue
-    println(joinpath(result_folder_path, "PADM_$(Utils.logfile_name(setting)).jls"))
-    delta_values = deserialize(joinpath(result_folder_path, "PADM_$(Utils.logfile_name(setting)).jls"))
-    # println(maximum(values(delta_values)))
+    delta_values = deserialize(joinpath(Settings.result_folder_path, "PADM_$(Utils.logfile_name(setting)).jls"))
     if delta_values === nothing
+        println("No delta values found for setting $(Utils.logfile_name(setting)), skipping...")
         continue
     end
     manipulated_cp =  first(filter(p -> p.name == setting.manipulated_cp, input.processes))
@@ -91,9 +71,12 @@ for setting in settings
     end
     # run the changed model
     changed_output = CESM.Model.run_optimization(changed_input)
+    # changed_output = nothing
+    plot(input, output, changed_input, changed_output, setting)
     break
-
 end
+
+
 
 # serialize("upper_values_b.jls", upper_values)
 # serialize("output_b.jls", output)
@@ -112,10 +95,10 @@ end
 # upper_values_15 = deserialize("upper_values_PV_15_12.jls")
 
 
-CHANGED_PROFILE_PROCESS = "Demand_Electricity"
-CHANGED_CAPACITY_PROCESS = "PP_PV"
-changed_profile_process =  first(filter(p -> p.name == CHANGED_PROFILE_PROCESS, input.processes))
-changed_capacity_process = first(filter(p -> p.name == CHANGED_CAPACITY_PROCESS, input.processes))
+# CHANGED_PROFILE_PROCESS = "Demand_Electricity"
+# CHANGED_CAPACITY_PROCESS = "PP_PV"
+# changed_profile_process =  first(filter(p -> p.name == CHANGED_PROFILE_PROCESS, input.processes))
+# changed_capacity_process = first(filter(p -> p.name == CHANGED_CAPACITY_PROCESS, input.processes))
 
 
 

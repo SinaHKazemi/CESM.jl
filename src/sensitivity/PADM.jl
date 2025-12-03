@@ -169,6 +169,7 @@ function run_PADM(setting::Setting)
         outer_counter += 1
         inner_counter = 0
         total_obj = Inf64
+        duality_gap = Inf64
         while true
             @info "Inner counter : $(inner_counter)"
             @info "Total inner counter : $(total_inner_counter)"
@@ -180,7 +181,6 @@ function run_PADM(setting::Setting)
             update_dual_obj(input, dual_model, new_upper_values, dual_vars, changed_profile_process)
             optimize!(dual_model)
             new_total_obj = objective_value(primal_model)
-
 
             @info "total obj: $(objective_value(primal_model))"
             @info "primal obj: $(value(primal_obj))"
@@ -200,11 +200,20 @@ function run_PADM(setting::Setting)
         if abs(value(primal_obj) - value(dual_obj)) < setting.duality_gap_tolerance || outer_counter > setting.max_outer_iterations
             break
         else
+            duality_gap = abs(value(primal_obj) - value(dual_obj))
             mu *= 2
         end
     end
+    @info "Algorithm finished."
     test_primal(input, input_without_profile, changed_profile_process, changed_capacity_process, upper_values)
-    return upper_values
+    if abs(value(primal_obj) - value(dual_obj)) < setting.duality_gap_tolerance
+        @info "PADM algorithm converged successfully."
+        return upper_values
+    else
+        @warn "PADM algorithm did not converge within the maximum number of iterations."
+        return nothing
+    end
+    
 end
 
 end

@@ -28,7 +28,7 @@ end
 
 function run_optimization(input::Input)
     model,vars,constraints = build_model(input)
-    set_attribute(model, "Method", 1)
+    # set_attribute(model, "Method", 1)
     optimize_model(model)    
     output = get_output(input, vars)
     return output
