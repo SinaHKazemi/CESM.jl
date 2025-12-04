@@ -97,11 +97,11 @@ PADM_settings = [
 
 PALM_settings = [
     Utils.Setting(
-        config_file = "./examples/House/House.json",
+        config_file = "./examples/House/House_PV_Wind.json",
         manipulation_bound = 0.05,
         manipulated_cp = "PP_Wind",
-        target_cp = "Battery",
-        target_change = 0.2,
+        target_cp = "PP_PV",
+        target_change = 0.05,
         init_mu = 1.0,
         init_trust_region_radius = 0.05,
         min_stationary_change = 1e-4,
