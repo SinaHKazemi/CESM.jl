@@ -71,36 +71,48 @@ function plot_PALM(input, output, changed_input, changed_output, setting)
 end
 
 
-
-for setting in Settings.PADM_settings[1:end]
-    # print the hash of the setting
-    println(Utils.logfile_name(setting))
-    # build the original model
-    input = CESM.Parser.parse_input(setting.config_file)
-    # run the original model
-    output = CESM.Model.run_optimization(input)
-    # output = nothing
-    # change the input according to PALM
-    delta_values = deserialize(joinpath(Settings.result_folder_path, "PADM_$(Utils.logfile_name(setting)).jls"))
-    if delta_values === nothing
-        println("No delta values found for setting $(Utils.logfile_name(setting)), skipping...")
-        continue
+function visualize(name::String)
+    if name == "PADM"
+        settings = Settings.PADM_settings
+    elseif name == "PALM"
+        settings = Settings.PALM_settings
+    else
+        error("Unknown method name: $name")
     end
-    manipulated_cp =  first(filter(p -> p.name == setting.manipulated_cp, input.processes))
-    println(manipulated_cp)
-    target_cp = first(filter(p -> p.name == setting.target_cp, input.processes))
-    changed_input = deepcopy(input)
-    for t in input.timesteps
-        delta_values[t]
-        changed_input.parameters["output_profile"][manipulated_cp][t] *= (1 + delta_values[t])
+    for setting in settings[1:end]
+        # print the hash of the setting
+        println(Utils.logfile_name(setting))
+        # build the original model
+        input = CESM.Parser.parse_input(setting.config_file)
+        # run the original model
+        output = CESM.Model.run_optimization(input)
+        # output = nothing
+        # change the input according to PALM
+        delta_values = deserialize(joinpath(Settings.result_folder_path, "$(name)_$(Utils.logfile_name(setting)).jls"))
+        if delta_values === nothing
+            println("No delta values found for setting $(Utils.logfile_name(setting)), skipping...")
+            continue
+        end
+        manipulated_cp =  first(filter(p -> p.name == setting.manipulated_cp, input.processes))
+        println(manipulated_cp)
+        target_cp = first(filter(p -> p.name == setting.target_cp, input.processes))
+        changed_input = deepcopy(input)
+        for t in input.timesteps
+            delta_values[t]
+            changed_input.parameters[if name == "PADM" "output_profile" else "availability_profile" end][manipulated_cp][t] *= (1 + delta_values[t])
+        end
+        # run the changed model
+        changed_output = CESM.Model.run_optimization(changed_input)
+        # changed_output = nothing
+        if name == "PADM"
+            plot_PADM(input, output, changed_input, changed_output, setting)
+        elseif name == "PALM"
+            plot_PALM(input, output, changed_input, changed_output, setting)
+        end
     end
-    # run the changed model
-    changed_output = CESM.Model.run_optimization(changed_input)
-    # changed_output = nothing
-    plot_PADM(input, output, changed_input, changed_output, setting)
-    break
 end
 
+visualize("PALM")
 
 
 # serialize("upper_values_b.jls", upper_values)

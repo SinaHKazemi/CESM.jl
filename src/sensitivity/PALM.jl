@@ -5,8 +5,8 @@ using JuMP, Dualization, Gurobi
 using Logging, LoggingExtras
 using SHA
 
-include("../core/CESM.jl")
-using .CESM
+using ..CESM
+using ..CESM.Model:  get_parameter
 using ..Utils
 
 export run_PALM
