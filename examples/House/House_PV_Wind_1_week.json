@@ -186,7 +186,7 @@
         "Import_Electricity": {
             "carrier_in": "Dummy",
             "carrier_out": "Electricity",
-            "operational_cost_energy": 0.50,
+            "operational_cost_energy": 0.60,
             "process_color": "lightcyan",
             "process_order": 1
         },
@@ -207,6 +207,16 @@
             "availability_profile": "./time_series/PV_availability_rescaled.txt",
             "process_color": "darkgoldenrod1",
             "process_order": 406
+        },
+        "PP_Wind": {
+            "carrier_in": "Dummy",
+            "carrier_out": "Electricity",
+            "lifetime": 25,
+            "operational_cost_power": 20,
+            "capital_cost_power": 3500,
+            "availability_profile": "./time_series/Onshore_Wind_Availability_rescaled.txt",
+            "process_color": "royalblue1",
+            "process_order": 409
         }
     }
 }   

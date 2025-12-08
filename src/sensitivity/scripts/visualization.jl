@@ -6,66 +6,199 @@ include("./settings.jl")
 using Serialization
 using .Utils
 using .Settings
+using .CESM
 
-using GLMakie
-GLMakie.activate!()
-# using CairoMakie
+using JuMP
 
-function plot_PADM(input, output, changed_input, changed_output, setting)
+# using GLMakie
+# GLMakie.activate!()
+using CairoMakie
+
+function plot_PADM(input, output, changed_input, changed_output, setting, delta_values=nothing)
     manipulated_cp =  first(filter(p -> p.name == setting.manipulated_cp, input.processes))
-    target_cp = first(filter(p -> p.name == setting.target_cp, input.processes))
+    
+    # wind_cp = first(filter(p -> p.name == "PP_Wind", input.processes))
+    # import_cp = first(filter(p -> p.name == "Import_Electricity", input.processes))
+    # CESM.Visualization.plot_P_Y(input, output, "new_capacity"; carrier_out = "Electricity")
+    # CESM.Visualization.plot_P_Y(input, changed_output, "new_capacity"; carrier_out = "Electricity")
 
-    series = input.parameters["output_profile"][manipulated_cp]
-    manipulated_series = changed_input.parameters["output_profile"][manipulated_cp]
+    # series = input.parameters["output_profile"][manipulated_cp]
+    # manipulated_series = changed_input.parameters["output_profile"][manipulated_cp]
 
     x = 1:length(input.timesteps)
-    fig = Figure()
-    ax = Axis(fig[1, 1], title = "Two Vectors", xlabel = "Index", ylabel = "Value")
+    fig = Figure(size = (900, 900))
+    i = 0 # row of the subplot
+    axes = []
+
+    ax = Axis(fig[i, 1], title = "Electricity Demand", ylabel = "kW")
+    axes = push!(axes, ax)
     demand_changed = [changed_output["energy_out_time"][manipulated_cp, input.years[end], t] for t in input.timesteps]
     demand = [get(output["energy_out_time"], (manipulated_cp, input.years[end], t), 0) for t in input.timesteps]
-    println(length([get(input.parameters["availability_profile"][target_cp],t,0) for t in input.timesteps]))
-    lines!(ax, x, demand_changed, color = :red, label = "changed")
-    lines!(ax, x, demand, color = :blue, label = "base")
+    lines!(ax, x, demand_changed, color = :red, label = "Changed", linestyle = :dot)
+    lines!(ax, x, demand, color = :blue, label = "Base")
+    Legend(fig[i, 2], ax)
+
+    i += 1
+    target_cp = first(filter(p -> p.name == setting.target_cp, input.processes))
+    ax = Axis(fig[i, 1], title = "PV", ylabel = "kW")
+    axes = push!(axes, ax)
     cap = (8760/length(input.timesteps)) * get(output["active_capacity"],(target_cp,input.years[end]),0)
     cap_changed = (8760/length(input.timesteps)) * get(changed_output["active_capacity"],(target_cp,input.years[end]),0)
     PV = [get(output["energy_out_time"], (target_cp, input.years[end], t), 0) for t in input.timesteps]
     PV_changed = [get(changed_output["energy_out_time"], (target_cp, input.years[end], t), 0) for t in input.timesteps]
-    # output["new_capacity"][target_cp,y]
-    lines!(ax, x, [input.parameters["availability_profile"][target_cp][t] * cap for t in input.timesteps], color = :blue, label = "availability", linestyle = :dash)
-    lines!(ax, x, [input.parameters["availability_profile"][target_cp][t] * cap_changed for t in input.timesteps], color = :red, label = "availability changed", linestyle = :dash)
-    lines!(ax, x, PV, color = :green, label = "production", linestyle = :dash)
-    lines!(ax, x, PV_changed, color = :orange, label = "production changed", linestyle = :dash)
-    band!(ax, x, PV, max.(PV, PV_changed), color=(:red, 0.5))
-    xlims!(ax, 1, length(input.timesteps))
-    axislegend(ax, position = :lt)
-    fig
-    display(fig)
+    lines!(ax, x, [input.parameters["availability_profile"][target_cp][t] * cap for t in input.timesteps], color = :blue, label = "Availability", linestyle = :dash)
+    lines!(ax, x, [input.parameters["availability_profile"][target_cp][t] * cap_changed for t in input.timesteps], color = :red, label = "Changed Availability", linestyle = :dash)
+    lines!(ax, x, PV_changed, color = :red, label = "Changed Production", linestyle = :dot)
+    lines!(ax, x, PV, color = :blue, label = "Base Production")
+    Legend(fig[i, 2], ax)
+
+    
+    if length(filter(p -> p.name == "PP_Wind", input.processes)) > 0
+        i += 1
+        wind_cp = first(filter(p -> p.name == "PP_Wind", input.processes))
+        ax = Axis(fig[i, 1], title = "Wind", ylabel = "kW")
+        axes = push!(axes, ax)
+        Wind = [get(output["energy_out_time"], (wind_cp, input.years[end], t), 0) for t in input.timesteps]
+        Wind_changed = [get(changed_output["energy_out_time"], (wind_cp, input.years[end], t), 0) for t in input.timesteps]
+        cap = (8760/length(input.timesteps)) * get(output["active_capacity"],(wind_cp,input.years[end]),0)
+        cap_changed = (8760/length(input.timesteps)) * get(changed_output["active_capacity"],(wind_cp,input.years[end]),0)
+        lines!(ax, x, Wind, color = :blue, label = "Production")
+        lines!(ax, x, Wind_changed, color = :red, label = "Changed Production", linestyle = :dot)
+        lines!(ax, x, [input.parameters["availability_profile"][wind_cp][t] * cap for t in input.timesteps], color = :blue, label = "Availability", linestyle = :dash)
+        lines!(ax, x, [input.parameters["availability_profile"][wind_cp][t] * cap_changed for t in input.timesteps], color = :red, label = "Changed Availability", linestyle = :dash)
+        Legend(fig[i, 2], ax)
+    end
+
+    i += 1
+    ax = Axis(fig[i, 1], title = "Electricity Import", ylabel = "kW")
+    axes = push!(axes, ax)
+    import_cp = first(filter(p -> p.name == "Import_Electricity", input.processes))
+    elec_import = [get(output["energy_out_time"], (import_cp, input.years[end], t), 0) for t in input.timesteps]
+    elec_import_changed = [get(changed_output["energy_out_time"], (import_cp, input.years[end], t), 0) for t in input.timesteps]
+    lines!(ax, x, elec_import , color = :brown, label = "Base")
+    lines!(ax, x, elec_import_changed , color = :gray, label = "Changed", linestyle = :dot)
+    Legend(fig[i, 2], ax)
+
+
+    # band!(ax, x, PV, max.(PV, PV_changed), color=(:red, 0.5))
+    
+    # axislegend(ax, position = :lt)
+    axes[end].xlabel = "Time Steps"
+    ticks = [index for (index,t) in enumerate(input.timesteps) if abs(delta_values[t]) > 1e-4 && abs(delta_values[t]) > abs(delta_values[t-1]) && abs(delta_values[t]) > abs(delta_values[t+1])]
+    linkxaxes!(axes...)
+    for ax in axes
+        xlims!(ax, 1, length(input.timesteps))
+        ax.xticks = (ticks)
+        ax.xticklabelrotation = 3.14/4
+    end
+    
+    save("figure.pdf", fig, pdf_version="1.4")
+    # fig
+    # display(fig)
 end
 
-function plot_PALM(input, output, changed_input, changed_output, setting)
+function plot_PALM(input, output, changed_input, changed_output, setting, delta_values)
     manipulated_cp =  first(filter(p -> p.name == setting.manipulated_cp, input.processes))
-    target_cp = first(filter(p -> p.name == setting.target_cp, input.processes))
+    println(maximum(abs.(values(delta_values))))
 
     x = 1:length(input.timesteps)
-    fig = Figure()
-    ax = Axis(fig[1, 1], title = "Two Vectors", xlabel = "Index", ylabel = "Value")
-    renewable_changed = [changed_output["energy_out_time"][manipulated_cp, input.years[end], t] for t in input.timesteps]
-    renewable = [get(output["energy_out_time"], (manipulated_cp, input.years[end], t), 0) for t in input.timesteps]
-    println(length([get(input.parameters["availability_profile"][target_cp],t,0) for t in input.timesteps]))#
-    lines!(ax, x, renewable_changed, color = :red, label = "changed")
-    lines!(ax, x, renewable, color = :blue, label = "base")
-    cap = (8760/length(input.timesteps)) * get(output["active_capacity"],(target_cp,input.years[end]),0)
-    cap_changed = (8760/length(input.timesteps)) * get(changed_output["active_capacity"],(target_cp,input.years[end]),0)
+    fig = Figure(size = (900, 1200))
+    i = 0 # row of the subplot
+    axes = []
+
+    if length(filter(p -> p.name == "PP_Wind", input.processes)) > 0
+        wind_cp = first(filter(p -> p.name == "PP_Wind", input.processes))
+    else
+        wind_cp = nothing
+    end
+    target_cp = first(filter(p -> p.name == setting.target_cp, input.processes))
+    demand_cp = first(filter(p -> p.name == "Demand_Electricity", input.processes))
+
+    ax = Axis(fig[i, 1], title = "Electricity Demand", ylabel = "kW")
+    axes = push!(axes, ax)
+
+    demand = [get(output["energy_out_time"], (demand_cp, input.years[end], t), 0) for t in input.timesteps]
     PV = [get(output["energy_out_time"], (target_cp, input.years[end], t), 0) for t in input.timesteps]
     PV_changed = [get(changed_output["energy_out_time"], (target_cp, input.years[end], t), 0) for t in input.timesteps]
-    # output["new_capacity"][target_cp,y]
-    lines!(ax, x, [input.parameters["availability_profile"][target_cp][t] * cap for t in input.timesteps], color = :blue, label = "availability", linestyle = :dash)
-    lines!(ax, x, [input.parameters["availability_profile"][target_cp][t] * cap_changed for t in input.timesteps], color = :red, label = "availability changed", linestyle = :dash)
-    lines!(ax, x, PV, color = :green, label = "production", linestyle = :dash)
-    lines!(ax, x, PV_changed, color = :orange, label = "production changed", linestyle = :dash)
-    band!(ax, x, PV, max.(PV, PV_changed), color=(:red, 0.5))
-    xlims!(ax, 1, length(input.timesteps))
-    axislegend(ax, position = :lt)
+    
+    if wind_cp !== nothing
+        Wind = [get(output["energy_out_time"], (wind_cp, input.years[end], t), 0) for t in input.timesteps]
+        lines!(ax, x, Wind .+ PV, color = :red, label = "PV + Wind Base")
+        Wind_changed = [get(changed_output["energy_out_time"], (manipulated_cp, input.years[end], t), 0) for t in input.timesteps]
+        lines!(ax, x, PV_changed .+ Wind_changed, color = :green, label = "PV + Demand Base", linestyle = :dot)
+    end
+    lines!(ax, x, demand, color = :blue, label = "Demand")
+    Legend(fig[i, 2], ax)
+
+    i += 1
+    
+    ax = Axis(fig[i, 1], title = "PV", ylabel = "kW")
+    axes = push!(axes, ax)
+    sum_cap = sum(get(output["new_capacity"],(target_cp,y),0) for y in input.years if Int(y) <= setting.last_year)
+
+    println([get(output["new_capacity"],(target_cp,y),0) for y in input.years])
+    println([get(changed_output["new_capacity"],(target_cp,y),0) for y in input.years])
+    sum_cap_changed = sum(get(changed_output["new_capacity"],(target_cp,y),0) for y in input.years if Int(y) <= setting.last_year)
+    println("Base PV capacity: $sum_cap, Changed PV capacity: $sum_cap_changed, increase: $((sum_cap_changed/sum_cap)-1)")
+    cap = (8760/length(input.timesteps)) * (get(output["active_capacity"],(target_cp,input.years[end]),0))
+    cap_changed = (8760/length(input.timesteps)) * (get(changed_output["active_capacity"],(target_cp,input.years[end]),0))
+    PV = [get(output["energy_out_time"], (target_cp, input.years[end], t), 0) for t in input.timesteps]
+    PV_changed = [get(changed_output["energy_out_time"], (target_cp, input.years[end], t), 0) for t in input.timesteps]
+    lines!(ax, x, [input.parameters["availability_profile"][target_cp][t] * cap for t in input.timesteps], color = :blue, label = "PV Availability", linestyle = :dash)
+    lines!(ax, x, [changed_input.parameters["availability_profile"][target_cp][t] * cap_changed for t in input.timesteps], color = :red, label = "PV Changed Availability", linestyle = :dash)
+    lines!(ax, x, PV_changed, color = :red, label = "PV Changed Production", linestyle = :dot)
+    lines!(ax, x, PV, color = :green, label = "PV Base Production")
+    Legend(fig[i, 2], ax)
+
+    
+    if wind_cp !== nothing
+        i += 1
+        ax = Axis(fig[i, 1], title = "Wind", ylabel = "kW")
+        axes = push!(axes, ax)
+        Wind = [get(output["energy_out_time"], (wind_cp, input.years[end], t), 0) for t in input.timesteps]
+        Wind_changed = [get(changed_output["energy_out_time"], (wind_cp, input.years[end], t), 0) for t in input.timesteps]
+        cap = (8760/length(input.timesteps)) * get(output["active_capacity"],(wind_cp,input.years[end]),0)
+        cap_changed = (8760/length(input.timesteps)) * get(changed_output["active_capacity"],(wind_cp,input.years[end]),0)
+        lines!(ax, x, Wind, color = :blue, label = "Production")
+        lines!(ax, x, Wind_changed, color = :red, label = "Changed Production", linestyle = :dot)
+        lines!(ax, x, [input.parameters["availability_profile"][wind_cp][t] * cap for t in input.timesteps], color = :blue, label = "Availability", linestyle = :dash)
+        lines!(ax, x, [changed_input.parameters["availability_profile"][wind_cp][t] * cap_changed for t in input.timesteps], color = :red, label = "Changed Availability", linestyle = :dash)
+        Legend(fig[i, 2], ax)
+    end
+
+    i += 1
+    ax = Axis(fig[i, 1], title = "Availability", ylabel = "Availability")
+    axes = push!(axes, ax)
+    lines!(ax, x, [input.parameters["availability_profile"][manipulated_cp][t] for t in input.timesteps], color = :blue, label = "Wind")
+    lines!(ax, x, [changed_input.parameters["availability_profile"][manipulated_cp][t] for t in input.timesteps], color = :red, label = "Changed Wind", linestyle = :dot)
+    lines!(ax, x, [delta_values[t] for t in input.timesteps], color = :green, label = "delta")
+    # lines!(ax, x, [changed_input.parameters["availability_profile"][target_cp][t] for t in input.timesteps], color = :purple, label = "PV")
+    Legend(fig[i, 2], ax)
+
+    i += 1
+    ax = Axis(fig[i, 1], title = "Electricity Import", ylabel = "kW")
+    axes = push!(axes, ax)
+    import_cp = first(filter(p -> p.name == "Import_Electricity", input.processes))
+    elec_import = [get(output["energy_out_time"], (import_cp, input.years[end], t), 0) for t in input.timesteps]
+    elec_import_changed = [get(changed_output["energy_out_time"], (import_cp, input.years[end], t), 0) for t in input.timesteps]
+    lines!(ax, x, elec_import , color = :brown, label = "Base")
+    lines!(ax, x, elec_import_changed , color = :gray, label = "Changed", linestyle = :dot)
+    Legend(fig[i, 2], ax)
+
+
+    # band!(ax, x, PV, max.(PV, PV_changed), color=(:red, 0.5))
+    
+    # axislegend(ax, position = :lt)
+    axes[end].xlabel = "Time Steps"
+    ticks = [index for (index,t) in enumerate(input.timesteps) if abs(delta_values[t]) > 1e-4 && abs(delta_values[t]) > abs(delta_values[t-1]) && abs(delta_values[t]) > abs(delta_values[t+1])]
+    linkxaxes!(axes...)
+    for ax in axes
+        xlims!(ax, 1, length(input.timesteps))
+        ax.xticks = (ticks)
+        ax.xticklabelrotation = 3.14/4
+    end
+    
+    save("figure.pdf", fig, pdf_version="1.4")
     fig
     display(fig)
 end
@@ -79,7 +212,8 @@ function visualize(name::String)
     else
         error("Unknown method name: $name")
     end
-    for setting in settings[1:end]
+    for setting in settings[1:1]
+        println("Visualizing for setting:")
         # print the hash of the setting
         println(Utils.logfile_name(setting))
         # build the original model
@@ -94,7 +228,6 @@ function visualize(name::String)
             continue
         end
         manipulated_cp =  first(filter(p -> p.name == setting.manipulated_cp, input.processes))
-        println(manipulated_cp)
         target_cp = first(filter(p -> p.name == setting.target_cp, input.processes))
         changed_input = deepcopy(input)
         for t in input.timesteps
@@ -102,12 +235,17 @@ function visualize(name::String)
             changed_input.parameters[if name == "PADM" "output_profile" else "availability_profile" end][manipulated_cp][t] *= (1 + delta_values[t])
         end
         # run the changed model
-        changed_output = CESM.Model.run_optimization(changed_input)
+        model, vars, constraints = CESM.Model.build_model(changed_input)
+        CESM.Model.optimize_model(model)
+        changed_output = CESM.Model.get_output(changed_input, vars)
+
+
+        # changed_output = CESM.Model.run_optimization(changed_input)
         # changed_output = nothing
         if name == "PADM"
-            plot_PADM(input, output, changed_input, changed_output, setting)
+            plot_PADM(input, output, changed_input, changed_output, setting, delta_values)
         elseif name == "PALM"
-            plot_PALM(input, output, changed_input, changed_output, setting)
+            plot_PALM(input, output, changed_input, changed_output, setting, delta_values)
         end
     end
 end

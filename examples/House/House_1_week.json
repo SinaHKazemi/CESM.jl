@@ -207,6 +207,27 @@
             "availability_profile": "./time_series/PV_availability_rescaled.txt",
             "process_color": "darkgoldenrod1",
             "process_order": 406
+        },
+        "PP_Wind": {
+            "carrier_in": "Dummy",
+            "carrier_out": "Electricity",
+            "lifetime": 25,
+            "operational_cost_power": 20,
+            "capital_cost_power": 3500,
+            "availability_profile": "./time_series/Onshore_Wind_Availability_rescaled.txt",
+            "process_color": "royalblue1",
+            "process_order": 409
+        },
+        "Battery": {
+            "_comment": "energy storage capacity of the battery is equal to the capacity of the conversion process(max power in and out) divided by c_rate",
+            "carrier_in": "Electricity",
+            "carrier_out": "Electricity",
+            "lifetime": 15,
+            "capital_cost_power": 2000,
+            "is_storage": true,
+            "c_rate": 0.3,
+            "process_color": "green2",
+            "process_order": 1001
         }
     }
 }   

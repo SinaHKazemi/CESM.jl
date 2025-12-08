@@ -239,6 +239,7 @@ function run_PALM(setting::Setting)
         end
         if value(primal_obj) - value(dual_obj) < 1e-2
             @info "Converged in outer loop"
+            @info "final capacity: $(sum(value(vars["new_capacity"][target_cp,y]) for y in years if Int(y)<=setting.last_year))"
             return (delta_values)
             break
         end
