@@ -28,20 +28,20 @@ PADM_settings = [
     #     max_outer_iterations = 30,
     #     max_inner_iterations = 20
     # ),
-    Utils.Setting(
-        config_file = "./examples/House/House_PV_1_week.json",
-        manipulation_bound = 0.20,
-        manipulated_cp = "Demand_Electricity",
-        target_cp = "PP_PV",
-        target_change = 0.2,
-        init_mu = 1.0,
-        min_stationary_change = 1e-4,
-        min_obj_improvement_rate = 1e-2,
-        last_year = 2050,
-        log_folder_path = log_folder_path,
-        max_outer_iterations = 30,
-        max_inner_iterations = 20
-    ),
+    # Utils.Setting(
+    #     config_file = "./examples/House/House_PV_1_week.json",
+    #     manipulation_bound = 0.20,
+    #     manipulated_cp = "Demand_Electricity",
+    #     target_cp = "PP_PV",
+    #     target_change = 0.2,
+    #     init_mu = 1.0,
+    #     min_stationary_change = 1e-4,
+    #     min_obj_improvement_rate = 1e-2,
+    #     last_year = 2050,
+    #     log_folder_path = log_folder_path,
+    #     max_outer_iterations = 30,
+    #     max_inner_iterations = 20
+    # ),
     # Utils.Setting(
     #     config_file = "./examples/House/House_1_week.json",
     #     manipulation_bound = 0.03,
@@ -119,11 +119,39 @@ PADM_settings = [
     #     min_obj_improvement_rate = 1e-2,
     #     last_year = 2050,
     #     log_folder_path = log_folder_path
-    # )
+    # ),
+    Utils.Setting(
+        config_file = "./examples/House/House_8760.json",
+        manipulation_bound = 0.1,
+        manipulated_cp = "Demand_Electricity",
+        target_cp = "PP_PV",
+        target_change = 0.2,
+        init_mu = 1.0,
+        min_stationary_change = 1e-4,
+        min_obj_improvement_rate = 1e-2,
+        last_year = 2050,
+        log_folder_path = log_folder_path,
+        max_outer_iterations = 30,
+        max_inner_iterations = 20
+    ),
 ]
 
 
 PALM_settings = [
+    Utils.Setting(
+        config_file = "./examples/House/House_8760.json",
+        manipulation_bound = 0.1,
+        manipulated_cp = "PP_Wind",
+        target_cp = "PP_PV",
+        target_change = 0.2,
+        init_mu = 1.0,
+        min_stationary_change = 1e-4,
+        min_obj_improvement_rate = 1e-2,
+        last_year = 2050,
+        log_folder_path = log_folder_path,
+        max_outer_iterations = 30,
+        max_inner_iterations = 20
+    ),
     # Utils.Setting(
     #     config_file = "./examples/House/House_PV_1_week.json",
     #     manipulation_bound = 0.15,

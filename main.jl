@@ -38,8 +38,8 @@ using JuMP
 
 include("./src/core/CESM.jl")
 using .CESM
-# input = CESM.Parser.parse_input("./examples/House/config.json");
-input = CESM.Parser.parse_input("./examples/House_PV_Battery/config.json");
+input = CESM.Parser.parse_input("./examples/House/House_8760.json");
+# input = CESM.Parser.parse_input("./examples/House_PV_Battery/config.json");
 # input = CESM.Parser.parse_input("./examples/Germany/GETM.json");
 @time output = CESM.Model.run_optimization(input)
 using Serialization
@@ -50,13 +50,13 @@ using Serialization
 
 # serialize("output_House.jls", output)
 # serialize("input_House.jls", input)
-output = deserialize("output_House.jls")
-input = deserialize("input_House.jls")
+# output = deserialize("output_House.jls")
+# input = deserialize("input_House.jls")
 
 
 # CESM.Visualization.plot_P_Y(input,output,"new_capacity", carrier_out=CESM.Components.Carrier("Industrial_Heat_LT"))
-# CESM.Visualization.plot_P_Y(input,output,"new_capacity", carrier_out="Electricity")
-CESM.Visualization.plot_P_Y(input,output,"active_capacity", carrier_out="Battery")
+CESM.Visualization.plot_P_Y(input,output,"new_capacity", carrier_out="Electricity")
+# CESM.Visualization.plot_P_Y(input,output,"active_capacity", carrier_out="Battery")
 # CESM.Visualization.plot_P_Y(input,output,"total_energy_out", carrier_out="Electricity")
 # CESM.Visualization.plot_Y(input,output,"annual_emission")
 # CESM.Visualization.plot_P_Y_T(input,output,"energy_out_time", 2030, carrier_out= "Electricity")
