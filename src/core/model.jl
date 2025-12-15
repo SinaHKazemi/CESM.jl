@@ -5,7 +5,7 @@ using JuMP, HiGHS, Gurobi
 using ..Variables
 using ..Components
 
-export run_model, get_parameter, build_model, optimize_model, get_output
+export get_parameter, build_model, optimize_model, get_output
 
 function get_parameter(input, param_name, keys)
     if ! (keys isa AbstractArray || keys isa Tuple)

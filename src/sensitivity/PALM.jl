@@ -219,6 +219,10 @@ function run_PALM(setting::Setting)
                 @info "duality gap: $(value(primal_obj) - value(dual_obj))"
                 @info "obj value improvement: $(obj_value - objective_value(model))"
                 @info "sum of delta: $(sum(abs(new_delta_values[t]) for t in timesteps))"
+                if (obj_value - objective_value(model)) < setting.min_stationary_change
+                    @info "Objective improvement is below the threshold."
+                    break
+                end
                 if (obj_value - objective_value(model)) / maximum(abs(value(vars["ddelta"][t])) for t in timesteps) < setting.min_obj_improvement_rate
                     @info "Objective improvement rate is below the threshold."
                     trust_region_radius /= 2

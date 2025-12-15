@@ -3,8 +3,11 @@
 
 include("../core/CESM.jl")
 using .CESM
-input = CESM.Parser.parse_input("./examples/House/config.json");
+using JuMP
+input = CESM.Parser.parse_input("./examples/House/House_PV_Wind_1_week.json");
 (model,vars,constraints) = CESM.Model.build_model(input)
+CESM.Model.optimize_model(model)
+output = CESM.Model.get_output(input, vars)
 # using Serialization
 # serialize("output.jls", output)
 # serialize("input.jls", input)
@@ -12,21 +15,24 @@ input = CESM.Parser.parse_input("./examples/House/config.json");
 # input = deserialize("input.jls")
 
 
-
 using JuMP, Dualization, Gurobi
 
-PP_Wind = first(filter(p -> p.name == "PP_Wind", input.processes))
-Battery = first(filter(p -> p.name == "Battery", input.processes))
+manipulated_cp = first(filter(p -> p.name == "PP_Wind", input.processes))
+target_cp = first(filter(p -> p.name == "PP_PV", input.processes))
+
+# println(output["new_capacity"])
+target_value = sum(value(output["new_capacity"][target_cp,y]) for y in input.years[1:1])
+println(target_value)
+
 
 
 dual_model = dualize(model,Gurobi.Optimizer; dual_names = DualNames("dual_var_", "dual_con_"))
 dual_obj = objective_function(dual_model)
 (model,vars,constrs) = CESM.Model.build_model(input,dual_model)
 primal_obj = objective_function(model)
-
-@constraint(model, dual_obj == primal_obj, base_name="strong_duality")
-
-@objective(model, Max, sum(vars["new_capacity"][Battery,y] for y in input.years))
+for y in input.years
+    @constraint(model, vars["active_capacity"][manipulated_cp,y] <= 1)
+end
 
 function get_param(param_name, keys)
     if ! (keys isa AbstractArray || keys isa Tuple)
@@ -51,17 +57,26 @@ end
 
 
 vars["delta"] = Dict(index => @variable(model, base_name= "delta" * "_" * string(index)) for index in input.timesteps)
+vars["abs_delta"] = Dict(index => @variable(model, base_name= "abs_delta" * "_" * string(index)) for index in input.timesteps)
 
 for t in input.timesteps
-    @constraint(model, vars["delta"][t] >= -0.1, base_name="delta_lowerbound_$(t)")
-    @constraint(model, vars["delta"][t] <= 0.1, base_name="delta_upperbound_$(t)")
+    @constraint(model, vars["delta"][t] >= -0.15, base_name="delta_lowerbound_$(t)")
+    @constraint(model, vars["delta"][t] <= 0.15, base_name="delta_upperbound_$(t)")
+    @constraint(model, vars["abs_delta"][t] >= vars["delta"][t], base_name="abs_delta_pos_$(t)")
+    @constraint(model, vars["abs_delta"][t] >= -vars["delta"][t], base_name="abs_delta_neg_$(t)")
 end
 
-@constraint(model, sum(vars["delta"][t]* get_param("availability_profile",(PP_Wind,t)) for t in input.timesteps) == 0, base_name="zero_sum")
+
+@constraint(model, dual_obj >= primal_obj, base_name="strong_duality")
+
+# @objective(model, Max, sum(vars["new_capacity"][Battery,y] for y in input.years))
+@objective(model, Min, sum(vars["abs_delta"][t] for t in input.timesteps))
+@constraint(model, sum(vars["new_capacity"][target_cp,y] for y in input.years) >= 1.15 * target_value , base_name="target_capacity_increase")
+@constraint(model, sum(vars["delta"][t]* get_param("availability_profile",(manipulated_cp,t)) for t in input.timesteps) == 0, base_name="zero_sum")
 
 
 for p in input.processes
-    (p != PP_Wind) && continue
+    (p != manipulated_cp) && continue
     for y in input.years
         for t in input.timesteps
             delete(model, constrs["renewable_availability"][p,y,t])
@@ -75,7 +90,7 @@ for p in input.processes
 end
 
 for p in input.processes
-    (p != PP_Wind) && continue
+    (p != manipulated_cp) && continue
     for y in input.years
         con = constraint_by_name(model, "dual_con_active_capacity_$(p)_$(y)")
         f = JuMP.constraint_object(con).func + sum(variable_by_name(model, "dual_var_renewable_availability_$(p)_$(y)_$(t)") * vars["delta"][t] * get_param("availability_profile",(p,t)) for t in input.timesteps)
@@ -94,6 +109,6 @@ function my_callback(cb_data, cb_where)
     end
 end
 
-set_attribute(model, Gurobi.CallbackFunction(), my_callback)
+# set_attribute(model, Gurobi.CallbackFunction(), my_callback)
 
 optimize!(model)
