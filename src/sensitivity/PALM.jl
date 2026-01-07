@@ -120,6 +120,8 @@ function run_PALM(setting::Setting)
         end
     end
 
+    @info "number of variables: $(num_variables(model))"
+
     # fix variables at zero
     for t in timesteps
         fix(vars["delta"][t], 0.0)

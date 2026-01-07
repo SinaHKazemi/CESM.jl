@@ -171,8 +171,8 @@
             "sets": ["P"]
         }
     },
-    "timesteps" : "./time_series/1_week_Manual.txt",
-    "years" : [2015, 2020, 2025, 2030, 2035, 2040, 2045, 2050, 2055, 2060],
+    "timesteps" : "./time_series/4_weeks_Manual.txt",
+    "years" : [2015, 2030],
     "carriers": {
         "Dummy": {},
         "Vehicles_Propulsion": {
@@ -186,7 +186,7 @@
         "Import_Electricity": {
             "carrier_in": "Dummy",
             "carrier_out": "Electricity",
-            "operational_cost_energy": 0.50,
+            "operational_cost_energy": 0.60,
             "process_color": "lightcyan",
             "process_order": 1
         },
