@@ -5,13 +5,31 @@ using JuMP, HiGHS, Gurobi
 using ..Variables
 using ..Components
 
-export run_model
+export get_parameter, build_model, optimize_model, get_output
+
+function get_parameter(input, param_name, keys)
+    if ! (keys isa AbstractArray || keys isa Tuple)
+        keys = (keys,)
+    end
+    current = input.parameters[param_name]
+    for key in keys
+        if current isa AbstractDict && haskey(current, key)
+            current = current[key]
+        elseif haskey(input.parameters["defaults"], param_name)
+            return input.parameters["defaults"][param_name]
+        else
+            return nothing
+        end
+    end
+    return current
+end
+
+
 
 function run_optimization(input::Input)
     model,vars,constraints = build_model(input)
+    # set_attribute(model, "Method", 1)
     optimize_model(model)    
-    # write_to_file(model, "model.mps")
-    # get_iis_model(model)
     output = get_output(input, vars)
     return output
 end
@@ -26,6 +44,9 @@ function build_model(input::Input, model::Union{JuMP.Model,Nothing}=nothing)
 
         # HiGHS
         # model = JuMP.Model(HiGHS.Optimizer)
+
+        # cuOpt
+        # model = JuMP.Model(cuOpt.Optimizer)
     end
     vars = add_vars!(model, input)
     constraints = add_constraints!(model, vars, input)
@@ -39,7 +60,7 @@ end
 
 function get_iis_model(model)
     # needs to be completed, it is just a draft
-    # write_to_file(model, "model.mps")
+    write_to_file(model, "model.mps")
     grb_model = model.moi_backend.optimizer.model.inner
     compute_conflict!(model)
     list_of_conflicting_constraints = ConstraintRef[]
@@ -113,22 +134,8 @@ function  add_constraints!(model, vars, input::Input)::Dict
         end
     end
 
-
     function get_param(param_name, keys)
-        if ! (keys isa AbstractArray || keys isa Tuple)
-            keys = (keys,)
-        end
-        current = input.parameters[param_name]
-        for key in keys
-            if current isa AbstractDict && haskey(current, key)
-                current = current[key]
-            elseif haskey(input.parameters["defaults"], param_name)
-                return input.parameters["defaults"][param_name]
-            else
-                return nothing
-            end
-        end
-        return current
+        return get_parameter(input, param_name, keys)
     end
 
     function has_param(param_name, keys)
@@ -521,7 +528,7 @@ function  add_constraints!(model, vars, input::Input)::Dict
             for t in timesteps
                 constrs["load_shape"][p,y,t] = @constraint(
                     model,
-                    vars["energy_out_time"][p,y,t] == get_param("output_profile",(p,t)) * vars["total_energy_out"][p,y],
+                    vars["energy_out_time"][p,y,t] >= get_param("output_profile",(p,t)) * vars["total_energy_out"][p,y],
                     base_name = "load_shape_$(p)_$(y)_$(t)"
                 )
             end

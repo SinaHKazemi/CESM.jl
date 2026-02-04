@@ -177,7 +177,7 @@
             "sets": ["P"]
         }
     },
-    "timesteps" : "./time_series/8_weeks_Manual.txt",
+    "timesteps" : "./time_series/4_thin_weeks.txt",
     "years" : [2015, 2020, 2025, 2030, 2035, 2040, 2045, 2050, 2055, 2060],
     "carriers": {
         "Dummy": {},
@@ -534,7 +534,7 @@
                 {"x": 2060, "y": 0}
             ],
             "operational_cost_power": 15,
-            "availability_profile": "./time_series/PV_availability.txt",
+            "availability_profile": "./time_series/PV_Availability.txt",
             "process_color": "gold3",
             "process_order": 405
         },
@@ -556,7 +556,7 @@
                 {"x": 2050, "y": 483},
                 {"x": 2060, "y": 483}
             ],
-            "availability_profile": "./time_series/PV_availability_rescaled.txt",
+            "availability_profile": "./time_series/PV_Availability_rescaled.txt",
             "process_color": "darkgoldenrod1",
             "process_order": 406
         },
