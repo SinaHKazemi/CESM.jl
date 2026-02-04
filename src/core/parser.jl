@@ -18,6 +18,7 @@ type_dict = Dict(
     "Integer" => Int,
     "Boolean" => Bool,
     "String" => String,
+    "StringArray" => Vector{String}
 )
 
 

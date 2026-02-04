@@ -38,7 +38,11 @@ using JuMP
 
 include("./src/core/CESM.jl")
 using .CESM
-input = CESM.Parser.parse_input("./examples/House/House_PV_Wind_1_week.json");
+input = CESM.Parser.parse_input("./examples/House/config.json");
+for p in input.processes
+    tags = CESM.Model.get_parameter(input, "tags", (p,))
+    println("Process: $(p.name), Tags: $tags")
+end
 # input = CESM.Parser.parse_input("./examples/House/House.json");
 # input = CESM.Parser.parse_input("./examples/House_PV_Battery/config.json");
 # input = CESM.Parser.parse_input("./examples/Germany/GETM.json");
