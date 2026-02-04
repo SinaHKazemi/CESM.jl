@@ -45,6 +45,13 @@ function plot_PADM()
     CESM.Model.optimize_model(model)
     changed_output = CESM.Model.get_output(changed_input, vars)
 
+    println("Original capacity:")
+    println(output["new_capacity"])
+    println(output["total_energy_out"])
+    println("Changed capacity:")
+    println(changed_output["new_capacity"])
+    println(changed_output["total_energy_out"])
+
     changed_input_20 = deepcopy(input)
     for t in input.timesteps
         changed_input_20.parameters["output_profile"][manipulated_cp][t] *= (1 + delta_values_vector[2][t])
@@ -160,6 +167,13 @@ function plot_PALM()
     CESM.Model.optimize_model(model)
     changed_output = CESM.Model.get_output(changed_input, vars)
 
+    println("Original capacity:")
+    println(output["new_capacity"])
+    println(output["total_energy_out"])
+    println("Changed capacity:")
+    println(changed_output["new_capacity"])
+    println(changed_output["total_energy_out"])
+
     changed_input_20 = deepcopy(input)
     for t in input.timesteps
         changed_input_20.parameters["availability_profile"][manipulated_cp][t] *= (1 + delta_values_vector[2][t])
@@ -242,8 +256,8 @@ function plot_PALM()
     lines!(ax, x, [input.parameters["availability_profile"][manipulated_cp][t] for t in input.timesteps], color = :violetred1, label = "Base Availability", linewidth=linewidth, alpha=0.7)
     lines!(ax, x, [changed_input.parameters["availability_profile"][manipulated_cp][t] for t in input.timesteps], color = :violetred1, label = "Changed Availability (10%)", linestyle = (:dot,:dense), linewidth=linewidth, alpha=0.7)
     # lines!(ax, x, [changed_input_20.parameters["availability_profile"][target_cp][t] for t in input.timesteps], color = :red, label = "Changed PV (20%)", linestyle = :dash, linewidth=linewidth, alpha=0.7)
-    lines!(ax, x, [delta_values[t] for t in input.timesteps], color = :purple, linestyle = :solid, label = "delta (10%)", linewidth=linewidth, alpha=0.5)
-    lines!(ax, x, [delta_values_vector[2][t] for t in input.timesteps], color = :purple, label = "delta (20%)", linestyle = :dash, linewidth=linewidth, alpha=0.5)
+    lines!(ax, x, [delta_values[t] for t in input.timesteps], color = :purple, linestyle = :solid, label = L"\delta (10\%)", linewidth=linewidth, alpha=0.5)
+    lines!(ax, x, [delta_values_vector[2][t] for t in input.timesteps], color = :purple, label = L"\delta (20\%)", linestyle = :dash, linewidth=linewidth, alpha=0.5)
     # lines!(ax, x, [changed_input.parameters["availability_profile"][target_cp][t] for t in input.timesteps], color = :purple, label = "PV")
     ax.yticks =  [-.2,-.1,0,.2, .5,1]
     Legend(fig[i, 2], ax)
@@ -296,6 +310,13 @@ function plot_PALM_Wind()
     model, vars, constraints = CESM.Model.build_model(changed_input)
     CESM.Model.optimize_model(model)
     changed_output = CESM.Model.get_output(changed_input, vars)
+
+    println("Original capacity:")
+    println(output["new_capacity"])
+    println(output["total_energy_out"])
+    println("Changed capacity:")
+    println(changed_output["new_capacity"])
+    println(changed_output["total_energy_out"])
 
     changed_input_20 = deepcopy(input)
     for t in input.timesteps
@@ -378,8 +399,8 @@ function plot_PALM_Wind()
     lines!(ax, x, [input.parameters["availability_profile"][manipulated_cp][t] for t in input.timesteps], color = :violetred1, label = "Base Availability", linewidth=linewidth, alpha=0.7)
     lines!(ax, x, [changed_input.parameters["availability_profile"][manipulated_cp][t] for t in input.timesteps], color = :violetred1, label = "Changed Availability (10%)", linestyle = (:dot,:dense), linewidth=linewidth, alpha=0.7)
     # lines!(ax, x, [changed_input_20.parameters["availability_profile"][target_cp][t] for t in input.timesteps], color = :red, label = "Changed PV (20%)", linestyle = :dash, linewidth=linewidth, alpha=0.7)
-    lines!(ax, x, [delta_values[t] for t in input.timesteps], color = :purple, linestyle = :solid, label = "delta (10%)", linewidth=linewidth, alpha=0.5)
-    lines!(ax, x, [delta_values_vector[2][t] for t in input.timesteps], color = :purple, label = "delta (20%)", linestyle = :dash, linewidth=linewidth, alpha=0.5)
+    lines!(ax, x, [delta_values[t] for t in input.timesteps], color = :purple, linestyle = :solid, label = L"\delta (10\%)", linewidth=linewidth, alpha=0.5)
+    lines!(ax, x, [delta_values_vector[2][t] for t in input.timesteps], color = :purple, label = L"\delta (20\%)", linestyle = :dash, linewidth=linewidth, alpha=0.5)
     # lines!(ax, x, [changed_input.parameters["availability_profile"][target_cp][t] for t in input.timesteps], color = :purple, label = "PV")
     Legend(fig[i, 2], ax)
     ax.yticks =  [-.2,-.1,0,.2, .5, 1]
@@ -450,9 +471,9 @@ function visualize(name::String)
 end
 
 # visualize("PADM")
-# plot_PADM()
+plot_PADM()
 # plot_PALM()
-plot_PALM_Wind()
+# plot_PALM_Wind()
 
 
 # serialize("upper_values_b.jls", upper_values)

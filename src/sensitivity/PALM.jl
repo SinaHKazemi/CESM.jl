@@ -207,7 +207,10 @@ function run_PALM(setting::Setting)
             # set_attribute(model, "DualReductions", 0)
             optimize!(model)
             @info "termination_status (find feasible primal and dual):  $(termination_status(model))"
-
+            if (obj_value - objective_value(model)) < setting.min_stationary_change
+                @info "Objective improvement is below the threshold."
+                break
+            end
             # check for feasibility
             if termination_status(model) == MOI.INFEASIBLE_OR_UNBOUNDED || termination_status(model) == MOI.INFEASIBLE
                 @info "Infeasible Solution."
